@@ -46,7 +46,7 @@ export const navigation = [
             { label: 'Alertas POA', icon: 'bell-alert-outline', href: '/alertas-poa' },
             { label: 'Consorcios', icon: 'link-variant', href: '/consorcios' },
             { label: 'Matriz documental', icon: 'clipboard-check-outline', href: '/matriz-cumplimiento' },
-            { label: 'Calculadora de oferta', icon: 'calculator-variant-outline', href: '/calculadora-oferta' },
+            { label: 'Calculadora de oferta', icon: 'calculator-variant-outline', href: '/calculadora-oferta', can: 'create' },
             { label: 'Generador de documentos', icon: 'file-edit-outline', href: '/generador-documentos', can: 'use_ai' },
         ],
     },
