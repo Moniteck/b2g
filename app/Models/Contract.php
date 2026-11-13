@@ -3,7 +3,8 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToCompany;
-use Carbon\Carbon;
+use App\Services\Contracts\ContractStatus;
+use App\Services\Contracts\ContractTerm;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -11,24 +12,33 @@ class Contract extends Model
 {
     use BelongsToCompany, HasFactory;
 
-    /** Estados del expediente post-adjudicacion. */
+    /** Estados del expediente post-adjudicación (clave = valor). Reglas en `ContractStatus`. */
     public const STATUSES = [
-        'Pendiente de contrato' => 'Pendiente de contrato',
-        'En ejecucion' => 'En ejecucion',
-        'Entrega parcial' => 'Entrega parcial',
-        'Entregado' => 'Entregado',
-        'Cerrado' => 'Cerrado',
-        'Suspendido' => 'Suspendido',
-        'Cancelado' => 'Cancelado',
+        ContractStatus::PENDING => ContractStatus::PENDING,
+        ContractStatus::IN_PROGRESS => ContractStatus::IN_PROGRESS,
+        ContractStatus::PARTIAL => ContractStatus::PARTIAL,
+        ContractStatus::DELIVERED => ContractStatus::DELIVERED,
+        ContractStatus::CLOSED => ContractStatus::CLOSED,
+        ContractStatus::SUSPENDED => ContractStatus::SUSPENDED,
+        ContractStatus::CANCELLED => ContractStatus::CANCELLED,
+    ];
+
+    /** Hitos desde los que corre el plazo. */
+    public const START_TRIGGERS = [
+        'Firma del contrato', 'Orden de inicio', 'Orden de compra', 'Pago de anticipo', 'Fecha fija',
     ];
 
     protected $fillable = [
-        'company_id', 'tender_id', 'quote_id', 'opportunity_id', 'institution_id', 'contact_id',
+        'company_id', 'client_id', 'tender_id', 'quote_id', 'opportunity_id', 'institution_id', 'contact_id',
         'manager_id', 'number', 'name', 'amount', 'awarded_amount', 'billed_amount',
         'collected_amount', 'physical_progress', 'financial_progress', 'retention_amount',
         'status', 'signed_at', 'duration_days', 'duration_business_days', 'start_trigger',
-        'start_date', 'end_date', 'starts_at', 'ends_at', 'product_delivered',
-        'official_in_charge', 'completed_at', 'closed_at', 'notes',
+        'start_date', 'end_date', 'is_end_date_manual', 'product_delivered',
+        'official_in_charge', 'completed_at', 'closed_at', 'notes', 'created_by', 'updated_by',
+    ];
+
+    protected $attributes = [
+        'status' => ContractStatus::PENDING,
     ];
 
     protected function casts(): array
@@ -44,13 +54,23 @@ class Contract extends Model
             'signed_at' => 'date',
             'start_date' => 'date',
             'end_date' => 'date',
-            'starts_at' => 'date',
-            'ends_at' => 'date',
             'completed_at' => 'date',
             'closed_at' => 'datetime',
             'product_delivered' => 'boolean',
             'duration_business_days' => 'boolean',
+            'is_end_date_manual' => 'boolean',
         ];
+    }
+
+    /** Compatibilidad: las columnas antiguas `starts_at`/`ends_at` se unificaron en `start_date`/`end_date`. */
+    public function getStartsAtAttribute()
+    {
+        return $this->start_date;
+    }
+
+    public function getEndsAtAttribute()
+    {
+        return $this->end_date;
     }
 
     public function purchaseOrders()
@@ -78,9 +98,19 @@ class Contract extends Model
         return $this->belongsTo(User::class, 'manager_id');
     }
 
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
     public function contact()
     {
         return $this->belongsTo(Contact::class);
+    }
+
+    public function client()
+    {
+        return $this->belongsTo(Client::class);
     }
 
     public function quote()
@@ -93,39 +123,31 @@ class Contract extends Model
         return $this->belongsTo(Opportunity::class);
     }
 
+    public function tender()
+    {
+        return $this->belongsTo(Tender::class);
+    }
+
     public function institution()
     {
         return $this->belongsTo(Institution::class);
     }
 
+    public function isOpen(): bool
+    {
+        return ContractStatus::isOpen($this->status);
+    }
+
     /**
-     * Calcula el vencimiento a partir de la duracion pactada y la fecha de inicio.
+     * Fecha fin según el plazo (días calendario, o hábiles sin feriados de la empresa).
      */
     public function calculateEndDate(): ?string
     {
-        if ($this->start_date === null || $this->duration_days === null) {
-            return null;
-        }
-
-        $end = $this->duration_business_days
-            ? $this->addBusinessDays($this->start_date->copy(), (int) $this->duration_days)
-            : $this->start_date->copy()->addDays((int) $this->duration_days);
-
-        return $end->toDateString();
-    }
-
-    private function addBusinessDays(Carbon $date, int $days): Carbon
-    {
-        $added = 0;
-        $cursor = $date->copy();
-
-        while ($added < $days) {
-            $cursor->addDay();
-            if ($cursor->isWeekday()) {
-                $added++;
-            }
-        }
-
-        return $cursor;
+        return app(ContractTerm::class)->endDate(
+            $this->start_date,
+            $this->duration_days !== null ? (int) $this->duration_days : null,
+            (bool) $this->duration_business_days,
+            $this->company_id,
+        );
     }
 }
