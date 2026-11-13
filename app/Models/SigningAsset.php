@@ -2,39 +2,63 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
+/**
+ * Firma o sello PERSONAL de un usuario: una imagen PNG o JPG en disco privado.
+ *
+ * Como máximo uno por usuario y tipo. Con un usuario autenticado, toda consulta
+ * se limita a sus propios activos (nadie lista ni usa la firma de otro).
+ */
 class SigningAsset extends Model
 {
-    public const TYPES = ['firma' => 'Firma', 'sello' => 'Sello'];
+    public const TYPE_SIGNATURE = 'firma';
+
+    public const TYPE_SEAL = 'sello';
+
+    public const TYPES = [self::TYPE_SIGNATURE => 'Firma', self::TYPE_SEAL => 'Sello'];
+
+    /** Tamaño máximo de la imagen en kilobytes. */
+    public const MAX_KILOBYTES = 2048;
 
     protected $fillable = [
-        'company_id', 'type', 'name', 'path', 'disk', 'mime_type', 'width', 'height',
-        'is_active', 'uploaded_by', 'revoked_at',
+        'user_id', 'type', 'name', 'path', 'disk', 'mime_type', 'size', 'width', 'height', 'is_active',
     ];
 
     protected function casts(): array
     {
         return [
             'is_active' => 'boolean',
+            'size' => 'integer',
             'width' => 'integer',
             'height' => 'integer',
-            'revoked_at' => 'datetime',
         ];
     }
 
-    public function company()
+    protected static function booted(): void
     {
-        return $this->belongsTo(Company::class);
+        static::addGlobalScope('owner', function (Builder $query): void {
+            if (Auth::hasUser()) {
+                $query->where($query->getModel()->qualifyColumn('user_id'), Auth::id());
+            }
+        });
     }
 
-    public function uploader()
+    public function user()
     {
-        return $this->belongsTo(User::class, 'uploaded_by');
+        return $this->belongsTo(User::class);
     }
 
-    public function isUsable(): bool
+    public function typeLabel(): string
     {
-        return $this->is_active && $this->revoked_at === null;
+        return self::TYPES[$this->type] ?? $this->type;
+    }
+
+    /** URL autorizada de la imagen, con versión para no servir una copia vieja. */
+    public function imageUrl(): string
+    {
+        return route('signatures.assets.image', ['type' => $this->type, 'v' => $this->updated_at?->timestamp]);
     }
 }
