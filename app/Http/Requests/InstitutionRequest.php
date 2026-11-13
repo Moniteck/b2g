@@ -1,0 +1,4 @@
+<?php
+namespace App\Http\Requests;
+use Illuminate\Foundation\Http\FormRequest; use Illuminate\Validation\Rule;
+class InstitutionRequest extends FormRequest { public function authorize(): bool { return true; } public function rules(): array { return ['name'=>['required','string','max:255',Rule::unique('institutions','name')->ignore($this->route('institution'))],'acronym'=>['nullable','string','max:50'],'type'=>['nullable','string','max:100'],'fleet_type'=>['nullable','string','max:100'],'modality'=>['nullable','string','max:100'],'contact_name'=>['nullable','string','max:255'],'phone'=>['nullable','string','max:50'],'email'=>['nullable','email','max:255'],'potential'=>['nullable','string','max:100'],'location'=>['nullable','string','max:255'],'status'=>['required','in:Activa,Inactiva'],'notes'=>['nullable','string','max:5000'],'management_notes'=>['nullable','string','max:5000'],'source'=>['nullable','string','max:100']]; } }

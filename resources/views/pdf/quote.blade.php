@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><style>body{font-family:DejaVu Sans,sans-serif;color:#1f2937;font-size:12px}header{border-bottom:2px solid #0057b8;padding-bottom:12px}h1{color:#0057b8;margin:0;font-size:22px}table{width:100%;border-collapse:collapse;margin-top:18px}th{background:#eff6ff;color:#1e40af;text-align:left}th,td{padding:8px;border-bottom:1px solid #e5e7eb}.right{text-align:right}.total{font-size:14px;font-weight:bold}.muted{color:#6b7280}.notice{margin-top:16px;padding:10px;background:#eff6ff;border-left:3px solid #0057b8;color:#1e40af;font-size:11px}.badge{display:inline-block;padding:3px 8px;border-radius:999px;background:#e0f2fe;color:#075985;font-size:10px;font-weight:bold}</style></head><body>
+<header><h1>Cotización {{ $quote->number }}</h1><p class="muted">{{ $quote->company?->name }} · RTN: {{ $quote->company?->tax_id }}</p></header>
+<p><strong>Institución:</strong> {{ $quote->institution?->name }}<br><strong>Contacto:</strong> {{ $quote->contact?->name ?? 'Jefe de Compras' }}<br><strong>Fecha:</strong> {{ $quote->quoted_at?->format('d/m/Y') }} · <strong>Vigencia:</strong> {{ $quote->validity_days }} días<br><strong>Estado:</strong> <span class="badge">{{ $quote->status }}</span>@if($quote->outcome !== 'Pendiente') · <strong>Resultado:</strong> {{ $quote->outcome }}@endif</p>
+<table><thead><tr><th>Descripción</th><th class="right">Cantidad</th><th>Unidad</th><th class="right">P. unitario</th><th class="right">Total</th></tr></thead><tbody>
+@forelse($quote->items as $item)<tr><td>{{ $item->description }}</td><td class="right">{{ $item->quantity }}</td><td>{{ $item->unit }}</td><td class="right">L {{ number_format($item->unit_price, 2) }}</td><td class="right">L {{ number_format($item->total, 2) }}</td></tr>
+@empty<tr><td colspan="5" class="muted">Sin líneas registradas.</td></tr>@endforelse
+</tbody></table>
+<table><tr><td class="right">Subtotal</td><td class="right">L {{ number_format($quote->subtotal,2) }}</td></tr><tr><td class="right">Impuesto contenido en los precios</td><td class="right">L {{ number_format($quote->tax,2) }}</td></tr><tr class="total"><td class="right">TOTAL</td><td class="right">L {{ number_format($quote->total,2) }}</td></tr></table>
+<p class="notice">Los precios unitarios incluyen el impuesto correspondiente y el total no suma un impuesto adicional.</p>
+@if($quote->notes)<p><strong>Notas:</strong><br>{{ $quote->notes }}</p>@endif
+</body></html>
