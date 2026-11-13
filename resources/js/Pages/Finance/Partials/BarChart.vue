@@ -62,15 +62,15 @@ function move(event) {
                 <span class="h-2.5 w-2.5 rounded-sm" :style="{ backgroundColor: colorOf(index) }"></span>{{ serie.label }}
             </li>
         </ul>
-        <div ref="box" class="relative" @mouseleave="active = -1">
+        <div ref="box" class="relative w-full min-w-0 overflow-hidden" @mouseleave="active = -1">
             <svg
-                :width="width"
                 :height="height"
+                preserveAspectRatio="none"
                 :viewBox="`0 0 ${width} ${height}`"
                 role="img"
                 :aria-label="title"
                 tabindex="0"
-                class="block rounded-cap-control focus:outline-none focus-visible:ring-2 focus-visible:ring-cap-chrome dark:focus-visible:ring-gray-100"
+                class="block w-full rounded-cap-control focus:outline-none focus-visible:ring-2 focus-visible:ring-cap-chrome dark:focus-visible:ring-gray-100"
                 @keydown="move"
                 @blur="active = -1"
             >
@@ -125,12 +125,14 @@ function move(event) {
                 </p>
             </div>
         </div>
-        <table class="sr-only">
+        <div class="sr-only">
+        <table>
             <caption>{{ title }}</caption>
             <thead><tr><th scope="col">Categoría</th><th v-for="serie in series" :key="serie.key" scope="col">{{ serie.label }}</th></tr></thead>
             <tbody>
                 <tr v-for="(category, index) in categories" :key="category"><th scope="row">{{ category }}</th><td v-for="serie in series" :key="serie.key">{{ format(serie.values[index]) }}</td></tr>
             </tbody>
         </table>
+        </div>
     </div>
 </template>

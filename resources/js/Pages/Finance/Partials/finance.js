@@ -66,7 +66,7 @@ export function useChartPalette() {
 }
 
 /** Ancho real de un elemento (para dibujar el SVG en píxeles y no deformar el texto). */
-export function useWidth(element, fallback = 640) {
+export function useWidth(element, fallback = 320) {
     const width = ref(fallback);
     let observer = null;
 

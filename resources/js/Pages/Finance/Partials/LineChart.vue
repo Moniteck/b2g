@@ -22,19 +22,28 @@ const PAD = { top: 12, right: 12, bottom: 28, left: 64 };
 const GRID_LINES = 4;
 
 const values = computed(() => props.points.map((point) => Number(point.value) || 0));
-const minValue = computed(() => Math.min(0, ...values.value));
-const maxValue = computed(() => niceMax(Math.max(...values.value, 0) - minValue.value) + minValue.value);
+// Eje en pasos «redondos» que siempre incluyen el cero (el saldo puede ser negativo).
+const scale = computed(() => {
+    const low = Math.min(0, ...values.value);
+    const high = Math.max(0, ...values.value);
+    const step = niceMax((high - low || 1) / GRID_LINES);
+    const min = Math.floor(low / step) * step;
+    const max = Math.max(min + step, Math.ceil(high / step) * step);
+    return { min, max, step };
+});
+const minValue = computed(() => scale.value.min);
+const maxValue = computed(() => scale.value.max);
 const plotWidth = computed(() => Math.max(10, width.value - PAD.left - PAD.right));
 const plotHeight = computed(() => props.height - PAD.top - PAD.bottom);
 const step = computed(() => (props.points.length > 1 ? plotWidth.value / (props.points.length - 1) : 0));
-const ticks = computed(() => Array.from({ length: GRID_LINES + 1 }, (_, index) => minValue.value + ((maxValue.value - minValue.value) / GRID_LINES) * index));
+const ticks = computed(() => Array.from({ length: Math.round((maxValue.value - minValue.value) / scale.value.step) + 1 }, (_, index) => minValue.value + scale.value.step * index));
 const labelEvery = computed(() => Math.max(1, Math.ceil(80 / Math.max(step.value, 1))));
 
 const x = (index) => PAD.left + (props.points.length > 1 ? step.value * index : plotWidth.value / 2);
 const y = (value) => PAD.top + plotHeight.value - ((value - minValue.value) / (maxValue.value - minValue.value || 1)) * plotHeight.value;
 
 const line = computed(() => values.value.map((value, index) => `${index ? 'L' : 'M'}${x(index)},${y(value)}`).join(' '));
-const area = computed(() => (values.value.length ? `${line.value} L${x(values.value.length - 1)},${y(Math.max(0, minValue.value))} L${x(0)},${y(Math.max(0, minValue.value))} Z` : ''));
+const area = computed(() => (values.value.length ? `${line.value} L${x(values.value.length - 1)},${y(0)} L${x(0)},${y(0)} Z` : ''));
 const color = computed(() => palette.value.series[0]);
 
 function hover(event) {
@@ -54,15 +63,15 @@ const tooltipStyle = computed(() => (active.value < 0 ? {} : { left: `${Math.min
 </script>
 
 <template>
-    <div ref="box" class="relative" @mouseleave="active = -1">
+    <div ref="box" class="relative w-full min-w-0 overflow-hidden" @mouseleave="active = -1">
         <svg
-            :width="width"
             :height="height"
+            preserveAspectRatio="none"
             :viewBox="`0 0 ${width} ${height}`"
             role="img"
             :aria-label="title"
             tabindex="0"
-            class="block rounded-cap-control focus:outline-none focus-visible:ring-2 focus-visible:ring-cap-chrome dark:focus-visible:ring-gray-100"
+            class="block w-full rounded-cap-control focus:outline-none focus-visible:ring-2 focus-visible:ring-cap-chrome dark:focus-visible:ring-gray-100"
             @mousemove="hover"
             @keydown="move"
             @blur="active = -1"
@@ -74,7 +83,7 @@ const tooltipStyle = computed(() => (active.value < 0 ? {} : { left: `${Math.min
             <path :d="area" :fill="color" fill-opacity="0.12" />
             <path :d="line" fill="none" :stroke="color" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" pathLength="1" class="cap-draw" />
             <template v-for="(point, index) in points" :key="point.label + index">
-                <text v-if="index % labelEvery === 0" :x="x(index)" :y="height - 8" text-anchor="middle" font-size="12" :fill="palette.text">{{ point.label }}</text>
+                <text v-if="index % labelEvery === 0 || index === points.length - 1" :x="x(index)" :y="height - 8" :text-anchor="index === 0 ? 'start' : index === points.length - 1 ? 'end' : 'middle'" font-size="12" :fill="palette.text">{{ point.label }}</text>
             </template>
             <g v-if="active >= 0">
                 <line :x1="x(active)" :x2="x(active)" :y1="PAD.top" :y2="PAD.top + plotHeight" :stroke="palette.grid" stroke-width="1" />
@@ -90,9 +99,11 @@ const tooltipStyle = computed(() => (active.value < 0 ? {} : { left: `${Math.min
             <p class="text-cap-text-soft">{{ points[active].label }}</p>
             <p class="mt-1 font-semibold tabular-nums text-gray-900 dark:text-gray-100">{{ format(points[active].value) }}</p>
         </div>
-        <table class="sr-only">
+        <div class="sr-only">
+        <table>
             <caption>{{ title }}</caption>
             <tbody><tr v-for="(point, index) in points" :key="index"><th scope="row">{{ point.label }}</th><td>{{ format(point.value) }}</td></tr></tbody>
         </table>
+        </div>
     </div>
 </template>
