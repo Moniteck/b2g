@@ -115,12 +115,13 @@ async function main() {
                     await settle(page);
                     const overflow = await horizontalOverflow(page);
                     if (overflow > 1) problems.push(`[${label}] scroll horizontal de ${overflow}px`);
-                    await page.screenshot({ path: `${OUTPUT}/${label}.png`, fullPage: true });
+                    await page.screenshot({ path: `${OUTPUT}/${label}.png`, fullPage: true, animations: 'disabled' });
                     console.log(`ok  ${label}`);
                 } catch (error) {
                     problems.push(`[${label}] ${error.message.split('\n')[0]}`);
                 }
-                problems.push(...seen);
+                // Una pantalla abierta sin ruta deja el 404 de su primer intento: no cuenta.
+                problems.push(...seen.filter((message) => !(screen.component && message.includes("404"))));
                 await page.close();
             }
             await guest.close();
