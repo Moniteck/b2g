@@ -63,7 +63,7 @@ export const navigation = [
             { label: 'Conexiones MCP', icon: 'connection', href: '/configuracion/mcp', can: 'manage_settings' },
             { label: 'Auditoría', icon: 'shield-search', href: '/configuracion/auditoria', can: 'view_audit' },
             { label: 'Diagnóstico', icon: 'stethoscope', href: '/configuracion/diagnostico', can: 'view_diagnostics' },
-            { label: 'Notificaciones', icon: 'bell-cog-outline', href: '/notificaciones', can: 'manage_settings' },
+            { label: 'Mis recordatorios', icon: 'bell-ring-outline', href: '/notificaciones' },
             { label: 'Configuración', icon: 'cog-outline', href: '/configuracion', can: 'manage_settings' },
             { label: 'SOP', icon: 'book-open-page-variant-outline', href: '/sops' },
             { label: 'Capacitación', icon: 'school-outline', href: '/capacitacion' },
