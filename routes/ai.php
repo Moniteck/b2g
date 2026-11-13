@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Company;
+use App\Mcp\Servers\CrmServer;
 use Illuminate\Support\Facades\Route;
 use Laravel\Mcp\Facades\Mcp;
 
@@ -18,7 +18,7 @@ use Laravel\Mcp\Facades\Mcp;
 */
 
 Route::middleware('throttle:mcp')->group(function () {
-    Mcp::web('/mcp/crm', \App\Mcp\Servers\CrmServer::class)
+    Mcp::web('/mcp/crm', CrmServer::class)
         ->middleware(['auth:api', 'mcp.scope']);
 });
 

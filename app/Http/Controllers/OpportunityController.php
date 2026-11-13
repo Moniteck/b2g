@@ -5,8 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Company;
 use App\Models\Institution;
 use App\Models\Opportunity;
-use App\Models\Quote;
+use App\Models\Tender;
+use App\Rules\AllowedCompany;
+use App\Rules\BelongsToActiveCompany;
 use App\Services\Notifications\CalendarSyncService;
+use App\Services\ProcessExportService;
+use App\Services\Tenancy\CompanyContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -59,10 +63,10 @@ class OpportunityController extends Controller
         $this->authorize('create', Opportunity::class);
 
         $data = $request->validate([
-            'company_id' => ['nullable', 'integer', 'exists:companies,id'],
+            'company_id' => ['nullable', 'integer', new AllowedCompany],
             'institution_id' => ['nullable', 'integer', 'exists:institutions,id'],
             'contact_id' => ['nullable', 'integer', 'exists:contacts,id'],
-            'tender_id' => ['nullable', 'integer', 'exists:tenders,id'],
+            'tender_id' => ['nullable', 'integer', new BelongsToActiveCompany(Tender::class)],
             'title' => ['required', 'string', 'max:255'],
             'opportunity_type' => ['nullable', 'string', 'max:100'],
             'amount' => ['required', 'numeric', 'min:0'],
@@ -73,7 +77,7 @@ class OpportunityController extends Controller
             'notes' => ['nullable', 'string', 'max:5000'],
         ]);
 
-        $data['company_id'] = $data['company_id'] ?? app(\App\Services\Tenancy\CompanyContext::class)->currentCompanyId();
+        $data['company_id'] = $data['company_id'] ?? app(CompanyContext::class)->currentCompanyId();
         $data['owner_id'] = $request->user()->id;
 
         $opportunity = Opportunity::create($data);
@@ -88,10 +92,10 @@ class OpportunityController extends Controller
         $this->authorize('update', $opportunity);
 
         $data = $request->validate([
-            'company_id' => ['nullable', 'integer', 'exists:companies,id'],
+            'company_id' => ['nullable', 'integer', new AllowedCompany],
             'institution_id' => ['nullable', 'integer', 'exists:institutions,id'],
             'contact_id' => ['nullable', 'integer', 'exists:contacts,id'],
-            'tender_id' => ['nullable', 'integer', 'exists:tenders,id'],
+            'tender_id' => ['nullable', 'integer', new BelongsToActiveCompany(Tender::class)],
             'title' => ['required', 'string', 'max:255'],
             'opportunity_type' => ['nullable', 'string', 'max:100'],
             'amount' => ['required', 'numeric', 'min:0'],
@@ -149,7 +153,7 @@ class OpportunityController extends Controller
         return back()->with('success', 'Oportunidad eliminada.');
     }
 
-    public function pdf(Request $request, \App\Services\ProcessExportService $exports)
+    public function pdf(Request $request, ProcessExportService $exports)
     {
         $this->authorize('viewAny', Opportunity::class);
 
@@ -165,7 +169,7 @@ class OpportunityController extends Controller
         return $exports->pdf('Pipeline de oportunidades', $records);
     }
 
-    public function xlsx(Request $request, \App\Services\ProcessExportService $exports)
+    public function xlsx(Request $request, ProcessExportService $exports)
     {
         $this->authorize('viewAny', Opportunity::class);
 

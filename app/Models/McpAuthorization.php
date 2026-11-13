@@ -26,9 +26,15 @@ class McpAuthorization extends Model
         ];
     }
 
-    public function connection() { return $this->belongsTo(McpConnection::class, 'mcp_connection_id'); }
+    public function connection()
+    {
+        return $this->belongsTo(McpConnection::class, 'mcp_connection_id');
+    }
 
-    public function user() { return $this->belongsTo(User::class); }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
     public function isValid(): bool
     {

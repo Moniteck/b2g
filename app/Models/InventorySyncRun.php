@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 
 class InventorySyncRun extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = ['company_id', 'status', 'started_at', 'finished_at', 'items_processed', 'error'];
 
     protected function casts(): array
@@ -17,5 +20,8 @@ class InventorySyncRun extends Model
         ];
     }
 
-    public function company() { return $this->belongsTo(Company::class); }
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
 }

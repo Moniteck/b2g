@@ -8,14 +8,15 @@ use App\Models\Event;
 use App\Models\GeneratedDocument;
 use App\Models\InventoryItem;
 use App\Models\NotificationTemplate;
+use App\Models\Quote;
 use App\Models\Tender;
 use App\Services\Notifications\ReminderService;
 use App\Services\OpenAIService;
+use App\Services\Tenancy\CompanyContext;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -24,11 +25,15 @@ use RuntimeException;
 
 class SpecializedToolsController extends Controller
 {
+    public function __construct(private CompanyContext $context) {}
+
     /**
      * Inventario sincronizado desde Blessing. Los precios ya incluyen impuesto.
      */
     public function inventory(Request $request): Response
     {
+        $this->authorize('viewAny', InventoryItem::class);
+
         $query = InventoryItem::query()
             ->when($request->string('search')->trim()->value(), fn ($q, $search) => $q->where(fn ($items) => $items->where('sku', 'like', "%{$search}%")->orWhere('description', 'like', "%{$search}%")))
             ->when($request->string('category')->trim()->value(), fn ($q, $category) => $q->where('category', $category))
@@ -59,15 +64,18 @@ class SpecializedToolsController extends Controller
 
     public function tenderAi(Request $request): Response
     {
+        $this->authorize('use-ai');
+
         return Inertia::render('SpecializedPage', [
             'kind' => 'tender-ai',
-            'tenders' => Tender::query()->with('institution')->whereIn('status', ['Activa', 'Abierta', 'En preparación'])->latest('published_at')->paginate(30),
+            'tenders' => Tender::query()->with('institution:id,name')->whereIn('status', ['Activa', 'Abierta', 'En preparación'])->latest('published_at')->paginate(30),
         ]);
     }
 
     public function analyzeTender(SpecializedActionRequest $request, Tender $tender, OpenAIService $openAI): JsonResponse
     {
         $this->authorize('use-ai');
+        $this->authorize('view', $tender);
         $data = $request->validated();
 
         try {
@@ -79,6 +87,8 @@ class SpecializedToolsController extends Controller
 
     public function offerCalculator(): Response
     {
+        $this->authorize('create', Quote::class);
+
         return Inertia::render('SpecializedPage', ['kind' => 'offer-calculator']);
     }
 
@@ -88,6 +98,8 @@ class SpecializedToolsController extends Controller
      */
     public function calculateOffer(SpecializedActionRequest $request): JsonResponse
     {
+        $this->authorize('create', Quote::class);
+
         $lines = $request->validated()['lines'] ?? [];
 
         if (! $lines) {
@@ -124,6 +136,8 @@ class SpecializedToolsController extends Controller
 
     public function documents(Request $request): Response
     {
+        $this->authorize('generate-documents');
+
         return Inertia::render('SpecializedPage', [
             'kind' => 'document-generator',
             'records' => GeneratedDocument::where('user_id', $request->user()->id)->latest()->paginate(20),
@@ -206,7 +220,6 @@ class SpecializedToolsController extends Controller
         $to = $request->date('to') ?? now()->addMonths(2)->endOfMonth();
 
         $records = Event::query()
-            ->where('company_id', app(\App\Services\Tenancy\CompanyContext::class)->currentCompanyId())
             ->whereBetween('starts_at', [$from, $to])
             ->with('deliveries')
             ->orderBy('starts_at')
@@ -244,10 +257,6 @@ class SpecializedToolsController extends Controller
     {
         $this->authorize($event ? 'update' : 'create', $event ?? Event::class);
 
-        if ($event && $event->company_id !== $request->user()->defaultCompanyId() && ! $request->user()->isRoot()) {
-            abort_unless($event->user_id === $request->user()->id, 403);
-        }
-
         $data = $request->validated();
         $payload = collect($data)->only(['title', 'description', 'starts_at', 'ends_at', 'priority', 'completed'])->filter(fn ($value) => $value !== null)->all();
         $payload['completed_at'] = ! empty($payload['completed']) ? now() : null;
@@ -256,7 +265,7 @@ class SpecializedToolsController extends Controller
             ? $event->update($payload)
             : Event::create($payload + [
                 'user_id' => $request->user()->id,
-                'company_id' => app(\App\Services\Tenancy\CompanyContext::class)->currentCompanyId(),
+                'company_id' => $this->context->currentCompanyId(),
                 'title' => $data['title'] ?? 'Evento',
                 'starts_at' => $data['starts_at'] ?? now(),
                 'type' => 'Manual',
@@ -268,8 +277,9 @@ class SpecializedToolsController extends Controller
 
     public function deleteEvent(Request $request, Event $event): RedirectResponse
     {
-        $this->authorize('delete', $event);
-        abort_unless($event->user_id === $request->user()->id || $request->user()->isRoot(), 403);
+        // Los eventos derivados (licitación, contrato, documento) no se borran a mano.
+        abort_if($event->isDerived(), 422, 'Este evento se genera automáticamente y no se puede eliminar.');
+        abort_unless($request->user()->can('delete', $event) || ($event->user_id === $request->user()->id && $request->user()->can('update', $event)), 403);
         $event->delete();
 
         return back();
@@ -277,12 +287,15 @@ class SpecializedToolsController extends Controller
 
     public function training(Request $request): Response
     {
+        $this->authorize('view');
+
         return Inertia::render('SpecializedPage', ['kind' => 'training', 'records' => DB::table('training_progress')->where('user_id', $request->user()->id)->get()]);
     }
 
     public function saveTraining(SpecializedActionRequest $request): RedirectResponse
     {
-        $data = $request->validated();
+        $this->authorize('view');
+        $data = $request->validate(['tutorial_key' => ['required', 'string', 'max:100']]) + $request->validated();
         DB::table('training_progress')->updateOrInsert(['user_id' => $request->user()->id, 'tutorial_key' => $data['tutorial_key']], ['progress' => $data['progress'] ?? 0, 'score' => $data['score'] ?? null, 'updated_at' => now(), 'created_at' => now()]);
 
         return back();
@@ -297,8 +310,9 @@ class SpecializedToolsController extends Controller
             'kind' => 'settings',
             'settings' => $this->companySettings(),
             'resetToken' => $token,
-            'users' => \App\Models\User::select('id', 'name', 'email', 'role')->orderBy('name')->get(),
-            'companies' => Company::orderBy('name')->get(['id', 'name', 'is_active']),
+            'users' => $this->activeCompany()->users()->orderBy('name')->get(['users.id', 'users.name', 'users.email'])
+                ->map(fn ($user) => ['id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'role' => $user->pivot->role]),
+            'companies' => Company::whereIn('id', $this->context->allowedCompanyIds())->orderBy('name')->get(['id', 'name', 'is_active']),
         ]);
     }
 
@@ -306,9 +320,8 @@ class SpecializedToolsController extends Controller
     {
         $this->authorize('manage-settings');
 
-        foreach ($request->validated()['settings'] ?? [] as $key => $value) {
-            DB::table('settings')->updateOrInsert(['key' => 'company.'.$key], ['value' => json_encode($value), 'updated_at' => now(), 'created_at' => now()]);
-        }
+        $company = $this->activeCompany();
+        $company->update(['settings' => [...($company->settings ?? []), ...($request->validated()['settings'] ?? [])]]);
 
         return back();
     }
@@ -322,7 +335,8 @@ class SpecializedToolsController extends Controller
             Storage::disk('local')->delete($old);
         }
         $path = $request->file('logo')->store('company/logo', 'local');
-        DB::table('settings')->updateOrInsert(['key' => 'company.logo'], ['value' => json_encode($path), 'updated_at' => now(), 'created_at' => now()]);
+        $company = $this->activeCompany();
+        $company->update(['logo_path' => $path, 'settings' => [...($company->settings ?? []), 'logo' => $path]]);
 
         return back();
     }
@@ -335,30 +349,26 @@ class SpecializedToolsController extends Controller
         return Pdf::loadHTML($this->printHtml('Vista previa de empresa', $company['name'] ?? 'Empresa', [['description' => $company['address'] ?? '', 'quantity' => '', 'price' => '', 'total' => '']], null))->stream('vista-previa.pdf');
     }
 
-    public function seed(): RedirectResponse
-    {
-        $this->authorize('manage-settings');
-        Artisan::call('db:seed', ['--class' => 'DatabaseSeeder', '--force' => true]);
-
-        return back();
-    }
-
     public function reset(Request $request): RedirectResponse
     {
         $this->authorize('manage-settings');
         abort_unless(hash_equals((string) $request->session()->pull('settings_reset_token'), (string) $request->input('confirmation_token')), 422);
-        DB::table('settings')->delete();
+        $this->activeCompany()->update(['settings' => null, 'logo_path' => null]);
 
         return back();
     }
 
     public function sops(): Response
     {
+        $this->authorize('view');
+
         return Inertia::render('SpecializedPage', ['kind' => 'sops', 'records' => $this->sopRecords()]);
     }
 
     public function sopPdf(int $sop)
     {
+        $this->authorize('view');
+
         $record = collect($this->sopRecords())->get($sop);
         abort_unless($record, 404);
 
@@ -376,12 +386,32 @@ class SpecializedToolsController extends Controller
         }
     }
 
+    /**
+     * Empresa activa del usuario. Sin empresa no hay configuración que mostrar.
+     */
+    private function activeCompany(): Company
+    {
+        return Company::query()->findOrFail($this->context->currentCompanyId());
+    }
+
+    /**
+     * Datos de la empresa ACTIVA para membretes y documentos: sus columnas
+     * (nombre, RTN, representante) más lo guardado en `companies.settings`.
+     */
     private function companySettings(): array
     {
-        $company = Company::query()->first();
-        $defaults = $company ? ['name' => $company->name, 'tax_id' => $company->tax_id, 'representative' => $company->representative] : [];
+        $company = Company::query()->find($this->context->currentCompanyId());
 
-        return [...$defaults, ...DB::table('settings')->where('key', 'like', 'company.%')->pluck('value', 'key')->mapWithKeys(fn ($value, $key) => [str($key)->after('company.')->toString() => json_decode($value, true)])->all()];
+        if ($company === null) {
+            return [];
+        }
+
+        return [
+            'name' => $company->name,
+            'tax_id' => $company->tax_id,
+            'representative' => $company->representative,
+            ...($company->settings ?? []),
+        ];
     }
 
     private function sopRecords(): array

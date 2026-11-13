@@ -3,9 +3,11 @@
 namespace App\Http\Middleware;
 
 use App\Models\McpConnection;
+use App\Models\User;
 use App\Services\Tenancy\CompanyContext;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -50,12 +52,12 @@ class ApplyMcpConnection
         $context->initialize($user, $allowed, $allowed[0] ?? null);
 
         $request->attributes->set('mcp_connection', $connection);
-        $request->attributes->set('mcp_request_id', (string) \Illuminate\Support\Str::uuid());
+        $request->attributes->set('mcp_request_id', (string) Str::uuid());
 
         return $next($request);
     }
 
-    protected function resolveConnection(Request $request, \App\Models\User $user): ?McpConnection
+    protected function resolveConnection(Request $request, User $user): ?McpConnection
     {
         $token = $request->user()->token();
         $clientId = is_object($token) && method_exists($token, 'getAttribute')

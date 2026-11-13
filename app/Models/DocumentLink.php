@@ -9,9 +9,18 @@ class DocumentLink extends Model
 {
     protected $fillable = ['document_id', 'document_version_id', 'linkable_type', 'linkable_id', 'context'];
 
-    public function document() { return $this->belongsTo(Document::class); }
+    public function document()
+    {
+        return $this->belongsTo(Document::class);
+    }
 
-    public function version() { return $this->belongsTo(DocumentVersion::class, 'document_version_id'); }
+    public function version()
+    {
+        return $this->belongsTo(DocumentVersion::class, 'document_version_id');
+    }
 
-    public function linkable(): MorphTo { return $this->morphTo(); }
+    public function linkable(): MorphTo
+    {
+        return $this->morphTo();
+    }
 }

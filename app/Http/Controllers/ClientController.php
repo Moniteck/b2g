@@ -6,10 +6,10 @@ use App\Models\Client;
 use App\Models\Institution;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * La base de clientes es de solo lectura para el usuario: los clientes se
@@ -65,7 +65,8 @@ class ClientController extends Controller
 
         $data = $request->validate([
             'name' => ['sometimes', 'required', 'string', 'max:255'],
-            'tax_id' => ['nullable', 'string', 'max:100'],
+            // El RTN es único dentro de la empresa del cliente.
+            'tax_id' => ['nullable', 'string', 'max:100', Rule::unique('clients', 'tax_id')->where('company_id', $client->company_id)->ignore($client)],
             'type' => ['nullable', 'string', 'max:100'],
             'sector' => ['nullable', 'string', 'max:100'],
             'contact_name' => ['nullable', 'string', 'max:255'],

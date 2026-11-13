@@ -18,7 +18,9 @@ class CompetitorController extends Controller
         if ($search = $request->string('search')->trim()->value()) {
             $query->where(fn ($q) => $q->where('name', 'like', "%{$search}%")->orWhere('tax_id', 'like', "%{$search}%")->orWhere('category', 'like', "%{$search}%"));
         }
-        if ($request->filled('category')) $query->where('category', $request->string('category'));
+        if ($request->filled('category')) {
+            $query->where('category', $request->string('category'));
+        }
 
         $analytics = Competitor::selectRaw('COALESCE(SUM(wins), 0) as wins, COALESCE(SUM(losses), 0) as losses, COALESCE(AVG(average_award_price), 0) as average_award_price')->first();
         $decisions = (int) $analytics->wins + (int) $analytics->losses;
@@ -36,7 +38,27 @@ class CompetitorController extends Controller
         ]);
     }
 
-    public function store(CompetitorRequest $request): RedirectResponse { $this->authorize('create', Competitor::class); Competitor::create($request->validated()); return back()->with('success', 'Competidor creado.'); }
-    public function update(CompetitorRequest $request, Competitor $competitor): RedirectResponse { $this->authorize('update', $competitor); $competitor->update($request->validated()); return back()->with('success', 'Competidor actualizado.'); }
-    public function destroy(Competitor $competitor): RedirectResponse { $this->authorize('delete', $competitor); $competitor->delete(); return back()->with('success', 'Competidor eliminado.'); }
+    public function store(CompetitorRequest $request): RedirectResponse
+    {
+        $this->authorize('create', Competitor::class);
+        Competitor::create($request->validated());
+
+        return back()->with('success', 'Competidor creado.');
+    }
+
+    public function update(CompetitorRequest $request, Competitor $competitor): RedirectResponse
+    {
+        $this->authorize('update', $competitor);
+        $competitor->update($request->validated());
+
+        return back()->with('success', 'Competidor actualizado.');
+    }
+
+    public function destroy(Competitor $competitor): RedirectResponse
+    {
+        $this->authorize('delete', $competitor);
+        $competitor->delete();
+
+        return back()->with('success', 'Competidor eliminado.');
+    }
 }

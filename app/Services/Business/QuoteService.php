@@ -5,9 +5,9 @@ namespace App\Services\Business;
 use App\Models\InventoryItem;
 use App\Models\Quote;
 use App\Models\QuoteItem;
+use App\Models\Scopes\CompanyScope;
 use App\Services\AuditLogger;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 use RuntimeException;
 
 /**
@@ -40,7 +40,7 @@ class QuoteService
                 'tender_id' => $data['tender_id'] ?? null,
                 'created_by' => $actorId,
                 'prepared_by' => $actorId,
-                'number' => $data['number'] ?? $this->nextNumber(),
+                'number' => $data['number'] ?? $this->nextNumber($companyId),
                 'quoted_at' => $data['quoted_at'] ?? now()->toDateString(),
                 'purchase_type' => $data['purchase_type'] ?? 'Cotizacion',
                 'validity_days' => $data['validity_days'] ?? 30,
@@ -239,12 +239,17 @@ class QuoteService
     /**
      * Consecutivo seguro ante peticiones simultaneas.
      */
-    protected function nextNumber(): string
+    /**
+     * Siguiente número de la EMPRESA: la numeración es única por empresa
+     * (índice `uq_quotes_company_id_number`), no global.
+     */
+    protected function nextNumber(?int $companyId): string
     {
         $year = now()->year;
         $prefix = "COT-{$year}-";
+        $numbers = fn () => Quote::withTrashed()->withoutGlobalScope(CompanyScope::class)->where('company_id', $companyId);
 
-        $last = Quote::withTrashed()
+        $last = $numbers()
             ->where('number', 'like', $prefix.'%')
             ->orderByDesc('number')
             ->lockForUpdate()
@@ -255,7 +260,7 @@ class QuoteService
         do {
             $candidate = $prefix.str_pad((string) $sequence, 4, '0', STR_PAD_LEFT);
             $sequence++;
-        } while (Quote::withTrashed()->where('number', $candidate)->exists());
+        } while ($numbers()->where('number', $candidate)->exists());
 
         return $candidate;
     }

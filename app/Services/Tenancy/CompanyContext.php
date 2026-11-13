@@ -4,10 +4,13 @@ namespace App\Services\Tenancy;
 
 use App\Models\Company;
 use App\Models\User;
-use Illuminate\Support\Facades\Cache;
 
 /**
- * Resuelve que empresas puede ver y operar el actor actual.
+ * Resuelve qué empresas puede operar el actor y cuál es su empresa activa.
+ *
+ * Las consultas de los modelos con `BelongsToCompany` se limitan a la empresa
+ * ACTIVA (`currentCompanyId()`); `allowedCompanyIds()` solo sirve para validar
+ * a qué empresas puede cambiarse.
  *
  * Reglas:
  *  - Un administrador raiz opera sobre todas las empresas del grupo.
@@ -17,6 +20,9 @@ use Illuminate\Support\Facades\Cache;
  */
 class CompanyContext
 {
+    /** Clave de sesión donde se guarda la empresa activa. */
+    public const SESSION_KEY = 'company_id';
+
     /** @var array<int>|null Null significa "sin restriccion de empresa". */
     protected ?array $allowed = null;
 
@@ -49,11 +55,7 @@ class CompanyContext
      */
     public function resolveAllowed(User $user): array
     {
-        if ($user->isRoot()) {
-            return Company::query()->pluck('id')->map(fn ($id) => (int) $id)->all();
-        }
-
-        return $user->companies()->pluck('companies.id')->map(fn ($id) => (int) $id)->all();
+        return $user->accessibleCompanyIds();
     }
 
     /**
@@ -72,6 +74,22 @@ class CompanyContext
     public function currentCompanyId(): ?int
     {
         return $this->current;
+    }
+
+    /**
+     * Empresa activa como `['id' => ..., 'name' => ...]`, o null si no hay.
+     *
+     * @return array{id: int, name: string}|null
+     */
+    public function currentCompany(): ?array
+    {
+        if ($this->current === null) {
+            return null;
+        }
+
+        $name = Company::query()->whereKey($this->current)->value('name');
+
+        return $name === null ? null : ['id' => $this->current, 'name' => (string) $name];
     }
 
     public function setCurrentCompanyId(?int $companyId): void

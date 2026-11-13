@@ -61,16 +61,16 @@ class TenderController extends Controller
     private function filtered(Request $request)
     {
         $q = Tender::query()->latest('published_at');
-        if (! $request->user()->isAdmin()) {
-            $q->where('owner_id', $request->user()->id);
-        } if ($s = $request->string('search')->trim()->value()) {
+        if ($s = $request->string('search')->trim()->value()) {
             $q->where(fn ($x) => $x->where('reference', 'like', "%$s%")->orWhere('title', 'like', "%$s%"));
-        } foreach (['status', 'purchase_type'] as $f) {
+        }
+
+        foreach (['status', 'purchase_type'] as $f) {
             if ($request->filled($f)) {
                 $q->where($f, $request->string($f));
             }
         }
 
-return $q;
+        return $q;
     }
 }

@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Client;
 use App\Models\CollectionInvoice;
+use App\Rules\BelongsToActiveCompany;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -101,11 +103,11 @@ class CollectionController extends Controller
             $query->where(fn ($q) => $q->where('number', 'like', "%{$search}%")->orWhere('concept', 'like', "%{$search}%")->orWhereHas('client', fn ($client) => $client->where('name', 'like', "%{$search}%")));
         }
 
-return $query;
+        return $query;
     }
 
     private function data(Request $request): array
     {
-        return $request->validate(['client_id' => 'nullable|exists:clients,id', 'institution_id' => 'nullable|exists:institutions,id', 'number' => 'required|string|max:255|unique:collection_invoices,number', 'concept' => 'required|string|max:255', 'amount' => 'required|numeric|min:0', 'issued_at' => 'required|date', 'due_at' => 'required|date|after_or_equal:issued_at', 'interest_rate' => 'nullable|numeric|between:0,100', 'notes' => 'nullable|string|max:5000']);
+        return $request->validate(['client_id' => ['nullable', new BelongsToActiveCompany(Client::class)], 'institution_id' => 'nullable|exists:institutions,id', 'number' => 'required|string|max:255|unique:collection_invoices,number', 'concept' => 'required|string|max:255', 'amount' => 'required|numeric|min:0', 'issued_at' => 'required|date', 'due_at' => 'required|date|after_or_equal:issued_at', 'interest_rate' => 'nullable|numeric|between:0,100', 'notes' => 'nullable|string|max:5000']);
     }
 }

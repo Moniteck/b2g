@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Company;
 use App\Models\User;
+use App\Services\Tenancy\CompanyContext;
+use App\Support\Permissions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,7 +22,7 @@ class CompanyController extends Controller
     {
         $this->authorize('viewAny', Company::class);
 
-        $context = app(\App\Services\Tenancy\CompanyContext::class);
+        $context = app(CompanyContext::class);
 
         $companies = Company::query()
             ->whereIn('id', $context->allowedCompanyIds())
@@ -117,7 +119,7 @@ class CompanyController extends Controller
 
         $data = $request->validate([
             'user_id' => ['required', 'integer', 'exists:users,id'],
-            'role' => ['required', 'in:admin,operator'],
+            'role' => ['required', Rule::in(Permissions::ROLES)],
             'is_default' => ['nullable', 'boolean'],
         ]);
 

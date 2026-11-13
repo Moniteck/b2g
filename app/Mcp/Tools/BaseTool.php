@@ -3,6 +3,7 @@
 namespace App\Mcp\Tools;
 
 use App\Models\McpConnection;
+use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\Tenancy\CompanyContext;
 use Illuminate\Database\Eloquent\Builder;
@@ -22,7 +23,7 @@ abstract class BaseTool extends Tool
     /**
      * Usuario autenticado que invoca la herramienta.
      */
-    protected function user(Request $request): \App\Models\User
+    protected function user(Request $request): User
     {
         $user = $request->user('api') ?? $request->user();
 

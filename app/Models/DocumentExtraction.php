@@ -21,7 +21,13 @@ class DocumentExtraction extends Model
         ];
     }
 
-    public function version() { return $this->belongsTo(DocumentVersion::class, 'document_version_id'); }
+    public function version()
+    {
+        return $this->belongsTo(DocumentVersion::class, 'document_version_id');
+    }
 
-    public function reviewer() { return $this->belongsTo(User::class, 'reviewed_by'); }
+    public function reviewer()
+    {
+        return $this->belongsTo(User::class, 'reviewed_by');
+    }
 }

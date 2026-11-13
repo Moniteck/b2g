@@ -14,13 +14,15 @@ class KpiService
 
     public function actuals(string $from, string $to): array
     {
-        $fromDate = Carbon::parse($from)->startOfDay(); $toDate = Carbon::parse($to)->endOfDay();
+        $fromDate = Carbon::parse($from)->startOfDay();
+        $toDate = Carbon::parse($to)->endOfDay();
         $presented = Quote::query()->whereBetween('quoted_at', [$fromDate, $toDate])->whereIn('status', ['Presentada', 'Sustituida'])->count();
         $accepted = Quote::query()->whereBetween('quoted_at', [$fromDate, $toDate])->where('outcome', 'Ganada')->count();
         $poa = PoaEntry::query()->whereBetween('estimated_date', [$fromDate, $toDate]);
         $budgeted = (float) (clone $poa)->sum('budgeted_amount');
+
         return [
-            'pipeline' => (float) Opportunity::query()->whereBetween('created_at', [$fromDate, $toDate])->whereNotIn('stage', ['cerrado', 'no_adjudicado'])->selectRaw('COALESCE(SUM(amount * probability / 100), 0) total')->value('total'),
+            'pipeline' => (float) Opportunity::query()->whereBetween('created_at', [$fromDate, $toDate])->whereNotIn('stage', Opportunity::CLOSED_STAGES)->selectRaw('COALESCE(SUM(amount * probability / 100), 0) total')->value('total'),
             'adjudicaciones' => (float) Quote::query()->whereBetween('quoted_at', [$fromDate, $toDate])->where('outcome', 'Ganada')->sum('awarded_amount'),
             'cobros' => (float) CollectionInvoice::query()->where('status', 'Pagada')->whereBetween('paid_at', [$fromDate, $toDate])->sum('amount'),
             'tasa_adjudicacion' => $presented ? round($accepted / $presented * 100, 2) : 0,

@@ -4,43 +4,21 @@ namespace App\Policies;
 
 use App\Models\Quote;
 use App\Models\User;
-use App\Policies\Concerns\HandlesCompanyScope;
+use App\Support\Permissions;
 
-class QuotePolicy
+class QuotePolicy extends OperationalPolicy
 {
-    use HandlesCompanyScope;
-
-    public function viewAny(User $user): bool
-    {
-        return $user->isRoot() || $user->companies()->exists();
-    }
-
-    public function view(User $user, Quote $quote): bool
-    {
-        return $this->hasCompanyAccess($user, $quote->company_id);
-    }
-
-    public function create(User $user): bool
-    {
-        return $user->isRoot() || $user->companies()->exists();
-    }
-
     /**
-     * Una cotizacion presentada ya no se edita: se sustituye por una revision.
+     * Una cotización presentada ya no se edita: se sustituye por una revisión.
      */
-    public function update(User $user, Quote $quote): bool
+    public function update(User $user, object $model): bool
     {
-        if (! $this->canOperate($user, $quote)) {
-            return false;
-        }
-
-        return $quote->isEditable();
+        return parent::update($user, $model) && $model->isEditable();
     }
 
-    public function delete(User $user, Quote $quote): bool
+    public function delete(User $user, object $model): bool
     {
-        return $this->isCompanyAdmin($user, $quote->company_id)
-            && in_array($quote->outcome, ['Pendiente'], true);
+        return parent::delete($user, $model) && $model->outcome === 'Pendiente';
     }
 
     /**
@@ -48,6 +26,11 @@ class QuotePolicy
      */
     public function adjudicate(User $user, Quote $quote): bool
     {
-        return $this->canOperate($user, $quote);
+        return $this->allowsOn($user, $quote, Permissions::ADJUDICATE);
+    }
+
+    public function revertOutcome(User $user, Quote $quote): bool
+    {
+        return $this->allowsOn($user, $quote, Permissions::REVERT_OUTCOME);
     }
 }

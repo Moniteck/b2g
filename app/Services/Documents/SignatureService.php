@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use setasign\Fpdi\Fpdi;
-use setasign\Fpdi\PdfParser\CrossReference\CrossReferenceException;
 use TCPDF;
 
 /**

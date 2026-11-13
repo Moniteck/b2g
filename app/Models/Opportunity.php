@@ -19,6 +19,12 @@ class Opportunity extends Model
         'no_adjudicado' => 'No Adjudicado',
     ];
 
+    /** Etapas que cuentan como pipeline activo (aún sin resultado). */
+    public const ACTIVE_STAGES = ['prospecto', 'oportunidad', 'oferta_presentada'];
+
+    /** Etapas de resultado: no son pipeline activo. */
+    public const CLOSED_STAGES = ['adjudicado', 'no_adjudicado'];
+
     protected $fillable = [
         'company_id', 'institution_id', 'contact_id', 'owner_id', 'title', 'opportunity_type',
         'amount', 'probability', 'stage', 'next_action', 'expected_close_date', 'notes',

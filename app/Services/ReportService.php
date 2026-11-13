@@ -26,7 +26,7 @@ class ReportService
         $module = $filters['module'];
         $rows = [];
         if (in_array($module, ['all', 'pipeline'], true)) {
-            $rows[] = $this->row('Pipeline ponderado', 'pipeline', Opportunity::query()->whereBetween('created_at', [$from, $to])->whereNotIn('stage', ['cerrado', 'no_adjudicado'])->selectRaw('COALESCE(SUM(amount * probability / 100), 0) total')->value('total'), Opportunity::query()->whereBetween('created_at', [$from, $to])->whereNotIn('stage', ['cerrado', 'no_adjudicado'])->count());
+            $rows[] = $this->row('Pipeline ponderado', 'pipeline', Opportunity::query()->whereBetween('created_at', [$from, $to])->whereNotIn('stage', Opportunity::CLOSED_STAGES)->selectRaw('COALESCE(SUM(amount * probability / 100), 0) total')->value('total'), Opportunity::query()->whereBetween('created_at', [$from, $to])->whereNotIn('stage', Opportunity::CLOSED_STAGES)->count());
         }
         if (in_array($module, ['all', 'cotizaciones'], true)) {
             $rows[] = $this->row('Cotizaciones ganadas', 'cotizaciones', Quote::query()->whereBetween('quoted_at', [$from, $to])->where('outcome', 'Ganada')->sum('awarded_amount'), Quote::query()->whereBetween('quoted_at', [$from, $to])->where('outcome', 'Ganada')->count());

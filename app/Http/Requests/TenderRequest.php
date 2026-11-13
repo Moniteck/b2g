@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Rules\AllowedCompany;
+use App\Services\Tenancy\CompanyContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -15,9 +17,9 @@ class TenderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'company_id' => ['nullable', 'exists:companies,id'],
+            'company_id' => ['nullable', new AllowedCompany],
             'institution_id' => ['nullable', 'exists:institutions,id'],
-            'reference' => ['required', 'string', 'max:100', Rule::unique('tenders', 'reference')->ignore($this->route('tender'))],
+            'reference' => ['required', 'string', 'max:100', Rule::unique('tenders', 'reference')->where('company_id', $this->input('company_id') ?: app(CompanyContext::class)->currentCompanyId())->ignore($this->route('tender'))],
             'process_name' => ['nullable', 'string', 'max:255'],
             'title' => ['required', 'string', 'max:255'],
             'purchase_type' => ['nullable', 'string', 'max:100'],

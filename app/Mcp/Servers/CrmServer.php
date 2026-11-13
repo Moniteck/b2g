@@ -25,6 +25,7 @@ use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Instructions;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Attributes\Version;
+use Laravel\Mcp\Server\Tool;
 
 #[Name('CRM B2G')]
 #[Version('1.0.0')]
@@ -32,7 +33,7 @@ use Laravel\Mcp\Server\Attributes\Version;
 class CrmServer extends Server
 {
     /**
-     * @var array<int, class-string<\Laravel\Mcp\Server\Tool>>
+     * @var array<int, class-string<Tool>>
      */
     protected array $tools = [
         ListCompaniesTool::class,

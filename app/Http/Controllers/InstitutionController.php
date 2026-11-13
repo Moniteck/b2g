@@ -23,7 +23,7 @@ class InstitutionController extends Controller
             }
         }
 
-return Inertia::render('Institutions', ['records' => $q->paginate(20)->withQueryString(), 'filters' => $request->only('search', 'type', 'potential', 'status')]);
+        return Inertia::render('Institutions', ['records' => $q->paginate(20)->withQueryString(), 'filters' => $request->only('search', 'type', 'potential', 'status')]);
     }
 
     public function update(InstitutionRequest $request, Institution $institution): RedirectResponse
@@ -31,6 +31,6 @@ return Inertia::render('Institutions', ['records' => $q->paginate(20)->withQuery
         $this->authorize('update', $institution);
         $institution->update($request->validated());
 
-        return back()->with('success','Institución actualizada.');
+        return back()->with('success', 'Institución actualizada.');
     }
 }

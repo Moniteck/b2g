@@ -22,7 +22,7 @@ class ContactController extends Controller
             $q->where('institution_id', $request->integer('institution_id'));
         }
 
-return Inertia::render('Contacts', ['records' => $q->paginate(20)->withQueryString(), 'institutions' => Institution::orderBy('name')->get(['id', 'name']), 'filters' => $request->only('search', 'institution_id')]);
+        return Inertia::render('Contacts', ['records' => $q->paginate(20)->withQueryString(), 'institutions' => Institution::orderBy('name')->get(['id', 'name']), 'filters' => $request->only('search', 'institution_id')]);
     }
 
     public function store(ContactRequest $request): RedirectResponse
@@ -38,6 +38,6 @@ return Inertia::render('Contacts', ['records' => $q->paginate(20)->withQueryStri
         $this->authorize('delete', $contact);
         $contact->delete();
 
-        return back()->with('success','Contacto eliminado.');
+        return back()->with('success', 'Contacto eliminado.');
     }
 }

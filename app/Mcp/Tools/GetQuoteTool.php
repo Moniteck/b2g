@@ -3,7 +3,6 @@
 namespace App\Mcp\Tools;
 
 use App\Models\Quote;
-use App\Services\Business\QuoteService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;

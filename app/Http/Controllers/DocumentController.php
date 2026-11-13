@@ -5,14 +5,17 @@ namespace App\Http\Controllers;
 use App\Models\Document;
 use App\Models\DocumentVersion;
 use App\Models\McpAuthorization;
+use App\Models\Quote;
 use App\Models\SigningAsset;
+use App\Rules\AllowedCompany;
+use App\Rules\BelongsToActiveCompany;
 use App\Services\Documents\DocumentService;
 use App\Services\Documents\SignatureService;
 use App\Services\Notifications\CalendarSyncService;
+use App\Services\Tenancy\CompanyContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -71,7 +74,7 @@ class DocumentController extends Controller
         $this->authorize('create', Document::class);
 
         $data = $request->validate([
-            'company_id' => ['nullable', 'integer', 'exists:companies,id'],
+            'company_id' => ['nullable', 'integer', new AllowedCompany],
             'institution_id' => ['nullable', 'integer', 'exists:institutions,id'],
             'name' => ['required', 'string', 'max:255'],
             'kind' => ['nullable', 'in:'.implode(',', array_keys(Document::KINDS))],
@@ -81,16 +84,16 @@ class DocumentController extends Controller
             'issued_at' => ['nullable', 'date'],
             'expires_at' => ['nullable', 'date', 'after_or_equal:issued_at'],
             'status' => ['nullable', 'string', 'max:100'],
-            'cotizacion_id' => ['nullable', 'integer', 'exists:quotes,id'],
+            'cotizacion_id' => ['nullable', 'integer', new BelongsToActiveCompany(Quote::class)],
             'file' => ['required', 'file', 'max:25600', 'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,webp'],
         ]);
 
-        $data['company_id'] = $data['company_id'] ?? app(\App\Services\Tenancy\CompanyContext::class)->currentCompanyId();
+        $data['company_id'] = $data['company_id'] ?? app(CompanyContext::class)->currentCompanyId();
 
         $document = $documents->create($data, $request->file('file'), $request->user());
 
         if (! empty($data['cotizacion_id'])) {
-            $quote = \App\Models\Quote::query()->find($data['cotizacion_id']);
+            $quote = Quote::query()->find($data['cotizacion_id']);
 
             abort_unless($quote && $quote->company_id === $document->company_id, 422, 'La cotización pertenece a otra empresa.');
 

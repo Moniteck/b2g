@@ -23,9 +23,15 @@ class SigningAsset extends Model
         ];
     }
 
-    public function company() { return $this->belongsTo(Company::class); }
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
 
-    public function uploader() { return $this->belongsTo(User::class, 'uploaded_by'); }
+    public function uploader()
+    {
+        return $this->belongsTo(User::class, 'uploaded_by');
+    }
 
     public function isUsable(): bool
     {

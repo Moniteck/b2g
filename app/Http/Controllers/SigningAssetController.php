@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\SigningAsset;
+use App\Services\Tenancy\CompanyContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -19,7 +20,7 @@ class SigningAssetController extends Controller
     {
         $this->authorize('viewAny', SigningAsset::class);
 
-        $context = app(\App\Services\Tenancy\CompanyContext::class);
+        $context = app(CompanyContext::class);
 
         $assets = SigningAsset::query()
             ->whereIn('company_id', $context->allowedCompanyIds())
@@ -61,7 +62,7 @@ class SigningAssetController extends Controller
         [$width, $height] = $this->dimensions($file->getRealPath());
 
         $asset = SigningAsset::create([
-            'company_id' => $data['company_id'] ?? app(\App\Services\Tenancy\CompanyContext::class)->currentCompanyId(),
+            'company_id' => $data['company_id'] ?? app(CompanyContext::class)->currentCompanyId(),
             'type' => $data['type'],
             'name' => $data['name'],
             'path' => $path,

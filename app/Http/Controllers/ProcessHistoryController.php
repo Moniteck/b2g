@@ -38,6 +38,6 @@ class ProcessHistoryController extends Controller
         $this->authorize('delete', $processHistory);
         $processHistory->delete();
 
-        return back()->with('success','Proceso eliminado.');
+        return back()->with('success', 'Proceso eliminado.');
     }
 }

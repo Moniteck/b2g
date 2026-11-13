@@ -3,21 +3,21 @@
 namespace App\Policies\Concerns;
 
 use App\Models\User;
+use App\Support\Permissions;
 
 /**
- * Reglas comunes de autorizacion para recursos-multiples.
+ * Reglas comunes de autorización por empresa y rol.
  *
- * El permiso efectivo es la interseccion de:
- *   - acceso del usuario a la empresa del recurso,
- *   - rol dentro de esa empresa,
- *   - propiedad del registro.
+ * El permiso efectivo sale de la matriz `App\Support\Permissions` evaluada con
+ * el rol del usuario en la empresa DEL REGISTRO (o en la empresa activa cuando
+ * todavía no hay registro: `viewAny`, `create`).
  */
 trait HandlesCompanyScope
 {
     protected function hasCompanyAccess(User $user, ?int $companyId): bool
     {
         if ($companyId === null) {
-            // Los registros sin empresa solo son visibles para administradores raiz.
+            // Los registros sin empresa solo son visibles para la raíz.
             return $user->isRoot();
         }
 
@@ -26,11 +26,29 @@ trait HandlesCompanyScope
 
     protected function isCompanyAdmin(User $user, ?int $companyId): bool
     {
-        if ($user->isRoot()) {
-            return true;
+        return $user->isRoot() || $user->isCompanyAdmin($companyId);
+    }
+
+    /**
+     * Permiso en la empresa activa (acciones sin registro).
+     */
+    protected function allowsInActiveCompany(User $user, string $permission): bool
+    {
+        return $user->hasPermission($permission);
+    }
+
+    /**
+     * Permiso sobre un registro concreto, según el rol en SU empresa.
+     */
+    protected function allowsOn(User $user, object $model, string $permission): bool
+    {
+        $companyId = $model->company_id ?? null;
+
+        if ($companyId === null) {
+            return $user->isRoot();
         }
 
-        return $user->isCompanyAdmin($companyId);
+        return $user->hasPermission($permission, (int) $companyId);
     }
 
     /**
@@ -48,19 +66,10 @@ trait HandlesCompanyScope
     }
 
     /**
-     * Un operador puede operar sobre lo que posee; un administrador de empresa
-     * sobre todo lo de su empresa.
+     * Puede modificar el registro: administradores y operadores de su empresa.
      */
     protected function canOperate(User $user, object $model): bool
     {
-        if (! $this->hasCompanyAccess($user, $model->company_id ?? null)) {
-            return false;
-        }
-
-        if ($this->isCompanyAdmin($user, $model->company_id ?? null)) {
-            return true;
-        }
-
-        return $this->owns($user, $model);
+        return $this->allowsOn($user, $model, Permissions::UPDATE);
     }
 }

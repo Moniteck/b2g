@@ -2,14 +2,10 @@
 
 namespace App\Services\Business;
 
-use App\Models\BusinessEvent;
 use App\Models\Client;
 use App\Models\Company;
-use App\Models\Institution;
-use App\Models\Opportunity;
 use App\Models\Quote;
 use App\Models\QuoteParticipant;
-use App\Models\Tender;
 use App\Services\AuditLogger;
 use App\Services\Notifications\CalendarSyncService;
 use Illuminate\Support\Facades\DB;

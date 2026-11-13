@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 
 class ReminderRule extends Model
 {
+    use BelongsToCompany;
+
     protected $fillable = ['company_id', 'event_type', 'days_before', 'channels', 'recipients', 'is_active'];
 
     protected function casts(): array
@@ -18,7 +21,10 @@ class ReminderRule extends Model
         ];
     }
 
-    public function company() { return $this->belongsTo(Company::class); }
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
 
     /**
      * Reglas por defecto cuando la empresa no define las suyas.

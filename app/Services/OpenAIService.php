@@ -43,7 +43,7 @@ class OpenAIService
             throw new RuntimeException('La IA no devolvió una estructura de pliego válida.');
         }
 
-return $decoded;
+        return $decoded;
     }
 
     public function tenderAnalysis(object $tender, array $rubrics, string $context): string

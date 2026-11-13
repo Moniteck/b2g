@@ -27,8 +27,8 @@ class DashboardMetricsService
         $today = today();
 
         return [
-            'pipeline' => (float) Opportunity::query()->whereNotIn('stage', ['cerrado', 'no_adjudicado'])->selectRaw('COALESCE(SUM(amount * probability / 100), 0) total')->value('total'),
-            'opportunities' => Opportunity::query()->whereNotIn('stage', ['cerrado', 'no_adjudicado'])->count(),
+            'pipeline' => (float) Opportunity::query()->whereNotIn('stage', Opportunity::CLOSED_STAGES)->selectRaw('COALESCE(SUM(amount * probability / 100), 0) total')->value('total'),
+            'opportunities' => Opportunity::query()->whereNotIn('stage', Opportunity::CLOSED_STAGES)->count(),
             'quoteRate' => $presented ? round($accepted / $presented * 100, 1) : 0,
             'acceptedQuotes' => $accepted,
             'lostQuotes' => $lost,

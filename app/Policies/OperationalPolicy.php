@@ -4,12 +4,16 @@ namespace App\Policies;
 
 use App\Models\User;
 use App\Policies\Concerns\HandlesCompanyScope;
+use App\Support\Permissions;
 
 /**
- * Politica base para los recursos operativos del CRM.
+ * Política base de todo recurso con `company_id`.
  *
- * Sustituye a la politica permisiva anterior: el acceso depende de la empresa,
- * del rol dentro de ella y de la propiedad del registro.
+ *   ver            admin, operator, viewer
+ *   crear/editar   admin, operator
+ *   eliminar       admin
+ *
+ * Las políticas específicas la extienden y solo añaden sus reglas de negocio.
  */
 class OperationalPolicy
 {
@@ -17,27 +21,26 @@ class OperationalPolicy
 
     public function viewAny(User $user): bool
     {
-        return $user->isRoot() || $user->companies()->exists();
+        return $this->allowsInActiveCompany($user, Permissions::VIEW);
     }
 
     public function view(User $user, object $model): bool
     {
-        return $this->hasCompanyAccess($user, $model->company_id ?? null);
+        return $this->allowsOn($user, $model, Permissions::VIEW);
     }
 
     public function create(User $user): bool
     {
-        return $user->isRoot() || $user->companies()->exists();
+        return $this->allowsInActiveCompany($user, Permissions::CREATE);
     }
 
     public function update(User $user, object $model): bool
     {
-        return $this->canOperate($user, $model);
+        return $this->allowsOn($user, $model, Permissions::UPDATE);
     }
 
     public function delete(User $user, object $model): bool
     {
-        return $this->isCompanyAdmin($user, $model->company_id ?? null)
-            && $this->hasCompanyAccess($user, $model->company_id ?? null);
+        return $this->allowsOn($user, $model, Permissions::DELETE);
     }
 }

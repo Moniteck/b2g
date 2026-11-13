@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\QuoteController;
 use App\Mail\QuoteMail;
 use App\Models\Quote;
 use App\Services\QuoteDocumentService;

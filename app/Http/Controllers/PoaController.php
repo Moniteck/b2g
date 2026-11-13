@@ -19,7 +19,7 @@ class PoaController extends Controller
             }
         }
 
-return Inertia::render('Poa', ['records' => $query->paginate(20)->withQueryString(), 'institutions' => Institution::orderBy('name')->get(['id', 'name'])]);
+        return Inertia::render('Poa', ['records' => $query->paginate(20)->withQueryString(), 'institutions' => Institution::orderBy('name')->get(['id', 'name'])]);
     }
 
     public function store(Request $request)

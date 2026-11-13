@@ -5,12 +5,19 @@ namespace App\Http\Controllers;
 use App\Http\Requests\QuoteStatusRequest;
 use App\Models\Company;
 use App\Models\Contact;
+use App\Models\Document;
+use App\Models\DocumentLink;
 use App\Models\Institution;
+use App\Models\InventoryItem;
+use App\Models\Opportunity;
 use App\Models\Quote;
+use App\Models\Tender;
+use App\Rules\AllowedCompany;
+use App\Rules\BelongsToActiveCompany;
 use App\Services\Business\AdjudicationService;
 use App\Services\Business\QuoteService;
 use App\Services\Documents\DocumentService;
-use App\Services\Notifications\CalendarSyncService;
+use App\Services\Tenancy\CompanyContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -172,11 +179,11 @@ class QuoteController extends Controller
         $this->authorize('update', $quote);
 
         $data = $request->validate([
-            'document_id' => ['required', 'integer', 'exists:documents,id'],
+            'document_id' => ['required', 'integer', new BelongsToActiveCompany(Document::class)],
             'context' => ['nullable', 'string', 'max:100'],
         ]);
 
-        $document = \App\Models\Document::query()->findOrFail($data['document_id']);
+        $document = Document::query()->findOrFail($data['document_id']);
 
         abort_unless(
             $request->user()->canAccessCompany($document->company_id) && $document->company_id === $quote->company_id,
@@ -193,7 +200,7 @@ class QuoteController extends Controller
     {
         $this->authorize('update', $quote);
 
-        \App\Models\DocumentLink::query()
+        DocumentLink::query()
             ->where('linkable_type', Quote::class)
             ->where('linkable_id', $quote->id)
             ->where('document_id', $document)
@@ -209,7 +216,7 @@ class QuoteController extends Controller
     {
         $this->authorize('view', $quote);
 
-        $documents = \App\Models\Document::query()
+        $documents = Document::query()
             ->whereHas('links', fn ($query) => $query
                 ->where('linkable_type', Quote::class)
                 ->where('linkable_id', $quote->id))
@@ -234,11 +241,11 @@ class QuoteController extends Controller
     private function validated(Request $request): array
     {
         $data = $request->validate([
-            'company_id' => ['nullable', 'integer', 'exists:companies,id'],
+            'company_id' => ['nullable', 'integer', new AllowedCompany],
             'institution_id' => ['required', 'integer', 'exists:institutions,id'],
             'contact_id' => ['nullable', 'integer', Rule::exists('contacts', 'id')->where(fn ($query) => $query->where('institution_id', $request->input('institution_id')))],
-            'opportunity_id' => ['nullable', 'integer', 'exists:opportunities,id'],
-            'tender_id' => ['nullable', 'integer', 'exists:tenders,id'],
+            'opportunity_id' => ['nullable', 'integer', new BelongsToActiveCompany(Opportunity::class)],
+            'tender_id' => ['nullable', 'integer', new BelongsToActiveCompany(Tender::class)],
             'purchase_type' => ['required', 'string', 'max:100'],
             'validity_days' => ['required', 'integer', 'min:1', 'max:365'],
             'status' => ['nullable', 'in:'.implode(',', Quote::STATUSES)],
@@ -251,7 +258,7 @@ class QuoteController extends Controller
             'items.*.unit_price' => ['nullable', 'numeric', 'min:0'],
             'items.*.margin' => ['nullable', 'numeric', 'min:0', 'max:95'],
             'items.*.tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'items.*.inventory_item_id' => ['nullable', 'integer', 'exists:inventory_items,id'],
+            'items.*.inventory_item_id' => ['nullable', 'integer', new BelongsToActiveCompany(InventoryItem::class)],
         ]);
 
         return $data;
@@ -259,7 +266,7 @@ class QuoteController extends Controller
 
     private function currentCompanyId(): ?int
     {
-        return app(\App\Services\Tenancy\CompanyContext::class)->currentCompanyId();
+        return app(CompanyContext::class)->currentCompanyId();
     }
 
     public function filtered(Request $request)

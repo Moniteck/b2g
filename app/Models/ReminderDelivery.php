@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 
 class ReminderDelivery extends Model
 {
+    use BelongsToCompany;
+
     public const STATUSES = ['Programado', 'Encolado', 'Enviado', 'Fallido', 'Leido', 'Cancelado'];
 
     protected $fillable = [
@@ -23,7 +26,10 @@ class ReminderDelivery extends Model
         ];
     }
 
-    public function event() { return $this->belongsTo(Event::class); }
+    public function event()
+    {
+        return $this->belongsTo(Event::class);
+    }
 
     public function isPending(): bool
     {

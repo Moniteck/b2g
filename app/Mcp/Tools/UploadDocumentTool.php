@@ -2,6 +2,7 @@
 
 namespace App\Mcp\Tools;
 
+use App\Models\Contract;
 use App\Models\Document;
 use App\Models\Quote;
 use App\Services\Documents\DocumentService;
@@ -87,7 +88,7 @@ class UploadDocumentTool extends BaseTool
         }
 
         if (! empty($data['contrato_id'])) {
-            $contract = \App\Models\Contract::query()->find($data['contrato_id']);
+            $contract = Contract::query()->find($data['contrato_id']);
             abort_unless($contract && $user->canAccessCompany($contract->company_id), 403, 'No tiene acceso a ese contrato.');
             app(DocumentService::class)->link($document, $contract, null, 'contrato');
             $linked = 'contrato';

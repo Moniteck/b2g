@@ -3,6 +3,9 @@
 namespace App\Http\Requests;
 
 use App\Models\Opportunity;
+use App\Models\Tender;
+use App\Rules\AllowedCompany;
+use App\Rules\BelongsToActiveCompany;
 use Illuminate\Foundation\Http\FormRequest;
 
 class OpportunityRequest extends FormRequest
@@ -15,11 +18,11 @@ class OpportunityRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'company_id' => ['nullable', 'exists:companies,id'],
+            'company_id' => ['nullable', new AllowedCompany],
             'title' => ['required', 'string', 'max:255'],
             'institution_id' => ['nullable', 'exists:institutions,id'],
             'contact_id' => ['nullable', 'exists:contacts,id'],
-            'tender_id' => ['nullable', 'exists:tenders,id'],
+            'tender_id' => ['nullable', new BelongsToActiveCompany(Tender::class)],
             'opportunity_type' => ['nullable', 'string', 'max:100'],
             'amount' => ['required', 'numeric', 'min:0'],
             'probability' => ['required', 'integer', 'between:0,100'],

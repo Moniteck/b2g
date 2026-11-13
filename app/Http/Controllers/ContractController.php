@@ -2,14 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Company;
 use App\Models\Contact;
 use App\Models\Contract;
 use App\Models\ContractDelivery;
-use App\Models\ContractFollowUp;
+use App\Models\Document;
 use App\Models\Institution;
+use App\Models\Opportunity;
+use App\Models\Quote;
+use App\Models\Tender;
 use App\Models\User;
+use App\Rules\AllowedCompany;
+use App\Rules\BelongsToActiveCompany;
 use App\Services\Notifications\CalendarSyncService;
+use App\Services\Tenancy\CompanyContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -83,7 +88,7 @@ class ContractController extends Controller
         $this->authorize('create', Contract::class);
 
         $data = $this->validated($request);
-        $data['company_id'] = $data['company_id'] ?? app(\App\Services\Tenancy\CompanyContext::class)->currentCompanyId();
+        $data['company_id'] = $data['company_id'] ?? app(CompanyContext::class)->currentCompanyId();
         $data['status'] = $data['status'] ?? 'Pendiente de contrato';
 
         $contract = Contract::create($data);
@@ -120,7 +125,7 @@ class ContractController extends Controller
             'due_date' => ['nullable', 'date'],
             'delivered_at' => ['nullable', 'date'],
             'status' => ['nullable', 'string', 'max:100'],
-            'evidence_document_id' => ['nullable', 'integer', 'exists:documents,id'],
+            'evidence_document_id' => ['nullable', 'integer', new BelongsToActiveCompany(Document::class)],
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
 
@@ -247,13 +252,13 @@ class ContractController extends Controller
     private function validated(Request $request): array
     {
         return $request->validate([
-            'company_id' => ['nullable', 'integer', 'exists:companies,id'],
-            'tender_id' => ['nullable', 'integer', 'exists:tenders,id'],
-            'quote_id' => ['nullable', 'integer', 'exists:quotes,id'],
-            'opportunity_id' => ['nullable', 'integer', 'exists:opportunities,id'],
+            'company_id' => ['nullable', 'integer', new AllowedCompany],
+            'tender_id' => ['nullable', 'integer', new BelongsToActiveCompany(Tender::class)],
+            'quote_id' => ['nullable', 'integer', new BelongsToActiveCompany(Quote::class)],
+            'opportunity_id' => ['nullable', 'integer', new BelongsToActiveCompany(Opportunity::class)],
             'institution_id' => ['nullable', 'integer', 'exists:institutions,id'],
             'contact_id' => ['nullable', 'integer', 'exists:contacts,id'],
-            'manager_id' => ['nullable', 'integer', 'exists:users,id'],
+            'manager_id' => ['nullable', 'integer', new BelongsToActiveCompany(User::class)],
             'number' => ['required', 'string', 'max:255'],
             'name' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'numeric', 'min:0'],
