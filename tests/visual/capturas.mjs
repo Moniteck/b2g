@@ -68,7 +68,8 @@ export async function settle(page) {
 }
 
 export async function horizontalOverflow(page) {
-    return page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    const width = page.viewportSize()?.width ?? 0;
+    return page.evaluate((viewport) => document.documentElement.scrollWidth - (viewport || window.innerWidth), width);
 }
 
 /** Abre la pantalla; si su ruta aún no existe y tiene `component`, la monta con el router de Inertia. */
