@@ -6,7 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class LegalMessage extends Model
 {
-    protected $fillable = ['role', 'content'];
+    public const ROLE_USER = 'user';
+
+    public const ROLE_ASSISTANT = 'assistant';
+
+    protected $fillable = ['legal_conversation_id', 'role', 'content'];
 
     public function conversation()
     {
