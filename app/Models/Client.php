@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToCompany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Client extends Model
 {
-    use BelongsToCompany, SoftDeletes;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id', 'institution_id', 'source_quote_id', 'origin', 'dedupe_key', 'name',
@@ -24,13 +25,25 @@ class Client extends Model
         ];
     }
 
-    public function institution() { return $this->belongsTo(Institution::class); }
+    public function institution()
+    {
+        return $this->belongsTo(Institution::class);
+    }
 
-    public function invoices() { return $this->hasMany(CollectionInvoice::class); }
+    public function invoices()
+    {
+        return $this->hasMany(CollectionInvoice::class);
+    }
 
-    public function contracts() { return $this->hasMany(Contract::class); }
+    public function contracts()
+    {
+        return $this->hasMany(Contract::class);
+    }
 
-    public function sourceQuote() { return $this->belongsTo(Quote::class, 'source_quote_id'); }
+    public function sourceQuote()
+    {
+        return $this->belongsTo(Quote::class, 'source_quote_id');
+    }
 
     /**
      * Clave de deduplicacion: evita crear dos clientes para la misma institucion

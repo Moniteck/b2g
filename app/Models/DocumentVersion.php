@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class DocumentVersion extends Model
 {
+    use HasFactory;
+
     public $timestamps = false;
 
     protected $fillable = [
@@ -22,11 +25,23 @@ class DocumentVersion extends Model
         ];
     }
 
-    public function document() { return $this->belongsTo(Document::class); }
+    public function document()
+    {
+        return $this->belongsTo(Document::class);
+    }
 
-    public function uploader() { return $this->belongsTo(User::class, 'uploaded_by'); }
+    public function uploader()
+    {
+        return $this->belongsTo(User::class, 'uploaded_by');
+    }
 
-    public function applications() { return $this->hasMany(SignatureApplication::class); }
+    public function applications()
+    {
+        return $this->hasMany(SignatureApplication::class);
+    }
 
-    public function extractions() { return $this->hasMany(DocumentExtraction::class); }
+    public function extractions()
+    {
+        return $this->hasMany(DocumentExtraction::class);
+    }
 }

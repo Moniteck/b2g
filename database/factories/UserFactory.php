@@ -30,7 +30,19 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
+            'role' => 'operator',
+            'is_root' => false,
         ];
+    }
+
+    /**
+     * Usuario raíz: ve y administra todas las empresas del grupo.
+     */
+    public function root(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_root' => true,
+        ]);
     }
 
     /**

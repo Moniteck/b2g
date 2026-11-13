@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToCompany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Quote extends Model
 {
-    use BelongsToCompany, SoftDeletes;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     public const STATUSES = ['Borrador', 'Emitida', 'Presentada', 'Sustituida', 'Anulada'];
 
@@ -35,27 +36,63 @@ class Quote extends Model
         ];
     }
 
-    public function institution() { return $this->belongsTo(Institution::class); }
+    public function institution()
+    {
+        return $this->belongsTo(Institution::class);
+    }
 
-    public function contact() { return $this->belongsTo(Contact::class); }
+    public function contact()
+    {
+        return $this->belongsTo(Contact::class);
+    }
 
-    public function items() { return $this->hasMany(QuoteItem::class); }
+    public function items()
+    {
+        return $this->hasMany(QuoteItem::class);
+    }
 
-    public function deliveryAlarms() { return $this->hasMany(DeliveryAlarm::class); }
+    public function deliveryAlarms()
+    {
+        return $this->hasMany(DeliveryAlarm::class);
+    }
 
-    public function participants() { return $this->hasMany(QuoteParticipant::class)->orderBy('position'); }
+    public function participants()
+    {
+        return $this->hasMany(QuoteParticipant::class)->orderBy('position');
+    }
 
-    public function opportunity() { return $this->belongsTo(Opportunity::class); }
+    public function opportunity()
+    {
+        return $this->belongsTo(Opportunity::class);
+    }
 
-    public function tender() { return $this->belongsTo(Tender::class); }
+    public function tender()
+    {
+        return $this->belongsTo(Tender::class);
+    }
 
-    public function creator() { return $this->belongsTo(User::class, 'created_by'); }
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 
-    public function documents() { return $this->morphMany(DocumentLink::class, 'linkable'); }
+    public function documents()
+    {
+        return $this->morphMany(DocumentLink::class, 'linkable');
+    }
 
-    public function isWon(): bool { return $this->outcome === 'Ganada'; }
+    public function isWon(): bool
+    {
+        return $this->outcome === 'Ganada';
+    }
 
-    public function isLost(): bool { return $this->outcome === 'Perdida'; }
+    public function isLost(): bool
+    {
+        return $this->outcome === 'Perdida';
+    }
 
-    public function isEditable(): bool { return in_array($this->status, ['Borrador', 'Emitida'], true); }
+    public function isEditable(): bool
+    {
+        return in_array($this->status, ['Borrador', 'Emitida'], true);
+    }
 }

@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class QuoteParticipant extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'quote_id', 'name', 'tax_id', 'amount', 'currency', 'includes_tax', 'is_ours',
         'position', 'notes',
@@ -21,5 +24,8 @@ class QuoteParticipant extends Model
         ];
     }
 
-    public function quote() { return $this->belongsTo(Quote::class); }
+    public function quote()
+    {
+        return $this->belongsTo(Quote::class);
+    }
 }

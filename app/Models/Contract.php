@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToCompany;
+use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Contract extends Model
 {
-    use BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     /** Estados del expediente post-adjudicacion. */
     public const STATUSES = [
@@ -51,23 +53,50 @@ class Contract extends Model
         ];
     }
 
-    public function purchaseOrders() { return $this->hasMany(PurchaseOrder::class); }
+    public function purchaseOrders()
+    {
+        return $this->hasMany(PurchaseOrder::class);
+    }
 
-    public function deliveryCertificates() { return $this->hasMany(DeliveryCertificate::class); }
+    public function deliveryCertificates()
+    {
+        return $this->hasMany(DeliveryCertificate::class);
+    }
 
-    public function deliveries() { return $this->hasMany(ContractDelivery::class); }
+    public function deliveries()
+    {
+        return $this->hasMany(ContractDelivery::class);
+    }
 
-    public function followUps() { return $this->hasMany(ContractFollowUp::class); }
+    public function followUps()
+    {
+        return $this->hasMany(ContractFollowUp::class);
+    }
 
-    public function manager() { return $this->belongsTo(User::class, 'manager_id'); }
+    public function manager()
+    {
+        return $this->belongsTo(User::class, 'manager_id');
+    }
 
-    public function contact() { return $this->belongsTo(Contact::class); }
+    public function contact()
+    {
+        return $this->belongsTo(Contact::class);
+    }
 
-    public function quote() { return $this->belongsTo(Quote::class); }
+    public function quote()
+    {
+        return $this->belongsTo(Quote::class);
+    }
 
-    public function opportunity() { return $this->belongsTo(Opportunity::class); }
+    public function opportunity()
+    {
+        return $this->belongsTo(Opportunity::class);
+    }
 
-    public function institution() { return $this->belongsTo(Institution::class); }
+    public function institution()
+    {
+        return $this->belongsTo(Institution::class);
+    }
 
     /**
      * Calcula el vencimiento a partir de la duracion pactada y la fecha de inicio.
@@ -85,7 +114,7 @@ class Contract extends Model
         return $end->toDateString();
     }
 
-    private function addBusinessDays(\Carbon\Carbon $date, int $days): \Carbon\Carbon
+    private function addBusinessDays(Carbon $date, int $days): Carbon
     {
         $added = 0;
         $cursor = $date->copy();

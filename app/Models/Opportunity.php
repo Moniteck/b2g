@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToCompany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Opportunity extends Model
 {
-    use BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     /** Etapas del tablero comercial. */
     public const STAGES = [
@@ -35,15 +36,30 @@ class Opportunity extends Model
         ];
     }
 
-    public function institution() { return $this->belongsTo(Institution::class); }
+    public function institution()
+    {
+        return $this->belongsTo(Institution::class);
+    }
 
-    public function contact() { return $this->belongsTo(Contact::class); }
+    public function contact()
+    {
+        return $this->belongsTo(Contact::class);
+    }
 
-    public function owner() { return $this->belongsTo(User::class, 'owner_id'); }
+    public function owner()
+    {
+        return $this->belongsTo(User::class, 'owner_id');
+    }
 
-    public function tender() { return $this->belongsTo(Tender::class); }
+    public function tender()
+    {
+        return $this->belongsTo(Tender::class);
+    }
 
-    public function quote() { return $this->belongsTo(Quote::class); }
+    public function quote()
+    {
+        return $this->belongsTo(Quote::class);
+    }
 
     public function stageLabel(): string
     {

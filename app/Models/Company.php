@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Company extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'name', 'code', 'tax_id', 'representative', 'contact_name', 'contact_email',
         'contact_phone', 'logo_path', 'is_active', 'settings', 'blessing_base_url',

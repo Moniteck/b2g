@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToCompany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Tender extends Model
 {
-    use BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     protected $fillable = [
         'company_id', 'institution_id', 'owner_id', 'reference', 'process_name', 'title',
@@ -31,13 +32,25 @@ class Tender extends Model
         ];
     }
 
-    public function institution() { return $this->belongsTo(Institution::class); }
+    public function institution()
+    {
+        return $this->belongsTo(Institution::class);
+    }
 
-    public function owner() { return $this->belongsTo(User::class, 'owner_id'); }
+    public function owner()
+    {
+        return $this->belongsTo(User::class, 'owner_id');
+    }
 
-    public function opportunities() { return $this->hasMany(Opportunity::class); }
+    public function opportunities()
+    {
+        return $this->hasMany(Opportunity::class);
+    }
 
-    public function quotes() { return $this->hasMany(Quote::class); }
+    public function quotes()
+    {
+        return $this->hasMany(Quote::class);
+    }
 
     /**
      * Fechas relevantes del proceso, en orden cronologico.

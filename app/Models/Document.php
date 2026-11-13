@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToCompany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Document extends Model
 {
-    use BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     /** Tipo de expediente documental. */
     public const KINDS = [
@@ -48,15 +49,30 @@ class Document extends Model
         ];
     }
 
-    public function institution() { return $this->belongsTo(Institution::class); }
+    public function institution()
+    {
+        return $this->belongsTo(Institution::class);
+    }
 
-    public function versions() { return $this->hasMany(DocumentVersion::class)->orderByDesc('version'); }
+    public function versions()
+    {
+        return $this->hasMany(DocumentVersion::class)->orderByDesc('version');
+    }
 
-    public function currentVersion() { return $this->hasOne(DocumentVersion::class)->where('is_current', true); }
+    public function currentVersion()
+    {
+        return $this->hasOne(DocumentVersion::class)->where('is_current', true);
+    }
 
-    public function links() { return $this->hasMany(DocumentLink::class); }
+    public function links()
+    {
+        return $this->hasMany(DocumentLink::class);
+    }
 
-    public function signer() { return $this->belongsTo(User::class, 'signed_by'); }
+    public function signer()
+    {
+        return $this->belongsTo(User::class, 'signed_by');
+    }
 
     public function isExpired(): bool
     {

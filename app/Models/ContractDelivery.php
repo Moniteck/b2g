@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ContractDelivery extends Model
 {
+    use HasFactory;
+
     protected $fillable = [
         'contract_id', 'description', 'quantity', 'unit', 'due_date', 'delivered_at',
         'status', 'evidence_document_id', 'notes',
@@ -20,7 +23,13 @@ class ContractDelivery extends Model
         ];
     }
 
-    public function contract() { return $this->belongsTo(Contract::class); }
+    public function contract()
+    {
+        return $this->belongsTo(Contract::class);
+    }
 
-    public function evidence() { return $this->belongsTo(Document::class, 'evidence_document_id'); }
+    public function evidence()
+    {
+        return $this->belongsTo(Document::class, 'evidence_document_id');
+    }
 }

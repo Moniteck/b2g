@@ -3,11 +3,12 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToCompany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Event extends Model
 {
-    use BelongsToCompany;
+    use BelongsToCompany, HasFactory;
 
     /** Tipos de evento y su origen. */
     public const TYPES = [
@@ -40,11 +41,20 @@ class Event extends Model
         ];
     }
 
-    public function user() { return $this->belongsTo(User::class); }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 
-    public function institution() { return $this->belongsTo(Institution::class); }
+    public function institution()
+    {
+        return $this->belongsTo(Institution::class);
+    }
 
-    public function deliveries() { return $this->hasMany(ReminderDelivery::class); }
+    public function deliveries()
+    {
+        return $this->hasMany(ReminderDelivery::class);
+    }
 
     public function isDerived(): bool
     {

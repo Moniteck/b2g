@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Institution extends Model
 {
+    use HasFactory;
+
     protected $fillable = ['name', 'acronym', 'type', 'fleet_type', 'modality', 'contact_name', 'phone', 'email', 'potential', 'location', 'status', 'notes', 'management_notes', 'source'];
 
     public function contacts()

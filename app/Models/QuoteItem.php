@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class QuoteItem extends Model
 {
+    use HasFactory;
+
     protected $fillable = ['quote_id', 'description', 'quantity', 'unit', 'unit_cost', 'margin', 'unit_price', 'total', 'tax_rate', 'pricing_source', 'inventory_item_id'];
 
     protected function casts(): array
