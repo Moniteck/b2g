@@ -43,6 +43,7 @@ use App\Policies\OperationalPolicy;
 use App\Policies\OpportunityPolicy;
 use App\Policies\ProcessHistoryPolicy;
 use App\Policies\QuotePolicy;
+use App\Policies\SigningAssetPolicy;
 use App\Policies\TenderPolicy;
 use App\Support\Permissions;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -89,7 +90,7 @@ class AppServiceProvider extends ServiceProvider
         ReminderRule::class => OperationalPolicy::class,
         ReminderDelivery::class => OperationalPolicy::class,
         SignatureApplication::class => OperationalPolicy::class,
-        SigningAsset::class => OperationalPolicy::class,
+        SigningAsset::class => SigningAssetPolicy::class,
         AuditLog::class => OperationalPolicy::class,
     ];
 
