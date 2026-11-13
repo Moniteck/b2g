@@ -6,22 +6,27 @@ use App\Models\Tender;
 use App\Services\AuditLogger;
 use App\Services\OpenAIService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Inertia\Response;
 use RuntimeException;
 
 /**
  * Recomendación de la IA sobre una licitación. Vive en la pestaña «Análisis del pliego» de la
- * ficha; la antigua pantalla `/ia-licitaciones` redirige a la lista de licitaciones.
+ * ficha; `/ia-licitaciones` muestra las vigentes con ese aviso.
  */
 class TenderAiController extends Controller
 {
-    public function index(): RedirectResponse
+    /**
+     * Vista de recomendaciones: las licitaciones vigentes, con el aviso de que el análisis con IA
+     * se hace en la ficha de cada una (pestaña «Análisis del pliego»).
+     */
+    public function index(Request $request, TenderController $tenders): Response
     {
-        $this->authorize('viewAny', Tender::class);
+        $this->authorize('use-ai');
 
-        return redirect()->route('tenders.index', ['window' => 'open'])
-            ->with('success', 'El análisis con IA ahora está en la ficha de cada licitación, pestaña «Análisis del pliego».');
+        $request->query->set('window', 'open');
+
+        return $tenders->index($request)->with('aiView', true);
     }
 
     public function recommend(Request $request, Tender $tender, OpenAIService $openAI, AuditLogger $audit): JsonResponse

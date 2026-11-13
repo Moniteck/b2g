@@ -167,7 +167,7 @@ async function recommend() {
 
         <BaseModal v-model:open="uploadOpen" size="md" title="Subir pliego de condiciones" :persistent="uploader.uploading.value">
             <div class="flex flex-col gap-4">
-                <FileDropzone v-model="files" :uploader="uploader" accept=".pdf,application/pdf" :max-size-mb="maxPdfMb" title="Arrastra el PDF del pliego o elígelo" hint="Solo PDF" />
+                <FileDropzone v-model="files" :uploader="uploader" accept=".pdf" :max-size-mb="maxPdfMb" title="Arrastra el PDF del pliego o elígelo" />
                 <p class="text-xs text-cap-text-soft">Se guarda como documento de la licitación y se envía a OpenAI para extraer los datos.</p>
             </div>
             <template #footer>

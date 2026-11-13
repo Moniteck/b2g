@@ -6,11 +6,13 @@ use App\Http\Requests\Tenders\CaptureConfirmRequest;
 use App\Models\Institution;
 use App\Models\Opportunity;
 use App\Models\Tender;
+use App\Services\Documents\UploadInspector;
 use App\Services\Tenancy\CompanyContext;
 use App\Services\Tenders\CaptureImportService;
-use App\Support\Binaries;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
@@ -23,19 +25,18 @@ class TenderCaptureImportController extends Controller
 {
     public function __construct(protected CaptureImportService $imports, protected CompanyContext $context) {}
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request, UploadInspector $inspector): RedirectResponse
     {
         $this->authorize('create', Tender::class);
 
-        $request->validate([
-            'file' => ['required', 'file', 'mimes:'.implode(',', CaptureImportService::imageExtensions()), 'max:'.Binaries::maxImageKilobytes()],
-        ], [
-            'file.required' => 'Elige la imagen de la captura.',
-            'file.mimes' => 'La captura debe ser una imagen PNG, JPG o WebP.',
-            'file.max' => 'La imagen supera el máximo de '.(int) (Binaries::maxImageKilobytes() / 1024).' MB.',
-        ]);
+        // Tipo real, tamaño y límites de PHP, con los mismos mensajes que Documentos.
+        $file = $request->file('file');
+        if (! $file instanceof UploadedFile) {
+            throw ValidationException::withMessages(['file' => 'Elige la imagen de la captura.']);
+        }
+        $inspector->inspect($file, 'file', CaptureImportService::imageExtensions());
 
-        $token = $this->imports->read($request->file('file'), $request->user(), $this->companyId());
+        $token = $this->imports->read($file, $request->user(), $this->companyId());
 
         return redirect()->route('tenders.import.review', $token);
     }

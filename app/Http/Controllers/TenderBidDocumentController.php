@@ -8,13 +8,16 @@ use App\Models\DocumentExtraction;
 use App\Models\Quote;
 use App\Models\Tender;
 use App\Services\Ai\BidDocumentAnalyzer;
+use App\Services\Documents\FileTypes;
+use App\Services\Documents\UploadInspector;
 use App\Services\OpenAIService;
 use App\Services\Tenders\BidReviewService;
-use App\Support\Binaries;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -28,18 +31,17 @@ class TenderBidDocumentController extends Controller
 {
     public function __construct(protected BidReviewService $reviews) {}
 
-    public function store(Request $request, Tender $tender, OpenAIService $openAI): RedirectResponse
+    public function store(Request $request, Tender $tender, OpenAIService $openAI, UploadInspector $inspector): RedirectResponse
     {
         $this->authorize('update', $tender);
         $this->authorize('use-ai');
 
-        $request->validate([
-            'file' => ['required', 'file', 'mimes:pdf', 'max:'.Binaries::maxPdfKilobytes()],
-        ], [
-            'file.required' => 'Elige el PDF del pliego.',
-            'file.mimes' => 'El pliego debe ser un archivo PDF.',
-            'file.max' => 'El PDF supera el máximo de '.(int) (Binaries::maxPdfKilobytes() / 1024).' MB.',
-        ]);
+        // Tipo real, tamaño, PDF legible y límites de PHP, con los mismos mensajes que Documentos.
+        $file = $request->file('file');
+        if (! $file instanceof UploadedFile) {
+            throw ValidationException::withMessages(['file' => 'Elige el PDF del pliego.']);
+        }
+        $inspector->inspect($file, 'file', FileTypes::PDF_ONLY);
 
         if (! $openAI->isConfigured()) {
             return back()->with('error', 'El análisis con IA no está configurado (falta OPENAI_API_KEY). Sube el pliego como documento y completa los datos a mano.');

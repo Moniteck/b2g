@@ -1,6 +1,7 @@
 <script setup>
 import { Link, router } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue';
+import CapAlert from '../../../design/vue/CapAlert.vue';
 import AppButton from '../../Components/AppButton.vue';
 import DataTable from '../../Components/DataTable.vue';
 import DropdownMenu from '../../Components/DropdownMenu.vue';
@@ -26,6 +27,7 @@ const props = defineProps({
     statuses: { type: Array, default: () => [] },
     modalities: { type: Array, default: () => [] },
     maxImageMb: { type: Number, default: 10 },
+    aiView: { type: Boolean, default: false },
     can: { type: Object, default: () => ({}) },
 });
 
@@ -129,9 +131,14 @@ onBeforeUnmount(() => stopListener());
                 <AppButton external :href="`/licitaciones/export/pdf?${exportQuery}`" icon="file-pdf-box">PDF</AppButton>
                 <AppButton external :href="`/licitaciones/export/xlsx?${exportQuery}`" icon="file-excel-outline">Excel</AppButton>
                 <AppButton v-if="can.create" icon="text-recognition" @click="importOpen = true">Importar captura</AppButton>
-                <AppButton v-if="can.create && tenders.total > 0" variant="primary" icon="plus" @click="create">Nueva licitación</AppButton>
+                <!-- En móvil el botón flotante del marco es el que crea. -->
+                <span v-if="can.create && tenders.total > 0" class="hidden lg:contents">
+                    <AppButton variant="primary" icon="plus" @click="create">Nueva licitación</AppButton>
+                </span>
             </template>
         </PageHeader>
+
+        <CapAlert v-if="aiView" status="info" title="Recomendaciones con IA" detail="Abre una licitación vigente y usa la pestaña «Análisis del pliego» para analizar su pliego y pedir una recomendación." />
 
         <div class="cap-stagger grid grid-cols-1 gap-3 sm:grid-cols-3">
             <StatCard variant="featured" label="Vigentes" :count="stats.open" icon="gavel" hint="Activas o en preparación con plazo abierto" href="/licitaciones?window=open" />

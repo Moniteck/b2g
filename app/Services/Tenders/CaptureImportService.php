@@ -225,7 +225,9 @@ class CaptureImportService
             $tender = $existing;
             $created = false;
         } else {
-            $tender = Tender::create($attributes + [
+            // La ficha no trae monto: sin valor queda en 0 (la columna no admite nulo).
+            $tender = Tender::create([
+                ...$attributes,
                 'company_id' => $companyId,
                 'owner_id' => $user->id,
                 'status' => 'Activa',

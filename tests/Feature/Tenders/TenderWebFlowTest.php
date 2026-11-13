@@ -98,6 +98,8 @@ class TenderWebFlowTest extends TestCase
             'contact_phone' => '2232-7200 EXT. 1126',
             'contact_email' => 'contrataciones@sit.gob.hn',
             'create_opportunity' => true,
+            // Como envía la pantalla: el monto vacío llega como nulo.
+            'estimated_amount' => null,
         ], $overrides);
     }
 
@@ -302,8 +304,10 @@ class TenderWebFlowTest extends TestCase
         $this->actingInCompany($otherAdmin, $other)->getJson("/licitaciones/{$tender->id}/pliego/{$extraction->id}/estado")->assertNotFound();
     }
 
-    public function test_old_ai_screen_redirects_to_the_list(): void
+    public function test_ai_screen_lists_open_tenders_and_requires_ai_permission(): void
     {
-        $this->actingInCompany($this->viewer, $this->company)->get('/ia-licitaciones')->assertRedirect('/licitaciones?window=open');
+        $this->actingInCompany($this->viewer, $this->company)->get('/ia-licitaciones')->assertForbidden();
+        $this->actingInCompany($this->operator, $this->company)->get('/ia-licitaciones')
+            ->assertOk()->assertInertia(fn (Assert $page) => $page->component('Tenders/Index')->where('aiView', true)->where('filters.window', 'open'));
     }
 }

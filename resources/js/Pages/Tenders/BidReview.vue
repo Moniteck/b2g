@@ -82,11 +82,6 @@ function currentLabel(row) {
     return row.type === 'datetime' ? dateTime(row.current) : String(row.current);
 }
 
-function proposedLabel(row) {
-    if (row.value === null || row.value === undefined) return '—';
-    return row.type === 'datetime' ? (String(row.value).length <= 10 ? `${dateTime(`${row.value}T00:00`).split(',')[0]} (sin hora)` : dateTime(row.value)) : String(row.value);
-}
-
 function submit() {
     form.fields = Object.fromEntries(props.rows.filter((row) => row.column).map((row) => [row.key, { apply: isApplied(row), value: state[row.key].value === '' ? null : state[row.key].value }]));
     form.lists = { ...listChoices };
@@ -173,7 +168,7 @@ const LIST_SECTIONS = [
                             <div v-if="row.column && editable">
                                 <div v-if="row.conflict" class="flex flex-col gap-2">
                                     <p class="text-xs font-medium text-cap-status-warning-ink">El pliego dice algo distinto a lo que ya tiene la licitación. Elige cuál conservar.</p>
-                                    <CapSegmented v-model="state[row.key].choice" :label="`Valor de ${row.label}`" :items="[{ label: `Mantener: ${currentLabel(row)}`, value: 'actual' }, { label: `Usar del pliego: ${proposedLabel(row)}`, value: 'pliego' }]" />
+                                    <CapSegmented v-model="state[row.key].choice" :label="`Valor de ${row.label}`" :items="[{ label: 'Mantener el actual', value: 'actual' }, { label: 'Usar el del pliego', value: 'pliego' }]" />
                                 </div>
                                 <Checkbox v-else v-model="state[row.key].apply" :label="row.status === 'unverified' ? 'Aplicar aunque no tenga evidencia' : 'Aplicar a la licitación'" />
                             </div>
