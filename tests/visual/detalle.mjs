@@ -145,6 +145,7 @@ for (const viewportName of viewports) {
         const context = await openContext(browser, viewportName, theme);
         const page = await context.newPage();
         const seen = watchConsole(page, label);
+        page.setDefaultTimeout(8000);
         await login(page);
         seen.length = 0;
         await openScreen(page, SCREENS[screenName], label, problems, seen);

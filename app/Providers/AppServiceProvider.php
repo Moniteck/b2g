@@ -28,6 +28,7 @@ use App\Models\Quote;
 use App\Models\ReminderDelivery;
 use App\Models\ReminderRule;
 use App\Models\SignatureApplication;
+use App\Models\SigningAsset;
 use App\Models\Tender;
 use App\Models\User;
 use App\Policies\CatalogPolicy;
@@ -45,6 +46,7 @@ use App\Policies\QuotePolicy;
 use App\Policies\TenderPolicy;
 use App\Support\Permissions;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Foundation\DevCommands;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
@@ -87,6 +89,7 @@ class AppServiceProvider extends ServiceProvider
         ReminderRule::class => OperationalPolicy::class,
         ReminderDelivery::class => OperationalPolicy::class,
         SignatureApplication::class => OperationalPolicy::class,
+        SigningAsset::class => OperationalPolicy::class,
         AuditLog::class => OperationalPolicy::class,
     ];
 
@@ -119,6 +122,10 @@ class AppServiceProvider extends ServiceProvider
         Passport::tokensExpireIn(now()->addDays(15));
         Passport::refreshTokensExpireIn(now()->addDays(30));
         Passport::personalAccessTokensExpireIn(now()->addMonths(6));
+
+        // `composer dev` (php artisan dev) levanta también el scheduler, para que
+        // los recordatorios y el latido del diagnóstico corran en desarrollo.
+        DevCommands::artisan('schedule:work', 'scheduler');
 
         RateLimiter::for('mcp', fn (Request $request) => [
             Limit::perMinute(120)->by($request->user()?->id ?: $request->ip()),

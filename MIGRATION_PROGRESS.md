@@ -72,3 +72,36 @@ Plan por fases: limpieza → OCR de capturas HonduCompras → pliego con IA → 
 - La migración `2026_11_13_000010_drop_guarantees_table` elimina la tabla `guarantees`; su `down()` la reconstruye.
 - El inventario Manus pasa de 33 a 30 pantallas.
 - Build: PASS. `migrate --pretend`: PASS.
+
+### Cimientos de servidor: Fases 0 y 1 (2026-11-13)
+
+**Estructura para trabajar en paralelo**
+- `routes/web.php` solo contiene el acceso; cada módulo tiene su archivo en `routes/modules/` (`quotes`, `pipeline`, `clients`, `tenders`, `documents`, `signatures`, `calendar`, `contracts`, `inventory`, `admin`, `mcp-admin`, `misc`), cargado automáticamente dentro de `auth`. Nombres y URL sin cambios.
+- Controladores, policies, Form Requests, modelos y servicios que estaban en una línea quedaron desminificados con Pint.
+
+**Fase 0**
+- Idioma `es` y faker `es_ES` fijos en `config/app.php`; `lang/es` (validación, acceso, contraseñas, paginación).
+- `composer.json`: dependencias acotadas con `^`; `tecnickcom/tcpdf` en `^6.8` (instalado 6.11.4; `setasign\Fpdi\Tcpdf\Fpdi` instancia); `laravel/sanctum` retirado (no se usaba).
+- `composer test` funciona sin pasos manuales: `tools/run-tests.php` carga `pdo_sqlite` y `sodium` desde `tools/php` cuando faltan.
+- `.env.example` mínimo y real; `config/tools.php` (Tesseract, Poppler, límites de subida) y `App\Support\Binaries`.
+- `composer dev` levanta también `schedule:work`. README con requisitos, worker y scheduler para producción.
+- Diagnóstico: `GET /configuracion/diagnostico` (`Admin/Diagnostics`) con `App\Services\System\SystemDiagnostics`; el scheduler deja un latido en caché cada minuto.
+- Se quitó `POST /configuracion/seed`; el sembrado es solo por consola.
+- Limpieza: aplicada la migración que borra `guarantees`; nueva migración que borra `quote_requests`; campos del flujo antiguo fuera de `SpecializedActionRequest`; etapas antiguas fuera del seeder, `DashboardMetricsService`, `KpiService` y `ReportService` (`Opportunity::ACTIVE_STAGES` / `CLOSED_STAGES`).
+
+**Fase 1**
+- El scope global filtra por la **empresa activa** (sesión; `POST /empresa-activa`); `BelongsToCompany` la asigna al crear. `ResolveCompanyContext` corre antes de `SubstituteBindings`: un id de otra empresa da 404.
+- Raíz separada del rol: `User::isRoot()` es solo `is_root` (`php artisan crm:root {email}`). Rol por empresa `admin` | `operator` | `viewer`; matriz única en `App\Support\Permissions`, con un gate por permiso.
+- Reglas `App\Rules\AllowedCompany` y `App\Rules\BelongsToActiveCompany` en todos los `store`/`update` que aceptan `company_id` o ids de otros modelos.
+- Policies reales por empresa y rol para todos los modelos (`OperationalPolicy` como base, `CatalogPolicy` para catálogos compartidos); `authorize` en reportes, dashboard, agente legal y herramientas especializadas.
+- `ProcessHistory`, `ReminderRule`, `ReminderDelivery`, `InventorySyncRun`, `AuditLog` y `SignatureApplication` adoptan `BelongsToCompany`.
+- Configuración por empresa (`companies.settings`) en lugar de `Company::first()`.
+- Únicos por empresa: `quotes.number`, `contracts.number`, `inventory_items.sku`, `clients.tax_id`, `tenders.reference` y metas KPI. Índices `company_id` + estado/fecha para los listados.
+- Migración de datos: registros sin empresa a «CAP Honduras», usuarios existentes como `admin` de CAP Honduras y `root@crm-b2g.test` como raíz.
+- Props compartidas de Inertia: `auth.user`, `auth.can`, `companies`, `activeCompany`, `flash`, `notifications`, `topbar.alertsCount` (caché de 60 s por usuario y empresa).
+
+**Datos de prueba**
+- Factories para los 17 modelos del flujo y `Database\Seeders\QaSeeder` (dos empresas, un usuario por rol; solo consola y fuera de producción).
+- Suite: 71 pruebas en verde (aislamiento entre empresas, cambio de empresa activa, matriz de roles, diagnóstico, `crm:root`, reglas y props compartidas).
+
+**Diferencias con `DATABASE_GUIDE.md`** (gana el esquema existente): tablas sin prefijo de módulo, `timestamp` sin milisegundos y en hora de Honduras (decisión 11), `company_id` nulable en las tablas previas. Los índices y constraints nuevos sí siguen el patrón `ix_` / `uq_` / `fk_`.

@@ -45,7 +45,7 @@ class AdministratorAccessTest extends TestCase
             '/alertas-poa', '/consorcios', '/matriz-cumplimiento', '/calculadora-oferta',
             '/generador-documentos', '/cobros', '/documentos', '/kpis', '/configuracion',
             '/configuracion/usuarios', '/configuracion/diagnostico', '/empresas',
-            '/sops', '/capacitacion', '/notificaciones', '/calendario',
+            '/sops', '/capacitacion', '/notificaciones', '/calendario', '/firmas',
         ];
 
         foreach ($routes as $route) {

@@ -1,58 +1,136 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# CRM B2G
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+CRM para licitaciones públicas hondureñas: licitaciones, calendario y recordatorios,
+cotizaciones, firma y sello, kanban de oportunidades, clientes, post-adjudicación e
+integración MCP. Laravel 13, Inertia 3, Vue 3 y MySQL.
 
-## About Laravel
+Reglas del proyecto: `MIGRATION_RULES.md`, `AGENTS.md` y `database/DATABASE_GUIDE.md`.
+Avance: `MIGRATION_PROGRESS.md`. Diseño vigente: `docs/superpowers/specs/`.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Requisitos del servidor
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+| Requisito | Detalle |
+|---|---|
+| PHP 8.3 o superior | Extensiones `pdo_mysql`, `sodium`, `gd`, `mbstring`, `fileinfo`, `zip`. Para las pruebas, además `pdo_sqlite`. |
+| MySQL 8 | Base `crm_b2g` en `utf8mb4`. |
+| Node 20 o superior | Solo para compilar la interfaz. |
+| Tesseract 5 con idioma `spa` | Lee las capturas de HonduCompras y las páginas escaneadas de los pliegos. |
+| Poppler | `pdftotext`, `pdftoppm` y `pdftocairo`: texto de los pliegos y normalización de PDF para firmar. |
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Tesseract y Poppler se buscan en el `PATH`. Si no están ahí, indique su ubicación en `.env`
+con `TESSERACT_PATH` (ejecutable) y `POPPLER_PATH` (carpeta de los binarios).
 
-## Learning Laravel
+Límites de PHP (`php.ini`) para subir pliegos de hasta 40 MB:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
-
-```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+```ini
+upload_max_filesize = 40M
+post_max_size = 48M
+memory_limit = 256M
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+El servidor web debe permitir el mismo tamaño de cuerpo (en Nginx, `client_max_body_size 48m;`).
 
-## Contributing
+La pantalla **Configuración → Diagnóstico** (`/configuracion/diagnostico`, raíz o administrador
+de empresa) comprueba todo lo anterior, además de la cola, el scheduler, la clave de OpenAI y
+el correo.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Instalación
 
-## Code of Conduct
+```bash
+composer install
+cp .env.example .env        # y complete base de datos, correo y claves
+php artisan key:generate
+php artisan migrate
+php artisan passport:keys   # llaves OAuth del servidor MCP
+npm install
+npm run build
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+`.env.example` contiene solo las variables necesarias. El idioma (`es`) y la zona horaria
+(`America/Tegucigalpa`) son fijos en `config/app.php`.
 
-## Security Vulnerabilities
+Primer usuario raíz:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+```bash
+php artisan admin:create-user persona@empresa.hn --name="Nombre Apellido" --company="CAP Honduras" --role=admin
+php artisan crm:root persona@empresa.hn
+```
 
-## License
+## Desarrollo
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+```bash
+composer dev
+```
+
+Levanta en paralelo el servidor (`php artisan serve`), el worker de la cola, el scheduler
+(`schedule:work`) y Vite. Sin el scheduler no se generan ni se envían recordatorios.
+
+Datos de prueba, solo por consola (no hay sembrado desde la web):
+
+```bash
+php artisan db:seed                    # datos mínimos de demostración
+php artisan db:seed --class=QaSeeder   # dos empresas y un usuario por rol (solo local)
+```
+
+## Pruebas
+
+```bash
+composer test
+composer test -- --filter=CompanyIsolationTest
+```
+
+La suite usa sqlite en memoria. `composer test` ejecuta `tools/run-tests.php`, que carga
+`pdo_sqlite` y `sodium` desde `tools/php` cuando el PHP de la máquina no los trae activados
+(caso habitual en Windows); no hay que tocar el `php.ini` ni definir variables a mano.
+
+## Producción: cola y scheduler
+
+Los recordatorios, el análisis de pliegos y los correos corren en segundo plano. Hacen falta
+dos procesos permanentes además del servidor web.
+
+**Worker de la cola** (Supervisor, `/etc/supervisor/conf.d/crm-b2g-worker.conf`):
+
+```ini
+[program:crm-b2g-worker]
+command=php /var/www/crm-b2g/artisan queue:work database --sleep=3 --tries=3 --timeout=300 --max-time=3600
+autostart=true
+autorestart=true
+stopwaitsecs=330
+user=www-data
+numprocs=1
+redirect_stderr=true
+stdout_logfile=/var/www/crm-b2g/storage/logs/worker.log
+```
+
+Tras cada despliegue: `php artisan queue:restart`.
+
+**Scheduler** (cron del usuario del servidor web):
+
+```cron
+* * * * * cd /var/www/crm-b2g && php artisan schedule:run >> /dev/null 2>&1
+```
+
+En Windows Server, los equivalentes son un servicio (NSSM) con `php artisan queue:work` y una
+tarea programada cada minuto con `php artisan schedule:run`.
+
+Si alguno de los dos se detiene, el diagnóstico lo muestra: «Tareas programadas» pasa a error
+cuando el scheduler lleva más de 5 minutos sin correr, y «Cola de trabajos» avisa de trabajos
+fallidos o acumulados. El latido del scheduler se guarda en la caché, que debe ser compartida
+entre procesos (`CACHE_STORE=database`, no `array`).
+
+## Multiempresa y permisos
+
+- Cada registro pertenece a una empresa del grupo. Las pantallas muestran la **empresa activa**,
+  que se elige en la cabecera (`POST /empresa-activa`).
+- **Raíz** (`users.is_root`, solo por `php artisan crm:root`) opera en todas las empresas y es la
+  única que las crea o elimina.
+- El **rol por empresa** (`company_user.role`) decide dentro de cada una: `admin`, `operator`
+  (escribe, no elimina ni administra) y `viewer` (solo lectura). La matriz está en
+  `app/Support/Permissions.php`.
+
+## Estructura para módulos
+
+- Rutas: un archivo por módulo en `routes/modules/`, cargado automáticamente dentro de `auth`.
+- Modelos con `company_id`: trait `App\Models\Concerns\BelongsToCompany`.
+- Validación de ids: `App\Rules\AllowedCompany` y `App\Rules\BelongsToActiveCompany`.
+- Políticas: se registran en `AppServiceProvider::$policies`.

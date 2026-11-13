@@ -2,14 +2,17 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Company;
 use App\Models\User;
+use App\Support\Permissions;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 /**
- * Crea (o actualiza) un usuario con permisos completos para el CRM.
+ * Crea (o actualiza) un usuario y, opcionalmente, lo asigna a una empresa con un rol.
+ * Los permisos salen del rol por empresa; la raíz se concede con `crm:root`.
  *
  * Uso típico:
  *   php artisan admin:create-user root@crm-b2g.test --name="Administrador B2G"
@@ -21,18 +24,19 @@ class CreateAdminUser extends Command
                             {email : Correo electronico del administrador}
                             {--name= : Nombre visible del administrador}
                             {--password= : Contrasena; si se omite se solicita de forma segura}
-                            {--role=admin : Rol asignado (admin concede todos los permisos)}
+                            {--role=admin : Rol dentro de la empresa: admin, operator o viewer}
+                            {--company= : Empresa (id, nombre o código) a la que se asigna con ese rol}
                             {--force : Actualiza el usuario si el correo ya existe}';
 
-    protected $description = 'Crea un usuario administrador con todos los permisos del CRM.';
+    protected $description = 'Crea un usuario del CRM y lo asigna a una empresa con un rol.';
 
     public function handle(): int
     {
         $email = Str::lower(trim((string) $this->argument('email')));
         $role = (string) $this->option('role');
 
-        if (! in_array($role, ['admin', 'operator'], true)) {
-            $this->components->error('El rol debe ser admin u operator.');
+        if (! in_array($role, Permissions::ROLES, true)) {
+            $this->components->error('El rol debe ser admin, operator o viewer.');
 
             return self::FAILURE;
         }
@@ -76,7 +80,7 @@ class CreateAdminUser extends Command
         $user->forceFill([
             'name' => $name,
             'password' => Hash::make($password),
-            'role' => $role,
+            'role' => $role === 'viewer' ? 'operator' : $role,
             'email_verified_at' => $existing?->email_verified_at ?? now(),
         ])->save();
 
@@ -86,8 +90,19 @@ class CreateAdminUser extends Command
         $this->components->twoColumnDetail('Rol', $user->role);
         $this->components->twoColumnDetail('ID', (string) $user->id);
 
-        if ($role === 'admin') {
-            $this->components->info('El rol admin concede todos los permisos, incluidos ajustes, KPIs y eliminaciones.');
+        if ($company = $this->option('company')) {
+            $record = Company::query()->where('id', $company)->orWhere('name', $company)->orWhere('code', $company)->first();
+
+            if ($record === null) {
+                $this->components->error("No existe la empresa «{$company}». El usuario quedó creado sin empresa.");
+
+                return self::FAILURE;
+            }
+
+            $record->users()->syncWithoutDetaching([$user->id => ['role' => $role, 'is_default' => true]]);
+            $this->components->twoColumnDetail('Empresa', "{$record->name} ({$role})");
+        } else {
+            $this->components->warn('El usuario no pertenece a ninguna empresa: use --company=... o márquelo como raíz con «php artisan crm:root '.$email.'».');
         }
 
         return self::SUCCESS;
