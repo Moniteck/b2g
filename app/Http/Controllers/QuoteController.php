@@ -241,7 +241,7 @@ class QuoteController extends Controller
     private function validated(Request $request): array
     {
         $data = $request->validate([
-            'company_id' => ['nullable', 'integer', new AllowedCompany],
+            'company_id' => ['nullable', 'integer', new AllowedCompany('create')],
             'institution_id' => ['required', 'integer', 'exists:institutions,id'],
             'contact_id' => ['nullable', 'integer', Rule::exists('contacts', 'id')->where(fn ($query) => $query->where('institution_id', $request->input('institution_id')))],
             'opportunity_id' => ['nullable', 'integer', new BelongsToActiveCompany(Opportunity::class)],

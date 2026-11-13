@@ -18,6 +18,7 @@ use App\Services\Tenancy\CompanyContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -195,7 +196,10 @@ class ContractController extends Controller
         $this->authorize('update', $contract);
 
         $data = $request->validate([
-            'number' => ['required', 'string', 'max:255'],
+            // El número de contrato es único dentro de la empresa.
+            'number' => ['required', 'string', 'max:255', Rule::unique('contracts', 'number')
+                ->where('company_id', $request->route('contract')?->company_id ?? $request->input('company_id') ?? app(CompanyContext::class)->currentCompanyId())
+                ->ignore($request->route('contract'))],
             'amount' => ['required', 'numeric', 'min:0'],
             'issued_at' => ['required', 'date'],
             'status' => ['required', 'string', 'max:100'],
@@ -211,7 +215,10 @@ class ContractController extends Controller
         $this->authorize('update', $contract);
 
         $data = $request->validate([
-            'number' => ['required', 'string', 'max:255'],
+            // El número de contrato es único dentro de la empresa.
+            'number' => ['required', 'string', 'max:255', Rule::unique('contracts', 'number')
+                ->where('company_id', $request->route('contract')?->company_id ?? $request->input('company_id') ?? app(CompanyContext::class)->currentCompanyId())
+                ->ignore($request->route('contract'))],
             'amount' => ['nullable', 'numeric', 'min:0'],
             'issued_at' => ['required', 'date'],
             'status' => ['required', 'string', 'max:100'],
@@ -252,14 +259,17 @@ class ContractController extends Controller
     private function validated(Request $request): array
     {
         return $request->validate([
-            'company_id' => ['nullable', 'integer', new AllowedCompany],
+            'company_id' => ['nullable', 'integer', new AllowedCompany('create')],
             'tender_id' => ['nullable', 'integer', new BelongsToActiveCompany(Tender::class)],
             'quote_id' => ['nullable', 'integer', new BelongsToActiveCompany(Quote::class)],
             'opportunity_id' => ['nullable', 'integer', new BelongsToActiveCompany(Opportunity::class)],
             'institution_id' => ['nullable', 'integer', 'exists:institutions,id'],
             'contact_id' => ['nullable', 'integer', 'exists:contacts,id'],
             'manager_id' => ['nullable', 'integer', new BelongsToActiveCompany(User::class)],
-            'number' => ['required', 'string', 'max:255'],
+            // El número de contrato es único dentro de la empresa.
+            'number' => ['required', 'string', 'max:255', Rule::unique('contracts', 'number')
+                ->where('company_id', $request->route('contract')?->company_id ?? $request->input('company_id') ?? app(CompanyContext::class)->currentCompanyId())
+                ->ignore($request->route('contract'))],
             'name' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'numeric', 'min:0'],
             'awarded_amount' => ['nullable', 'numeric', 'min:0'],

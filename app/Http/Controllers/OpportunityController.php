@@ -63,7 +63,7 @@ class OpportunityController extends Controller
         $this->authorize('create', Opportunity::class);
 
         $data = $request->validate([
-            'company_id' => ['nullable', 'integer', new AllowedCompany],
+            'company_id' => ['nullable', 'integer', new AllowedCompany('create')],
             'institution_id' => ['nullable', 'integer', 'exists:institutions,id'],
             'contact_id' => ['nullable', 'integer', 'exists:contacts,id'],
             'tender_id' => ['nullable', 'integer', new BelongsToActiveCompany(Tender::class)],
@@ -92,7 +92,7 @@ class OpportunityController extends Controller
         $this->authorize('update', $opportunity);
 
         $data = $request->validate([
-            'company_id' => ['nullable', 'integer', new AllowedCompany],
+            'company_id' => ['nullable', 'integer', new AllowedCompany('create')],
             'institution_id' => ['nullable', 'integer', 'exists:institutions,id'],
             'contact_id' => ['nullable', 'integer', 'exists:contacts,id'],
             'tender_id' => ['nullable', 'integer', new BelongsToActiveCompany(Tender::class)],

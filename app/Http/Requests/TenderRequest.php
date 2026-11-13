@@ -17,7 +17,7 @@ class TenderRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'company_id' => ['nullable', new AllowedCompany],
+            'company_id' => ['nullable', new AllowedCompany('create')],
             'institution_id' => ['nullable', 'exists:institutions,id'],
             'reference' => ['required', 'string', 'max:100', Rule::unique('tenders', 'reference')->where('company_id', $this->input('company_id') ?: app(CompanyContext::class)->currentCompanyId())->ignore($this->route('tender'))],
             'process_name' => ['nullable', 'string', 'max:255'],

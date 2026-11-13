@@ -18,7 +18,7 @@ class OpportunityRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'company_id' => ['nullable', new AllowedCompany],
+            'company_id' => ['nullable', new AllowedCompany('create')],
             'title' => ['required', 'string', 'max:255'],
             'institution_id' => ['nullable', 'exists:institutions,id'],
             'contact_id' => ['nullable', 'exists:contacts,id'],

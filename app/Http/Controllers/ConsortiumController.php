@@ -77,12 +77,12 @@ class ConsortiumController extends Controller
 
     private function data(Request $r, ?Consortium $consortium = null): array
     {
-        return $r->validate(['name' => 'required|string|max:255|unique:consortia,name,'.($consortium?->id ?? 'NULL'), 'tender_id' => ['nullable', new BelongsToActiveCompany(Tender::class)], 'institution_id' => 'nullable|exists:institutions,id', 'leader_company_id' => ['nullable', new AllowedCompany], 'amount' => 'nullable|numeric|min:0', 'formed_at' => 'nullable|date', 'status' => 'required|string|max:100', 'notes' => 'nullable|string|max:5000']);
+        return $r->validate(['name' => 'required|string|max:255|unique:consortia,name,'.($consortium?->id ?? 'NULL'), 'tender_id' => ['nullable', new BelongsToActiveCompany(Tender::class)], 'institution_id' => 'nullable|exists:institutions,id', 'leader_company_id' => ['nullable', new AllowedCompany('create')], 'amount' => 'nullable|numeric|min:0', 'formed_at' => 'nullable|date', 'status' => 'required|string|max:100', 'notes' => 'nullable|string|max:5000']);
     }
 
     private function memberData(Request $r): array
     {
-        return $r->validate(['name' => 'required|string|max:255', 'company_id' => ['nullable', new AllowedCompany], 'participation_percentage' => 'required|numeric|gt:0|lte:100', 'role' => 'nullable|string|max:255', 'tax_id' => 'nullable|string|max:255', 'email' => 'nullable|email', 'phone' => 'nullable|string|max:255']);
+        return $r->validate(['name' => 'required|string|max:255', 'company_id' => ['nullable', new AllowedCompany('create')], 'participation_percentage' => 'required|numeric|gt:0|lte:100', 'role' => 'nullable|string|max:255', 'tax_id' => 'nullable|string|max:255', 'email' => 'nullable|email', 'phone' => 'nullable|string|max:255']);
     }
 
     private function saveMember(Consortium $consortium, array $data): void

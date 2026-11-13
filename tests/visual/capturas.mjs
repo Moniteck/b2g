@@ -23,7 +23,8 @@ const THEMES = ['claro', 'oscuro'];
 export const SCREENS = {
     acceso: { path: '/login', guest: true },
     dashboard: { path: '/' },
-    componentes: { path: '/dev/componentes' },
+    // Mientras la ruta no exista, la página se abre en el cliente sobre el dashboard.
+    componentes: { path: '/dev/componentes', component: 'Dev/Components', fallback: '/' },
     clientes: { path: '/clientes' },
     licitaciones: { path: '/licitaciones' },
     contactos: { path: '/contactos' },
@@ -70,6 +71,20 @@ export async function horizontalOverflow(page) {
     return page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
 }
 
+/** Abre la pantalla; si su ruta aún no existe y tiene `component`, la monta con el router de Inertia. */
+export async function openScreen(page, screen, label, problems, seen = []) {
+    const response = await page.goto(`${BASE_URL}${screen.path}`);
+    const status = response?.status() ?? 200;
+    if (status === 404 && screen.component) {
+        await page.goto(`${BASE_URL}${screen.fallback}`);
+        await page.waitForSelector('.cap-shell');
+        seen.length = 0;
+        await page.evaluate(({ component, url }) => window.__inertia.router.push({ component, url }), { component: screen.component, url: screen.path });
+        return;
+    }
+    if (status >= 400) problems.push(`[${label}] HTTP ${status}`);
+}
+
 async function main() {
     const wanted = process.argv.slice(2);
     const names = wanted.length ? wanted : Object.keys(SCREENS);
@@ -96,8 +111,7 @@ async function main() {
                         await login(page);
                         loggedIn = true;
                     }
-                    const response = await page.goto(`${BASE_URL}${screen.path}`);
-                    if (response && response.status() >= 400) problems.push(`[${label}] HTTP ${response.status()}`);
+                    await openScreen(page, screen, label, problems, seen);
                     await settle(page);
                     const overflow = await horizontalOverflow(page);
                     if (overflow > 1) problems.push(`[${label}] scroll horizontal de ${overflow}px`);

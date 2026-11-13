@@ -74,7 +74,7 @@ class DocumentController extends Controller
         $this->authorize('create', Document::class);
 
         $data = $request->validate([
-            'company_id' => ['nullable', 'integer', new AllowedCompany],
+            'company_id' => ['nullable', 'integer', new AllowedCompany('create')],
             'institution_id' => ['nullable', 'integer', 'exists:institutions,id'],
             'name' => ['required', 'string', 'max:255'],
             'kind' => ['nullable', 'in:'.implode(',', array_keys(Document::KINDS))],
