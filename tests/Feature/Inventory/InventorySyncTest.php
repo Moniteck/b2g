@@ -13,6 +13,7 @@ use App\Services\Blessing\FakeBlessingClient;
 use App\Services\Blessing\HttpBlessingClient;
 use App\Services\Blessing\InventorySyncService;
 use App\Services\Blessing\NullBlessingClient;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -41,7 +42,7 @@ class InventorySyncTest extends TestCase
         return app(InventorySyncService::class)->sync($company ?? $this->company);
     }
 
-    /** @return \Illuminate\Database\Eloquent\Builder<InventoryItem> */
+    /** @return Builder<InventoryItem> */
     private function items(?Company $company = null)
     {
         return InventoryItem::query()->withoutGlobalScopes()->where('company_id', ($company ?? $this->company)->id);

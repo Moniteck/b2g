@@ -10,7 +10,9 @@ use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\Pricing\TaxRules;
 use Illuminate\Contracts\Cache\Lock;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -180,7 +182,7 @@ class InventorySyncService
         $now = now();
         $counts = ['created' => 0, 'updated' => 0, 'deactivated' => 0, 'errors' => []];
 
-        /** @var \Illuminate\Support\Collection<int, InventoryItem> $existing */
+        /** @var Collection<int, InventoryItem> $existing */
         $existing = $this->items($company)->get();
         $byId = $existing->filter(fn (InventoryItem $item) => $item->blessing_id !== null)->keyBy('blessing_id');
         $bySku = $existing->keyBy(fn (InventoryItem $item) => mb_strtolower($item->sku));
@@ -345,7 +347,7 @@ class InventorySyncService
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Builder<InventoryItem>
+     * @return Builder<InventoryItem>
      */
     private function items(Company $company)
     {
@@ -353,7 +355,7 @@ class InventorySyncService
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Builder<InventorySyncRun>
+     * @return Builder<InventorySyncRun>
      */
     private function runs(Company $company)
     {
