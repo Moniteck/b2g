@@ -13,9 +13,9 @@
         .muted { color: {{ $colors['soft'] }}; }
         h2 { font-size: 14px; margin: 24px 0 8px; }
         table.items { width: 100%; border-collapse: collapse; margin-top: 8px; }
-        table.items th { background: {{ $colors['surface'] }}; color: #fff; text-align: left; padding: 6px 8px; font-size: 11px; }
+        table.items th { background: {{ $colors['surface'] }}; color: {{ $colors['onAccent'] }}; text-align: left; padding: 6px 8px; font-size: 11px; }
         table.items td { border-bottom: 1px solid {{ $colors['paperLine'] }}; padding: 6px 8px; }
-        .right { text-align: right; }
+        .right, table.items th.right { text-align: right; }
         .footer { margin-top: 32px; border-top: 1px solid {{ $colors['paperLine'] }}; padding-top: 8px; font-size: 10px; }
     </style>
 </head>

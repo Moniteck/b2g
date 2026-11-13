@@ -127,6 +127,7 @@ class SettingsController extends Controller
                 'paperLine' => config('design.chrome.paperLine'),
                 'brand' => config('design.brand.red'),
                 'soft' => config('design.chrome.textSoft'),
+                'onAccent' => config('design.chrome.onAccent'),
             ],
         ])->render();
 
