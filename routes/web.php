@@ -26,7 +26,7 @@ Route::middleware('guest')->group(function () { Route::get('/login', [AuthContro
 Route::post('/logout', [AuthController::class, 'destroy'])->middleware('auth')->name('logout');
 
 Route::middleware('auth')->group(function () {
-Route::get('/', [DashboardController::class])->name('dashboard');
+Route::get('/', DashboardController::class)->name('dashboard');
 Route::get('/reportes', [ReportController::class, 'index'])->name('reports.index');
 Route::get('/reportes/pdf', [ReportController::class, 'pdf'])->name('reports.pdf');
 Route::get('/reportes/xlsx', [ReportController::class, 'xlsx'])->name('reports.xlsx');

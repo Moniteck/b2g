@@ -1,4 +1,8 @@
+@import '..\design\tokens.css';
+@import '..\design\shell.css';
+@import '@mdi/font/css/materialdesignicons.min.css';
 @import 'tailwindcss';
+@config '..\..\tailwind.config.js';
 
 @theme { --font-sans: Inter, "Segoe UI", system-ui, sans-serif; }
 

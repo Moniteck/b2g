@@ -1,4 +1,5 @@
 <?php
+nnamespace AppProviders;
 
 use App\Models\User;
 use App\Models\{Contract, Competitor, InstitutionalRelation, CollectionInvoice, BudgetMovement, ManualCashIncome, PoaEntry, Consortium, Document, ComplianceMatrix, NotificationTemplate, Event, TrainingProgress, KpiGoal};

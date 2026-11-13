@@ -11,3 +11,4 @@ createInertiaApp({
         createApp({ render: () => h(App, props) }).use(plugin).mount(el);
     },
 });
+import '../design/shell-auto.js';
