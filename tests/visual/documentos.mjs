@@ -2,6 +2,7 @@
 //
 //   node tests/visual/documentos.mjs            todo (flujo real + capturas en 4 combinaciones + lector + adjuntos)
 //   node tests/visual/documentos.mjs rapido     solo escritorio claro (flujo real)
+//   node tests/visual/documentos.mjs adjuntos   solo el panel de adjuntos (admin y lector)
 //
 // Flujo real (escritorio claro, admin): sube 5 archivos (uno truncado, que el servidor rechaza),
 // ve, reemplaza, revisa el historial, renueva con archivo, edita, descarga el ZIP para oferta
@@ -316,8 +317,8 @@ async function modalTour(page, label, files) {
     }
 
     await step(label, 'confirmar eliminar', async () => {
-        await rowMenu(page, 'Escritura de constitución', 'Eliminar');
-        await page.getByText('¿Eliminar «Escritura de constitución»?').waitFor();
+        await rowMenu(page, 'Solvencia fiscal SAR', 'Eliminar');
+        await page.getByText('¿Eliminar «Solvencia fiscal SAR»?').waitFor();
         await shot(page, label, '09-confirmar-eliminar');
         await page.getByRole('button', { name: 'Cancelar' }).last().click();
     });
@@ -342,7 +343,7 @@ async function readerTour(page, label) {
 
 async function attachmentsTour(page, label, files, quoteId, canEdit, flow) {
     await openPage(page, `/directorio/adjuntos-prueba/quote/${quoteId}`, label);
-    await page.waitForSelector('text=Adjuntos');
+    await page.locator('h3', { hasText: 'Adjuntos' }).first().waitFor();
     await settle(page);
     await shot(page, label, '01-panel');
 
@@ -397,8 +398,10 @@ async function main() {
     const quoteId = cleanup();
     const browser = await chromium.launch();
 
-    const runs = [['escritorio', 'claro', ADMIN, 'flow']];
-    if (!quick) runs.push(['escritorio', 'oscuro', ADMIN, 'tour'], ['movil', 'claro', ADMIN, 'tour'], ['movil', 'oscuro', ADMIN, 'tour'], ['escritorio', 'claro', READER, 'reader'], ['movil', 'claro', READER, 'reader']);
+    const onlyAttachments = process.argv.includes('adjuntos');
+    const runs = onlyAttachments ? [] : [['escritorio', 'claro', ADMIN, 'flow']];
+    if (onlyAttachments) runs.push(['escritorio', 'claro', ADMIN, 'attachments'], ['movil', 'oscuro', ADMIN, 'attachments'], ['movil', 'claro', READER, 'attachments']);
+    else if (!quick) runs.push(['escritorio', 'oscuro', ADMIN, 'tour'], ['movil', 'claro', ADMIN, 'tour'], ['movil', 'oscuro', ADMIN, 'tour'], ['escritorio', 'claro', READER, 'reader'], ['movil', 'claro', READER, 'reader']);
 
     for (const [viewport, theme, email, mode] of runs) {
         const { context, page, label, seen } = await session(browser, viewport, theme, email);
@@ -406,7 +409,7 @@ async function main() {
             if (mode === 'flow') await realFlow(page, label, files);
             if (mode === 'tour') await modalTour(page, label, files);
             if (mode === 'reader') await readerTour(page, label);
-            const adminFlow = mode === 'flow' || (mode === 'tour' && viewport === 'movil' && theme === 'oscuro');
+            const adminFlow = (mode === 'flow' || mode === 'attachments' || (mode === 'tour' && viewport === 'movil' && theme === 'oscuro')) && email === ADMIN;
             if (mode !== 'tour' || adminFlow) await attachmentsTour(page, `${label}-adjuntos`, files, quoteId, email === ADMIN, adminFlow);
         } catch (error) {
             problems.push(`[${label}] ${error.message.split('\n')[0]}`);

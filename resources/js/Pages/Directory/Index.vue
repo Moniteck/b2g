@@ -282,7 +282,7 @@ async function downloadPackage() {
                     <span v-if="row.expiresAt && row.status !== 'Vigente'" class="block text-xs" :class="expiryTone(row)">{{ relativeDays(row.expiresAt) }}</span>
                 </template>
                 <template #cell-status="{ value }"><StatusBadge :value="value" /></template>
-                <template #actions="{ row }"><DropdownMenu :label="`Acciones de ${row.name}`" :items="actionsOf(row)" /></template>
+                <template #actions="{ row }"><DropdownMenu :label="`Acciones de ${row.name}`" :items="actionsOf(row)" width="w-60" /></template>
                 <template v-if="can.create" #empty-action><AppButton variant="primary" icon="tray-arrow-up" @click="modal.upload = true">Subir documentos</AppButton></template>
             </DataTable>
             <Pagination :paginator="documents" :only="['documents', 'filters']" />
