@@ -82,8 +82,11 @@ class LegalAgentTest extends TestCase
         $this->actingInCompany($operator, $company)->post('/agente-legal/escritos/pdf', ['type' => 'impugnacion', 'content' => '<b>texto</b>'])
             ->assertOk()->assertHeader('content-type', 'application/pdf');
 
-        $html = view('pdf.tools.text-document', ['title' => 'T', 'company' => [], 'generatedAt' => now(), 'content' => '<b>texto</b>'])->render();
+        $html = view('pdf.tools.text-document', ['title' => 'T', 'company' => [], 'generatedAt' => now(), 'content' => '<b>texto</b>
+**Asunto**'])->render();
         $this->assertStringContainsString('&lt;b&gt;texto&lt;/b&gt;', $html);
+        $this->assertStringContainsString('<strong>Asunto</strong>', $html);
+        $this->assertStringNotContainsString('<b>texto</b>', $html);
     }
 
     public function test_viewer_cannot_use_ai_and_conversations_are_personal(): void

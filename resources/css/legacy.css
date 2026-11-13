@@ -82,23 +82,6 @@
     .quote-modal { padding: 16px; }
     .quote-detail pre { font-size: 12px; }
 }
-.legal-article { width: 100%; padding: 8px 3px; color: var(--cap-text-soft); border: 0; border-bottom: 1px solid var(--cap-divider); background: transparent; font-size: 12px; text-align: left; }
-.legal-quick.selected { border-color: var(--cap-brand); background: var(--cap-status-info-tint); }
-.legal-document { flex: 1; overflow: auto; padding: 28px; }
-.legal-document h2 { margin: 0 0 5px; font-size: 19px; }
-.legal-document > p { margin: 0 0 22px; color: var(--cap-text-soft); font-size: 13px; }
-.legal-document label { display: block; margin-bottom: 14px; color: var(--cap-text-soft); font-size: 12px; font-weight: 700; }
-.legal-document input, .legal-document textarea { width: 100%; margin-top: 5px; padding: 10px; color: var(--cap-text); border: 1px solid var(--cap-divider); border-radius: 8px; outline: 0; background: var(--cap-card-2); }
-.legal-generate { width: 100%; padding: 12px; color: var(--cap-text); border: 0; border-radius: 10px; background: var(--cap-red); font-size: 13px; font-weight: 800; }
-.legal-generate:disabled { opacity: .45; }
-.legal-empty { display: grid; height: 100%; place-content: center; text-align: center; }
-.legal-empty b { font-size: 45px; }
-.legal-empty h2 { margin: 14px 0 6px; }
-.legal-empty p { color: var(--cap-text-soft); }
-.legal-document-actions { display: flex; gap: 10px; margin-bottom: 12px; }
-.legal-document-actions button { padding: 9px 12px; color: var(--cap-text-soft); border: 0; border-radius: 8px; background: var(--cap-card-2); }
-.legal-document-actions .legal-generate { width: auto; }
-.legal-document pre { padding: 18px; color: var(--cap-text); border: 1px solid var(--cap-divider); border-radius: 10px; background: var(--cap-card); font: 12px/1.6 ui-monospace, monospace; white-space: pre-wrap; }
 .module-page { width: 100%; }
 .module-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
 .module-header h2 { margin: 0; color: var(--cap-text); font-size: 22px; }
