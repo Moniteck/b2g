@@ -99,3 +99,4 @@ Schedule::call(fn () => ReminderDelivery::query()->withoutGlobalScopes()
 
 Schedule::command('queue:prune-batches --hours=48')->daily();
 Schedule::command('queue:prune-failed --hours=720')->daily();
+Schedule::command('blessing:sync --cola')->hourly()->name('sincronizar-blessing')->withoutOverlapping(); // Inventario Blessing: un trabajo por empresa con conexión

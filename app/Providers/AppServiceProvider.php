@@ -85,7 +85,7 @@ class AppServiceProvider extends ServiceProvider
         ComplianceMatrix::class => OperationalPolicy::class,
         NotificationTemplate::class => OperationalPolicy::class,
         Event::class => OperationalPolicy::class,
-        InventoryItem::class => OperationalPolicy::class,
+        InventoryItem::class => \App\Policies\InventoryItemPolicy::class,
         InventorySyncRun::class => OperationalPolicy::class,
         ReminderRule::class => OperationalPolicy::class,
         ReminderDelivery::class => OperationalPolicy::class,
