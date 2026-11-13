@@ -72,7 +72,7 @@ async function shot(page, name) {
     console.log(`ok  ${name}`);
 }
 
-const dialog = (page) => page.locator('[role="dialog"]').last();
+const dialog = (page) => page.locator('[role="dialog"], [role="alertdialog"]').filter({ visible: true }).last();
 
 async function modalShot(page, name, opener) {
     await opener();
@@ -81,6 +81,13 @@ async function modalShot(page, name, opener) {
     if (!(await page.locator('.cap-shell').count())) throw new Error('la página quedó en blanco al abrir la modal');
     await page.screenshot({ path: `${OUTPUT}/${name}.png`, animations: 'disabled' });
     console.log(`ok  ${name}`);
+}
+
+/** Botón visible con ese nombre; en móvil, si está oculto, el botón flotante de crear. */
+async function clickCreate(page, name) {
+    const visible = page.getByRole('button', { name }).filter({ visible: true }).first();
+    if (await visible.count()) return visible.click();
+    return page.locator('.cap-shell-fab').click();
 }
 
 async function closeModal(page) {
@@ -106,9 +113,9 @@ async function step(label, fn) {
 /** Abre el menú ⋮ de la primera fila (o tarjeta) y elige una acción. */
 async function rowAction(page, label, rowText = null) {
     const scope = rowText ? page.locator('tr, li, article, [role="row"], .cap-card, div').filter({ hasText: rowText }).last() : page;
-    const trigger = (rowText ? scope : page).getByRole('button', { name: /^Acciones de/ }).first();
+    const trigger = (rowText ? scope : page).getByRole('button', { name: /^Acciones de/ }).filter({ visible: true }).first();
     await trigger.click();
-    await page.getByRole('menuitem', { name: label }).first().click();
+    await page.getByRole('menuitem', { name: label }).filter({ visible: true }).first().click();
 }
 
 async function expectToast(page, text) {
@@ -142,7 +149,7 @@ async function screensFor(page, profile, tag) {
 
     await step(`cliente-ficha-${tag}`, async () => {
         await open(page, '/clientes');
-        await page.getByText('Secretaría de Salud (QA)').first().click();
+        await page.getByText('Secretaría de Salud (QA)').filter({ visible: true }).first().click();
         await page.waitForURL(/\/clientes\/\d+/);
         await settle(page);
         await shot(page, `cliente-ficha-${tag}`);
@@ -161,12 +168,12 @@ async function screensFor(page, profile, tag) {
 
     await step(`institucion-ficha-${tag}`, async () => {
         await open(page, '/instituciones?search=QA');
-        await page.getByText('Secretaría de Salud (QA)').first().click();
+        await page.getByText('Secretaría de Salud (QA)').filter({ visible: true }).first().click();
         await page.waitForURL(/\/instituciones\/\d+/);
         await settle(page);
         await shot(page, `institucion-ficha-${tag}`);
         if (profile !== 'lector') {
-            await modalShot(page, `modal-contacto-nuevo-${tag}`, () => page.getByRole('button', { name: 'Nuevo contacto' }).first().click());
+            await modalShot(page, `modal-contacto-nuevo-${tag}`, () => clickCreate(page, 'Nuevo contacto'));
             await closeModal(page);
             await modalShot(page, `modal-institucion-editar-${tag}`, () => page.getByRole('button', { name: 'Editar', exact: true }).click());
             await closeModal(page);
@@ -176,13 +183,12 @@ async function screensFor(page, profile, tag) {
     if (profile !== 'lector') {
         await step(`modal-institucion-nueva-${tag}`, async () => {
             await open(page, '/instituciones');
-            const button = page.getByRole('button', { name: 'Nueva institución' }).first();
-            await modalShot(page, `modal-institucion-nueva-${tag}`, () => button.click());
+            await modalShot(page, `modal-institucion-nueva-${tag}`, () => clickCreate(page, 'Nueva institución'));
             await closeModal(page);
         });
         await step(`modal-contacto-${tag}`, async () => {
             await open(page, '/contactos');
-            await modalShot(page, `modal-contacto-lista-${tag}`, () => page.getByRole('button', { name: 'Nuevo contacto' }).first().click());
+            await modalShot(page, `modal-contacto-lista-${tag}`, () => clickCreate(page, 'Nuevo contacto'));
             await closeModal(page);
         });
     }
@@ -212,7 +218,7 @@ async function screensFor(page, profile, tag) {
 
     await step(`modales-admin-${tag}`, async () => {
         await open(page, '/configuracion/usuarios');
-        await modalShot(page, `modal-usuario-nuevo-${tag}`, () => page.getByRole('button', { name: 'Agregar usuario' }).first().click());
+        await modalShot(page, `modal-usuario-nuevo-${tag}`, () => clickCreate(page, 'Agregar usuario'));
         await closeModal(page);
 
         await open(page, '/configuracion');
@@ -227,9 +233,8 @@ async function screensFor(page, profile, tag) {
         const rows = page.locator('table tbody tr, [role="list"] > *');
         if (await page.getByText('Aún no hay registros de auditoría').count() === 0) {
             await modalShot(page, `modal-auditoria-detalle-${tag}`, async () => {
-                const firstRow = page.locator('tbody tr').first();
-                if (await firstRow.isVisible()) await firstRow.click();
-                else await page.locator('[role="button"]').filter({ hasText: /·/ }).first().click();
+                // Escritorio: fila de la tabla; móvil: tarjeta de la lista.
+                await page.locator('tbody tr[tabindex="0"], ul > li[tabindex="0"]').filter({ visible: true }).first().click();
             });
             await closeModal(page);
         }
@@ -239,9 +244,9 @@ async function screensFor(page, profile, tag) {
     if (profile === 'root') {
         await step(`empresa-ficha-${tag}`, async () => {
             await open(page, '/empresas');
-            await modalShot(page, `modal-empresa-nueva-${tag}`, () => page.getByRole('button', { name: 'Nueva empresa' }).first().click());
+            await modalShot(page, `modal-empresa-nueva-${tag}`, () => clickCreate(page, 'Nueva empresa'));
             await closeModal(page);
-            await page.getByText('CAP Honduras').first().click();
+            await page.getByText('CAP Honduras').filter({ visible: true }).first().click();
             await page.waitForURL(/\/empresas\/\d+/);
             await settle(page);
             await shot(page, `empresa-ficha-${tag}`);
@@ -264,7 +269,7 @@ async function adminFlow(page) {
 
     await step('flujo: crear institución', async () => {
         await open(page, '/instituciones');
-        await page.getByRole('button', { name: 'Nueva institución' }).first().click();
+        await clickCreate(page, 'Nueva institución');
         const modal = dialog(page);
         await modal.getByRole('button', { name: 'Crear institución' }).click();
         await modal.getByText('Escriba el nombre de la institución.').waitFor();
@@ -277,14 +282,14 @@ async function adminFlow(page) {
 
     await step('flujo: editar institución y crear contacto', async () => {
         await open(page, `/instituciones?search=${encodeURIComponent(institution)}`);
-        await page.getByText(institution).first().click();
+        await page.getByText(institution).filter({ visible: true }).first().click();
         await page.waitForURL(/\/instituciones\/\d+/);
         await settle(page);
         await page.getByRole('button', { name: 'Editar', exact: true }).click();
         await dialog(page).getByLabel('Ubicación').fill('San Pedro Sula');
         await dialog(page).getByRole('button', { name: 'Guardar cambios' }).click();
         await expectToast(page, 'Institución actualizada.');
-        await page.getByRole('button', { name: 'Nuevo contacto' }).first().click();
+        await page.getByRole('button', { name: 'Nuevo contacto' }).filter({ visible: true }).first().click();
         await dialog(page).getByLabel('Nombre').fill(`Contacto QA ${STAMP}`);
         await dialog(page).getByLabel('Cargo').fill('Jefe de Compras');
         await dialog(page).getByLabel('Correo').fill(`contacto${STAMP}@qa.hn`);
@@ -304,7 +309,7 @@ async function adminFlow(page) {
 
     await step('flujo: editar cliente con RTN duplicado y válido', async () => {
         await open(page, '/clientes');
-        await page.getByText('Secretaría de Salud (QA)').first().click();
+        await page.getByText('Secretaría de Salud (QA)').filter({ visible: true }).first().click();
         await page.waitForURL(/\/clientes\/\d+/);
         await settle(page);
         await page.getByRole('button', { name: 'Editar datos' }).click();
@@ -324,7 +329,7 @@ async function adminFlow(page) {
     const email = `qa.visual.${STAMP}@crm-b2g.test`;
     await step('flujo: crear usuario y ver contraseña temporal', async () => {
         await open(page, '/configuracion/usuarios');
-        await page.getByRole('button', { name: 'Agregar usuario' }).first().click();
+        await clickCreate(page, 'Agregar usuario');
         await dialog(page).getByLabel('Nombre').fill(`Usuario Visual ${STAMP}`);
         await dialog(page).getByLabel('Correo').fill(email);
         await dialog(page).getByLabel('Rol').selectOption('viewer');
@@ -355,7 +360,7 @@ async function adminFlow(page) {
 
     await step('flujo: configuración, logo, vista previa y restablecer', async () => {
         await open(page, '/configuracion');
-        await page.getByLabel('Dirección').fill('Col. Palmira, Ave. República de Chile');
+        await page.getByLabel('Dirección').fill(`Col. Palmira, Ave. República de Chile ${STAMP}`);
         await page.getByLabel('Ciudad').fill('Tegucigalpa');
         await page.getByRole('button', { name: 'Guardar cambios' }).click();
         await expectToast(page, 'Configuración guardada.');
@@ -370,7 +375,7 @@ async function adminFlow(page) {
         await closeModal(page);
         await page.getByRole('button', { name: 'Restablecer configuración' }).click();
         await dialog(page).getByRole('textbox').fill('nombre equivocado');
-        const disabled = await dialog(page).getByRole('button', { name: 'Restablecer configuración' }).isDisabled();
+        const disabled = await dialog(page).getByRole('button', { name: 'Restablecer', exact: true }).isDisabled();
         if (!disabled) throw new Error('el botón de restablecer no se bloquea con un nombre equivocado');
         await closeModal(page);
         // Se deja el logo y los datos puestos para las capturas siguientes.
@@ -387,7 +392,7 @@ async function adminFlow(page) {
         await page.getByRole('button', { name: 'Guardar datos' }).click();
         await expectToast(page, 'Datos guardados.');
         await page.getByLabel('Contraseña actual').fill('incorrecta');
-        await page.getByLabel('Contraseña nueva', { exact: true }).fill('OtraClave2026x');
+        await page.getByLabel(/^Contraseña nueva/).fill('OtraClave2026x');
         await page.getByLabel('Repita la contraseña nueva').fill('OtraClave2026x');
         await page.getByRole('button', { name: 'Cambiar contraseña' }).click();
         await page.getByText('La contraseña actual no es correcta.').waitFor();
@@ -400,7 +405,7 @@ async function rootFlow(page) {
     const tag = 'flujo-raiz';
     await step('flujo: token de Blessing enmascarado', async () => {
         await open(page, '/empresas');
-        await page.getByText('Empresa Demo B').first().click();
+        await page.getByText('Empresa Demo B').filter({ visible: true }).first().click();
         await page.waitForURL(/\/empresas\/\d+/);
         await settle(page);
         await page.getByRole('tab', { name: /Blessing/ }).click();
@@ -418,7 +423,7 @@ async function rootFlow(page) {
     });
 
     await step('flujo: eliminar institución de QA', async () => {
-        await open(page, `/instituciones?search=${encodeURIComponent(`Institución QA ${STAMP}`)}`);
+        await open(page, `/instituciones?search=${encodeURIComponent('Institución QA')}`);
         await rowAction(page, 'Eliminar');
         await page.waitForTimeout(300);
         await page.screenshot({ path: `${OUTPUT}/${tag}-confirmar-eliminar-institucion.png` });
@@ -433,9 +438,11 @@ async function main() {
     mkdirSync(OUTPUT, { recursive: true });
     const browser = await chromium.launch();
 
+    const viewports = process.env.QA_ONLY_FLOW ? ['escritorio'] : VIEWPORTS;
+    const themes = process.env.QA_ONLY_FLOW ? ['claro'] : THEMES;
     for (const profile of profiles) {
-        for (const viewport of VIEWPORTS) {
-            for (const theme of THEMES) {
+        for (const viewport of viewports) {
+            for (const theme of themes) {
                 const tag = `${profile}-${viewport}-${theme}`;
                 const context = await openContext(browser, viewport, theme);
                 const page = await context.newPage();
@@ -452,7 +459,7 @@ async function main() {
                         if (profile === 'admin') await adminFlow(page);
                         if (profile === 'root') await rootFlow(page);
                     }
-                    await screensFor(page, profile, tag);
+                    if (!process.env.QA_ONLY_FLOW) await screensFor(page, profile, tag);
                 } catch (error) {
                     problems.push(`[${tag}] ${error.message.split('\n')[0]}`);
                 }

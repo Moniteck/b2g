@@ -74,7 +74,7 @@ function remove(row) {
     >
         <PageHeader :description="`${number(contacts.total)} ${contacts.total === 1 ? 'contacto' : 'contactos'} de instituciones compradoras`">
             <template #actions>
-                <AppButton v-if="can.create && contacts.total" variant="primary" icon="plus" @click="create">Nuevo contacto</AppButton>
+                <AppButton v-if="can.create && contacts.total" class="max-lg:hidden" variant="primary" icon="plus" @click="create">Nuevo contacto</AppButton>
             </template>
         </PageHeader>
 

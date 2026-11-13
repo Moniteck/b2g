@@ -138,7 +138,7 @@ function removeUser(row) {
     <AppLayout title="Usuarios" :fab-label="'Agregar usuario'" @fab="openInvite">
         <PageHeader :description="`Miembros de ${company.name} y su rol en la empresa`">
             <template #actions>
-                <AppButton variant="primary" icon="account-plus-outline" @click="openInvite">Agregar usuario</AppButton>
+                <AppButton class="max-lg:hidden" variant="primary" icon="account-plus-outline" @click="openInvite">Agregar usuario</AppButton>
             </template>
         </PageHeader>
 

@@ -186,7 +186,7 @@ const taxInfo = computed(() => [
             </div>
             <template #footer>
                 <AppButton :disabled="resetForm.processing" @click="resetOpen = false">Cancelar</AppButton>
-                <AppButton variant="danger" type="submit" icon="restore-alert" :disabled="!resetReady" :loading="resetForm.processing">Restablecer configuración</AppButton>
+                <AppButton variant="danger" type="submit" icon="restore-alert" :disabled="!resetReady" :loading="resetForm.processing">Restablecer</AppButton>
             </template>
         </BaseModal>
     </AppLayout>

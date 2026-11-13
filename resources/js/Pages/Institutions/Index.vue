@@ -73,7 +73,7 @@ function remove(row) {
     >
         <PageHeader :description="`${number(institutions.total)} ${institutions.total === 1 ? 'institución' : 'instituciones'} · catálogo compartido del grupo`">
             <template #actions>
-                <AppButton v-if="can.create && institutions.total" variant="primary" icon="plus" @click="editing = {}">Nueva institución</AppButton>
+                <AppButton v-if="can.create && institutions.total" class="max-lg:hidden" variant="primary" icon="plus" @click="editing = {}">Nueva institución</AppButton>
             </template>
         </PageHeader>
 

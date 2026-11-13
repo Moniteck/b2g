@@ -57,7 +57,7 @@ function create() {
     <AppLayout title="Empresas" :fab-label="can.manage ? 'Nueva empresa' : ''" @fab="openCreate">
         <PageHeader :description="`${number(companies.total)} ${companies.total === 1 ? 'empresa' : 'empresas'} del grupo`">
             <template #actions>
-                <AppButton v-if="can.manage" variant="primary" icon="plus" @click="openCreate">Nueva empresa</AppButton>
+                <AppButton v-if="can.manage" class="max-lg:hidden" variant="primary" icon="plus" @click="openCreate">Nueva empresa</AppButton>
             </template>
         </PageHeader>
 

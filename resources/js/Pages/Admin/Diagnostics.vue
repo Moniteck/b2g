@@ -77,7 +77,7 @@ function metaLines(check) {
         <CapAlert v-else-if="summary.warning" status="warning" :title="`${summary.warning} comprobación(es) para revisar`" detail="El sistema funciona, pero algunas funciones pueden fallar." />
         <CapAlert v-else status="ok" title="Todo en orden" detail="El servidor tiene lo necesario para el flujo completo." />
 
-        <div class="cap-stagger grid grid-cols-3 gap-3 sm:gap-4">
+        <div class="cap-stagger grid grid-cols-1 gap-4 sm:grid-cols-3">
             <StatCard label="Correctas" :count="summary.ok" />
             <StatCard label="Para revisar" :count="summary.warning" :hint="summary.warning ? 'Funcionan con riesgo' : 'Nada pendiente'" />
             <StatCard :variant="summary.error ? 'alert' : 'normal'" label="Con falla" :count="summary.error" />
