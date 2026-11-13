@@ -1,0 +1,52 @@
+<?php
+
+use App\Http\Controllers\BudgetController;
+use App\Http\Controllers\CashFlowController;
+use App\Http\Controllers\CollectionController;
+use App\Http\Controllers\KpiGoalController;
+use App\Http\Controllers\PoaController;
+use App\Http\Controllers\ReportController;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/reportes', [ReportController::class, 'index'])->name('reports.index');
+Route::get('/reportes/pdf', [ReportController::class, 'pdf'])->name('reports.pdf');
+Route::get('/reportes/xlsx', [ReportController::class, 'xlsx'])->name('reports.xlsx');
+Route::get('/reportes/csv', [ReportController::class, 'csv'])->name('reports.csv');
+
+Route::get('/kpis', [KpiGoalController::class, 'index'])->name('kpis.index');
+Route::post('/kpis', [KpiGoalController::class, 'store'])->name('kpis.store');
+Route::put('/kpis/{kpiGoal}', [KpiGoalController::class, 'update'])->name('kpis.update');
+
+/* Cobros */
+
+Route::get('/cobros', [CollectionController::class, 'index'])->name('collections.index');
+Route::post('/cobros', [CollectionController::class, 'store'])->name('collections.store');
+Route::get('/cobros/export/pdf', [CollectionController::class, 'pdf'])->name('collections.pdf');
+Route::get('/cobros/export/xlsx', [CollectionController::class, 'xlsx'])->name('collections.xlsx');
+Route::patch('/cobros/{collectionInvoice}/pagar', [CollectionController::class, 'pay'])->name('collections.pay');
+Route::patch('/cobros/{collectionInvoice}/nota', [CollectionController::class, 'note'])->name('collections.note');
+Route::get('/cobros/{collectionInvoice}/whatsapp', [CollectionController::class, 'whatsapp'])->name('collections.whatsapp');
+Route::get('/cobros/{collectionInvoice}/nota.pdf', [CollectionController::class, 'notePdf'])->name('collections.note.pdf');
+Route::delete('/cobros/{collectionInvoice}', [CollectionController::class, 'destroy'])->name('collections.destroy');
+
+/* Presupuesto revolvente y flujo de caja */
+
+Route::get('/presupuesto-revolvente', [BudgetController::class, 'index'])->name('budget.index');
+Route::post('/presupuesto-revolvente', [BudgetController::class, 'store'])->name('budget.store');
+Route::post('/presupuesto-revolvente/inicializar', [BudgetController::class, 'initialize'])->name('budget.initialize');
+Route::post('/presupuesto-revolvente/sincronizar', [BudgetController::class, 'sync'])->name('budget.sync');
+Route::get('/presupuesto-revolvente/export/pdf', [BudgetController::class, 'pdf'])->name('budget.pdf');
+Route::get('/presupuesto-revolvente/export/xlsx', [BudgetController::class, 'xlsx'])->name('budget.xlsx');
+Route::delete('/presupuesto-revolvente/{budgetMovement}', [BudgetController::class, 'destroy'])->name('budget.destroy');
+
+Route::get('/flujo-caja', [CashFlowController::class, 'index'])->name('cash-flow.index');
+Route::post('/flujo-caja', [CashFlowController::class, 'store'])->name('cash-flow.store');
+Route::delete('/flujo-caja/{cashIncome}', [CashFlowController::class, 'destroy'])->name('cash-flow.destroy');
+
+/* Alertas POA */
+
+Route::get('/alertas-poa', [PoaController::class, 'index'])->name('poa.index');
+Route::post('/alertas-poa', [PoaController::class, 'store'])->name('poa.store');
+Route::put('/alertas-poa/{poaEntry}', [PoaController::class, 'update'])->name('poa.update');
+Route::patch('/alertas-poa/{poaEntry}/ejecutar', [PoaController::class, 'execute'])->name('poa.execute');
+Route::delete('/alertas-poa/{poaEntry}', [PoaController::class, 'destroy'])->name('poa.destroy');
