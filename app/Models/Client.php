@@ -35,9 +35,32 @@ class Client extends Model
         return $this->hasMany(CollectionInvoice::class);
     }
 
+    /**
+     * Contratos del cliente (`contracts.client_id`). Los contratos anteriores a esa
+     * columna se enlazan por su cotización de origen: ver `contractsQuery()`.
+     */
     public function contracts()
     {
         return $this->hasMany(Contract::class);
+    }
+
+    /**
+     * Cotizaciones vinculadas al cliente (las ganadas lo crean o lo reutilizan).
+     */
+    public function quotes()
+    {
+        return $this->hasMany(Quote::class);
+    }
+
+    /**
+     * Contratos del cliente por su columna o por una cotización suya: así cuenta
+     * también los contratos creados sin `client_id`.
+     */
+    public function contractsQuery()
+    {
+        return Contract::query()->where(fn ($query) => $query
+            ->where('client_id', $this->id)
+            ->orWhereIn('quote_id', Quote::query()->withTrashed()->select('id')->where('client_id', $this->id)));
     }
 
     public function sourceQuote()

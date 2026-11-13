@@ -7,5 +7,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/clientes', [ClientController::class, 'index'])->name('clients.index');
 Route::get('/clientes/export/csv', [ClientController::class, 'export'])->name('clients.export');
-Route::put('/clientes/{client}', [ClientController::class, 'update'])->name('clients.update');
-Route::delete('/clientes/{client}', [ClientController::class, 'destroy'])->name('clients.destroy');
+Route::get('/clientes/{client}', [ClientController::class, 'show'])->whereNumber('client')->name('clients.show');
+Route::put('/clientes/{client}', [ClientController::class, 'update'])->whereNumber('client')->name('clients.update');
+Route::delete('/clientes/{client}', [ClientController::class, 'destroy'])->whereNumber('client')->name('clients.destroy');

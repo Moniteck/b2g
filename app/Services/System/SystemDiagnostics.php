@@ -59,6 +59,7 @@ class SystemDiagnostics
             $this->scheduler(),
             $this->openAi(),
             $this->mailer(),
+            $this->httpsOutbound(),
         ];
 
         $summary = [self::OK => 0, self::WARNING => 0, self::ERROR => 0];
@@ -194,6 +195,37 @@ class SystemDiagnostics
 
         return $this->check('mailer', 'Correo saliente', $status, $detail,
             ['mailer' => $mailer, 'from' => config('mail.from.address')]);
+    }
+
+    /**
+     * Certificados raíz para las conexiones HTTPS salientes (OpenAI, Resend, Blessing).
+     * Sin `curl.cainfo` ni `openssl.cafile` y sin el almacén por defecto de OpenSSL,
+     * PHP no puede verificar ningún certificado (típico de PHP en Windows).
+     */
+    public function httpsOutbound(): array
+    {
+        $configured = array_filter([
+            'curl.cainfo' => (string) ini_get('curl.cainfo'),
+            'openssl.cafile' => (string) ini_get('openssl.cafile'),
+        ], fn (string $path) => trim($path) !== '');
+
+        $missing = array_keys(array_filter($configured, fn (string $path) => ! is_file($path)));
+        $default = function_exists('openssl_get_cert_locations') ? (string) (openssl_get_cert_locations()['default_cert_file'] ?? '') : '';
+        $hasDefault = $default !== '' && is_file($default);
+        $meta = ['configured' => $configured, 'default_cert_file' => $default ?: null, 'ini_file' => php_ini_loaded_file() ?: null];
+
+        if ($missing !== []) {
+            return $this->check('https', 'Conexión HTTPS saliente', self::ERROR,
+                'El archivo de certificados indicado en '.implode(' y ', $missing).' no existe. Corrija la ruta en php.ini y reinicie PHP.', $meta);
+        }
+
+        if ($configured === [] && ! $hasDefault) {
+            return $this->check('https', 'Conexión HTTPS saliente', self::WARNING,
+                'PHP no tiene certificados raíz configurados: las llamadas a OpenAI, Resend o Blessing pueden fallar con «SSL certificate problem». Descargue cacert.pem de https://curl.se/ca/cacert.pem y en php.ini indique su ruta en curl.cainfo y openssl.cafile; luego reinicie PHP.', $meta);
+        }
+
+        return $this->check('https', 'Conexión HTTPS saliente', self::OK,
+            'Certificados raíz disponibles en '.($configured !== [] ? implode(', ', array_unique($configured)) : $default).'.', $meta);
     }
 
     /**

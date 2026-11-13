@@ -25,4 +25,14 @@ class Institution extends Model
     {
         return $this->hasMany(Quote::class);
     }
+
+    public function tenders()
+    {
+        return $this->hasMany(Tender::class);
+    }
+
+    public function clients()
+    {
+        return $this->hasMany(Client::class);
+    }
 }
