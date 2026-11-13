@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Models\Company;
 use App\Models\User;
 use App\Services\AlertService;
+use App\Services\Notifications\NotificationFeed;
 use App\Services\Tenancy\CompanyContext;
 use App\Support\Permissions;
 use Illuminate\Http\Request;
@@ -117,19 +118,20 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * Campana de la cabecera.
-     *
-     * PUNTO DE EXTENSIÓN (Fase 6, recordatorios): sustituir el cuerpo por la
-     * consulta de `ReminderDelivery` del canal «bandeja» del usuario en la
-     * empresa activa, manteniendo la forma:
+     * Campana de la cabecera: avisos del canal «campana» del usuario en la empresa activa
+     * (`NotificationFeed`, cacheado unos segundos e invalidado al leer o al recibir un aviso).
      *   unread: int
-     *   items:  [{ id, title, body, url, created_at, read_at }]
+     *   items:  [{ id, title, body, href, read_at, created_at, severity }]
      *
      * @return array{unread: int, items: array<int, array<string, mixed>>}
      */
     protected function notifications(?User $user, CompanyContext $context): array
     {
-        return ['unread' => 0, 'items' => []];
+        if ($user === null) {
+            return ['unread' => 0, 'items' => []];
+        }
+
+        return app(NotificationFeed::class)->forUser($user->id, $context->currentCompanyId());
     }
 
     protected function alertsCount(?User $user, CompanyContext $context): int
@@ -138,10 +140,11 @@ class HandleInertiaRequests extends Middleware
             return 0;
         }
 
+        // `AlertService` guarda las alertas por empresa; esta clave solo evita releerlas en cada petición.
         return (int) Cache::remember(
             self::alertsCacheKey($user->id, $context->currentCompanyId()),
             self::ALERTS_TTL,
-            fn () => count(app(AlertService::class)->active()),
+            fn () => app(AlertService::class)->count($context->currentCompanyId()),
         );
     }
 }

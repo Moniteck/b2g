@@ -1,41 +1,38 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <title>Recordatorio</title>
-</head>
-<body style="margin:0;padding:24px;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#1f2937;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;">
+@extends('mail.layout', ['title' => $heading])
+
+@section('content')
+    @php
+        $surface = config('design.chrome.surface');
+        $onAccent = config('design.chrome.onAccent');
+        $textSoft = config('design.chrome.textSoft');
+        $paper = config('design.chrome.paper');
+    @endphp
+    <p style="margin:0 0 6px;font-size:13px;color:{{ $textSoft }};">{{ $typeLabel }} · {{ $offsetLabel }}</p>
+    <h1 style="margin:0 0 16px;font-family:Poppins,Helvetica,Arial,sans-serif;font-size:20px;line-height:28px;font-weight:600;">
+        {{ $heading }}: {{ $event->label ?: $event->title }}
+    </h1>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;background:{{ $paper }};border-radius:12px;">
         <tr>
-            <td style="background:#1f2937;padding:20px 28px;color:#ffffff;">
-                <h1 style="margin:0;font-size:18px;">Recordatorio de fecha critica</h1>
-            </td>
-        </tr>
-        <tr>
-            <td style="padding:28px;">
-                <h2 style="margin:0 0 8px;font-size:20px;">{{ $event->title }}</h2>
-
-                @if ($startsAt)
-                    <p style="margin:0 0 16px;">
-                        <strong>Fecha:</strong> {{ $startsAt }}
-                    </p>
-                @endif
-
-                @if ($company)
-                    <p style="margin:0 0 16px;">
-                        <strong>Empresa:</strong> {{ $company }}
-                    </p>
-                @endif
-
+            <td style="padding:14px 16px;font-size:14px;line-height:22px;">
+                <strong>Plazo:</strong> {{ $when }}<br>
+                <strong>Registro:</strong> {{ $sourceLabel }} · {{ $event->title }}
                 @if ($event->description)
-                    <p style="margin:0 0 16px;">{{ $event->description }}</p>
+                    <br><span style="color:{{ $textSoft }};">{{ $event->description }}</span>
                 @endif
-
-                <p style="margin:24px 0 0;font-size:13px;color:#6b7280;">
-                    Este mensaje se genero automaticamente por el CRM B2G. Ingrese al sistema para ver el detalle completo del expediente.
-                </p>
             </td>
         </tr>
     </table>
-</body>
-</html>
+
+    <table role="presentation" cellpadding="0" cellspacing="0">
+        <tr>
+            <td style="border-radius:999px;background:{{ $surface }};">
+                <a href="{{ $url }}" style="display:inline-block;padding:12px 24px;font-size:14px;font-weight:600;color:{{ $onAccent }};text-decoration:none;">Abrir el registro</a>
+            </td>
+        </tr>
+    </table>
+
+    <p style="margin:20px 0 0;font-size:13px;line-height:20px;color:{{ $textSoft }};">
+        Si ya lo resolviste, márcalo como atendido en el calendario para detener los avisos de este plazo.
+    </p>
+@endsection

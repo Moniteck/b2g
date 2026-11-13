@@ -116,6 +116,8 @@ class AppServiceProvider extends ServiceProvider
             Gate::policy($model, $policy);
         }
 
+        \App\Observers\CalendarSourceObserver::register(); // Fase 6: plazos al calendario.
+
         Passport::authorizationView(function ($parameters) {
             return view('mcp.authorize', $parameters);
         });

@@ -2,36 +2,28 @@
 
 namespace App\Jobs;
 
-use App\Models\ReminderDelivery;
+use App\Services\Notifications\ReminderDispatcher;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\SerializesModels;
 
 /**
- * Encola los recordatorios cuya fecha de envio ya venció.
+ * Despacha los recordatorios vencidos (campana en el acto, correo a la cola).
+ * El scheduler llama al despachador directamente cada minuto; este trabajo sirve para lanzarlo
+ * desde la cola o a mano (`DispatchDueReminders::dispatchSync()`).
  */
-class DispatchDueReminders implements ShouldQueue
+class DispatchDueReminders implements ShouldBeUnique, ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable;
 
     public int $tries = 1;
 
-    public function handle(): void
-    {
-        ReminderDelivery::query()
-            ->withoutGlobalScopes()
-            ->whereIn('status', ['Programado', 'Encolado'])
-            ->where('scheduled_for', '<=', now())
-            ->orderBy('scheduled_for')
-            ->limit(500)
-            ->each(function (ReminderDelivery $delivery) {
-                if ($delivery->channel === 'correo') {
-                    SendReminderEmail::dispatch($delivery->id)->after(now());
-                }
+    public int $uniqueFor = 120;
 
-                $delivery->update(['status' => 'Encolado']);
-            });
+    public function handle(ReminderDispatcher $dispatcher): void
+    {
+        $dispatcher->dispatchDue();
     }
 }
