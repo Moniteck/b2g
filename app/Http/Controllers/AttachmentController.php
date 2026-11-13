@@ -16,6 +16,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Inertia\Inertia;
+use Inertia\Response;
 
 /**
  * Adjuntos de cualquier entidad (`quote`, `tender`, `opportunity`, `contract`, `client`; ver
@@ -36,6 +38,19 @@ class AttachmentController extends Controller
         return response()->json([
             'data' => $this->attachments($entity),
             'can' => ['edit' => $request->user()->can(Attachables::editAbility($entity), $entity)],
+        ]);
+    }
+
+    /** Pantalla de prueba del panel (solo local y pruebas). */
+    public function preview(Request $request, string $type, int $id): Response
+    {
+        $entity = Attachables::find($type, $id);
+        $this->authorize('view', $entity);
+
+        return Inertia::render('Directory/AttachmentsPreview', [
+            'entityType' => $type,
+            'entityId' => $entity->getKey(),
+            'canEdit' => $request->user()->can(Attachables::editAbility($entity), $entity),
         ]);
     }
 

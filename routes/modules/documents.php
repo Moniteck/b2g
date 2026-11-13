@@ -10,6 +10,12 @@ use Illuminate\Support\Facades\Route;
 Route::get('/directorio', [DocumentController::class, 'index'])->name('directory.index');
 Route::get('/directorio/paquete', [DocumentController::class, 'package'])->name('directory.package');
 
+// Vista de prueba del panel de adjuntos (solo local y pruebas): la usa tests/visual/documentos.mjs.
+if (app()->environment(['local', 'testing'])) {
+    Route::get('/directorio/adjuntos-prueba/{type}/{id}', [AttachmentController::class, 'preview'])
+        ->whereIn('type', array_keys(Attachables::TYPES))->whereNumber('id')->name('attachments.preview');
+}
+
 /* Documentos: los nombres de ruta se conservan porque otros módulos los usan */
 
 Route::get('/documentos', [DocumentController::class, 'legacyIndex'])->name('documents.index');
