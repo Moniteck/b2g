@@ -2,6 +2,9 @@
 import { computed, ref } from 'vue';
 import { Head, router } from '@inertiajs/vue3';
 import AppLayout from '../Layouts/AppLayout.vue';
+import { useConfirm } from '../composables/useConfirm.js';
+import { visit } from '../lib/http.js';
+const ask = useConfirm();
 const props = defineProps({ kind:String, items:Object, records:[Object,Array], tenders:Object, categories:Array, settings:Object, company:Object, resetToken:String, users:Array });
 const title=ref(''), recipient=ref(''), context=ref(''), text=ref(''), spreadsheet=ref(null), result=ref(null), error=ref(''), loading=ref(false), parsed=ref([]), template=ref({name:'',channel:'whatsapp',subject:'',body:'',active:true}), event=ref({title:'',starts_at:'',ends_at:'',priority:'Normal'}), config=ref({...props.settings}), resetToken=ref('');
 const labels={inventory:'Inventario','tender-ai':'IA Licitaciones','offer-calculator':'Calculadora de Oferta','document-generator':'Generador de Documentos',notifications:'Notificaciones',calendar:'Calendario',training:'Capacitación',settings:'Configuración',sops:'Procedimientos Operativos'};
@@ -10,12 +13,12 @@ async function api(url,payload,file=false){loading.value=true;error.value='';try
 async function generate(){await api('/generador-documentos',{type:title.value||'carta_presentacion',recipient:recipient.value,context:context.value,...(props.company||{})});}
 function saveTemplate(){router.post('/notificaciones',template.value)}
 function updateTemplate(row){router.put(`/notificaciones/${row.id}`,{...row,active:!row.active})}
-function deleteTemplate(id){if(confirm('¿Eliminar plantilla?'))router.delete(`/notificaciones/${id}`)}
+function deleteTemplate(id){ask({verb:'Eliminar',object:'esta plantilla',noun:'plantilla',message:'Dejará de usarse en los avisos. No se puede deshacer.',action:()=>visit('delete',`/notificaciones/${id}`)})}
 function saveEvent(){router.post('/calendario',event.value)}
 function completeEvent(row){router.put(`/calendario/${row.id}`,{...row,completed:!row.completed})}
 function saveSettings(){router.put('/configuracion',{settings:config.value})}
 function uploadLogo(e){router.post('/configuracion/logo',{logo:e.target.files[0]},{forceFormData:true})}
-function reset(){if(confirm('Esto eliminará la configuración de empresa.'))router.post('/configuracion/reset',{confirmation_token:resetToken.value})}
+function reset(){ask({verb:'Restablecer',object:'la configuración de la empresa',noun:'configuración',message:'Se borrarán los datos y el logo de la empresa. No se puede deshacer.',action:()=>visit('post','/configuracion/reset',{confirmation_token:resetToken.value})})}
 function changeRole(user, role){router.put(`/configuracion/usuarios/${user.id}/rol`,{role})}
 </script>
 <template><Head :title="label"/><AppLayout><main class="specialized"><header><h1>{{label}}</h1><p>Datos y acciones procesados por el servidor.</p></header>

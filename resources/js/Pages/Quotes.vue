@@ -226,7 +226,7 @@ function downloadPdf(quote) {
                             <option v-for="item in companies" :key="item.id" :value="item.id">{{ item.name }}</option>
                         </select>
                     </label>
-                    <button class="quote-primary" @click="$router.visit('/cotizaciones')">+ Nueva Cotización</button>
+                    <button class="quote-primary" @click="router.visit('/cotizaciones')">+ Nueva Cotización</button>
                 </div>
             </div>
 
@@ -246,7 +246,7 @@ function downloadPdf(quote) {
                     <option>Todos</option>
                     <option v-for="item in outcomes" :key="item">{{ item }}</option>
                 </select>
-                <button class="export excel" @click="window.location.assign('/cotizaciones/export/excel')">📊 Excel</button>
+                <a class="export excel" href="/cotizaciones/export/excel">Excel</a>
             </div>
 
             <div class="quote-tip">

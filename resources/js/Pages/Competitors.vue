@@ -10,4 +10,4 @@ const fields = [
     { key: 'average_award_price', label: 'Precio promedio adjudicado', type: 'number' }, { key: 'last_participation_at', label: 'Última participación', type: 'date' }, { key: 'notes', label: 'Notas', type: 'textarea' },
 ];
 </script>
-<template><Head title="Inteligencia Competitiva"/><AppLayout><ResourceCrud title="Inteligencia Competitiva" :records="records" :statistics="analytics" :fields="fields" create-url="/inteligencia-competitiva" update-url="/inteligencia-competitiva/:id" delete-url="/inteligencia-competitiva/:id"/></AppLayout></template>
+<template><Head title="Inteligencia Competitiva"/><AppLayout><ResourceCrud noun="competidor" title="Inteligencia Competitiva" :records="records" :statistics="analytics" :fields="fields" create-url="/inteligencia-competitiva" update-url="/inteligencia-competitiva/:id" delete-url="/inteligencia-competitiva/:id"/></AppLayout></template>
