@@ -78,7 +78,7 @@ código, tablas y columnas en inglés, como el resto del proyecto. Sin emojis en
 
 - Commits pequeños en español. Solo tus archivos: `git add <rutas>` y `git commit -m "…" -- <rutas>` (nunca `git add -A` ni `git commit -a`).
 - Si git dice que el índice está bloqueado, espera unos segundos y reintenta.
-- Cada mensaje termina con: `Co-Authored-By: Claude Fable 5.2 <noreply@anthropic.com>`
+- Cada mensaje termina con: `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`
 
 ## Informe final (conciso)
 
