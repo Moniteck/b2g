@@ -11,6 +11,15 @@ use Illuminate\Validation\Rule;
 /** Subir un documento al Directorio Institucional (o, por compatibilidad, a una cotización). */
 class StoreDocumentRequest extends DocumentRequest
 {
+    /**
+     * Se autoriza antes de validar: quien no puede subir recibe 403 y no
+     * errores de validación que revelen el formulario.
+     */
+    public function authorize(): bool
+    {
+        return (bool) $this->user()?->can('create', Document::class);
+    }
+
     public function rules(): array
     {
         $kind = $this->input('kind') ?: 'empresa';

@@ -77,7 +77,7 @@ class RolePermissionsTest extends TestCase
 
         $this->assertDatabaseHas('tenders', ['id' => $tender->id, 'title' => 'Original']);
         $this->assertDatabaseCount('tenders', 1);
-        $this->assertDatabaseCount('events', 0);
+        $this->assertDatabaseMissing('events', ['title' => 'Reunión']); // los derivados de la licitación sí existen
     }
 
     public function test_viewer_has_no_ai_and_no_administration(): void

@@ -9,13 +9,18 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 /**
- * Evento manual del calendario. La autorización la hace el controlador.
+ * Evento manual del calendario. Se autoriza antes de validar para que un rol
+ * sin permiso reciba 403 y no errores de validación.
  */
 class EventRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        $event = $this->route('event');
+
+        return $event instanceof Event
+            ? (bool) $this->user()?->can('update', $event)
+            : (bool) $this->user()?->can('create', Event::class);
     }
 
     protected function prepareForValidation(): void
