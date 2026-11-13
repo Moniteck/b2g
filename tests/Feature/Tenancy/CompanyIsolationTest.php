@@ -45,14 +45,14 @@ class CompanyIsolationTest extends TestCase
         $this->actingAs($this->userA)->get('/cotizaciones')->assertOk()
             ->assertSee('COT-PROPIA-1')->assertDontSee('COT-AJENA-1');
 
-        $this->actingAs($this->userA)->get("/cotizaciones/{$foreign->id}/documentos")->assertNotFound();
+        $this->actingAs($this->userA)->getJson("/cotizaciones/{$foreign->id}")->assertNotFound();
         $this->actingAs($this->userA)->put("/cotizaciones/{$foreign->id}", $this->quotePayload())->assertNotFound();
         $this->actingAs($this->userA)->patch("/cotizaciones/{$foreign->id}/estado", ['status' => 'Emitida'])->assertNotFound();
-        $this->actingAs($this->userA)->patch("/cotizaciones/{$foreign->id}/resultado", ['outcome' => 'Ganada'])->assertNotFound();
+        $this->actingAs($this->userA)->postJson("/cotizaciones/{$foreign->id}/ganada", ['awarded_amount' => 100, 'awarded_at' => now()->toDateString()])->assertNotFound();
         $this->actingAs($this->userA)->delete("/cotizaciones/{$foreign->id}")->assertNotFound();
 
         $this->assertDatabaseHas('quotes', ['id' => $foreign->id, 'status' => 'Borrador', 'deleted_at' => null]);
-        $this->actingAs($this->userA)->get("/cotizaciones/{$own->id}/documentos")->assertOk();
+        $this->actingAs($this->userA)->getJson("/cotizaciones/{$own->id}")->assertOk();
     }
 
     public function test_quote_cannot_be_created_in_or_linked_to_another_company(): void
@@ -190,17 +190,6 @@ class CompanyIsolationTest extends TestCase
 
         $this->assertDatabaseHas('documents', ['id' => $foreign->id, 'name' => 'RTN ajeno']);
         $this->assertDatabaseCount('documents', 2);
-    }
-
-    public function test_a_document_of_another_company_cannot_be_attached_to_a_quote(): void
-    {
-        $quote = Quote::factory()->for($this->companyA)->create();
-        $foreign = Document::factory()->for($this->companyB)->create();
-
-        $this->actingAs($this->userA)->post("/cotizaciones/{$quote->id}/documentos", ['document_id' => $foreign->id])
-            ->assertSessionHasErrors('document_id');
-
-        $this->assertDatabaseCount('document_links', 0);
     }
 
     public function test_route_binding_resolves_after_the_company_context(): void

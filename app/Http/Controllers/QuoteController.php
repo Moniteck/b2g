@@ -2,295 +2,409 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\QuoteStatusRequest;
+use App\Http\Requests\Quotes\QuoteRequest;
+use App\Http\Requests\Quotes\QuoteStatusRequest;
 use App\Models\Company;
-use App\Models\Contact;
-use App\Models\Document;
-use App\Models\DocumentLink;
-use App\Models\Institution;
-use App\Models\InventoryItem;
 use App\Models\Opportunity;
 use App\Models\Quote;
 use App\Models\Tender;
-use App\Rules\AllowedCompany;
-use App\Rules\BelongsToActiveCompany;
-use App\Services\Business\AdjudicationService;
+use App\Models\User;
 use App\Services\Business\QuoteService;
-use App\Services\Documents\DocumentService;
+use App\Services\Pricing\TaxRules;
+use App\Services\QuoteDocumentService;
 use App\Services\Tenancy\CompanyContext;
+use App\Support\Permissions;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
+use Illuminate\Http\Response as HttpResponse;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Cotizaciones de la empresa activa: lista, alta, edición, estado documental, PDF y eliminación.
+ * El resultado comercial (Ganada, Perdida, revertir) y los participantes van en AdjudicationController.
+ */
 class QuoteController extends Controller
 {
+    public const PER_PAGE = 25;
+
+    /** Segmentos de la lista: estado documental o resultado. */
+    public const SEGMENTS = ['all', 'preparacion', 'presentadas', 'ganadas', 'perdidas'];
+
     public function index(Request $request): Response
     {
         $this->authorize('viewAny', Quote::class);
 
-        $query = $this->filtered($request)
-            ->with(['company:id,name', 'institution:id,name', 'contact:id,name', 'items', 'participants'])
-            ->withCount('documents');
+        $user = $request->user();
+        $filters = $this->filters($request);
+        $perPage = in_array($request->integer('per_page'), [25, 50, 100], true) ? $request->integer('per_page') : self::PER_PAGE;
 
-        $quotes = $query->paginate(20)->through(fn (Quote $quote) => [
-            'id' => (string) $quote->id,
-            'numero' => $quote->number,
-            'fecha' => $quote->quoted_at?->toDateString(),
-            'empresa' => $quote->company?->name,
-            'institucion' => $quote->institution?->name ?? '',
-            'contacto' => $quote->contact?->name ?? '',
-            'items' => $quote->items->map(fn ($item) => [
-                'id' => (string) $item->id,
-                'descripcion' => $item->description,
-                'cantidad' => (float) $item->quantity,
-                'unidad' => $item->unit,
-                'precioUnitario' => (float) $item->unit_price,
-                'total' => (float) $item->total,
-            ]),
-            'subtotal' => (float) $quote->subtotal,
-            'impuesto' => (float) $quote->tax,
-            'total' => (float) $quote->total,
-            'validezDias' => $quote->validity_days,
-            'estado' => $quote->status,
-            'resultado' => $quote->outcome,
-            'tipoCompra' => $quote->purchase_type,
-            'notas' => $quote->notes,
-            'participantes' => $quote->participants->count(),
-            'documentos' => $quote->documents_count,
-            'montoAdjudicado' => $quote->awarded_amount !== null ? (float) $quote->awarded_amount : null,
-            'ganador' => $quote->winner_name,
-        ]);
+        $quotes = $this->filtered($request)
+            ->select([
+                'id', 'company_id', 'institution_id', 'contact_id', 'opportunity_id', 'tender_id', 'client_id', 'number',
+                'quoted_at', 'validity_days', 'purchase_type', 'status', 'outcome', 'subtotal', 'tax', 'total',
+                'awarded_amount', 'awarded_at', 'winner_name', 'updated_at',
+            ])
+            ->with([
+                'institution:id,name,acronym',
+                'contact:id,name',
+                'tender:id,reference',
+                'opportunity:id,title,stage',
+                'client:id,name',
+                'contract',
+            ])
+            ->withCount(['participants', 'documents'])
+            ->paginate($perPage)
+            ->withQueryString()
+            ->through(fn (Quote $quote) => $this->row($quote, $user));
 
-        return Inertia::render('Quotes', [
+        return Inertia::render('Quotes/Index', [
             'quotes' => $quotes,
-            'companies' => Company::orderBy('name')->get(['id', 'name', 'tax_id', 'representative']),
-            'institutions' => Institution::orderBy('name')->get(['id', 'name']),
-            'contacts' => Contact::orderBy('name')->get(['id', 'institution_id', 'name']),
+            'stats' => $this->stats(),
+            'filters' => $filters,
+            'filterOptions' => $this->filterOptions($filters),
             'statuses' => Quote::STATUSES,
-            'outcomes' => Quote::OUTCOMES,
-            'filters' => $request->only('search', 'status', 'type', 'outcome'),
+            'issuerCompanies' => $this->issuerCompanies($user),
+            'taxRules' => TaxRules::forCompany(Company::query()->find(app(CompanyContext::class)->currentCompanyId()))->toArray(),
+            'can' => [
+                'create' => $user->can('create', Quote::class),
+                'export' => $user->can('viewAny', Quote::class),
+                'sign' => $user->hasPermission(Permissions::SIGN_DOCUMENTS),
+            ],
         ]);
     }
 
-    public function store(Request $request, QuoteService $quotes): RedirectResponse
+    /**
+     * Ficha completa en JSON: para el formulario de edición, la modal «Ver» y los participantes.
+     */
+    public function show(Request $request, Quote $quote): JsonResponse
     {
-        $this->authorize('create', Quote::class);
+        $this->authorize('view', $quote);
 
-        $data = $this->validated($request);
-        $companyId = (int) ($data['company_id'] ?? $this->currentCompanyId());
+        $quote->load(['items', 'institution:id,name,acronym', 'contact:id,name,institution_id,email,position', 'tender:id,reference,title', 'opportunity:id,title,stage', 'company:id,name', 'client:id,name', 'contract']);
+
+        return response()->json(['data' => $this->detail($quote, $request->user())]);
+    }
+
+    public function store(QuoteRequest $request, QuoteService $quotes): RedirectResponse
+    {
+        $data = $request->validated();
+        $companyId = (int) ($data['company_id'] ?? app(CompanyContext::class)->currentCompanyId());
+
+        abort_if($companyId <= 0, 422, 'Seleccione una empresa activa.');
 
         $quote = $quotes->create($companyId, (int) $request->user()->id, $data);
+        $active = app(CompanyContext::class)->currentCompanyId();
+        $where = $active !== $companyId ? ' en '.Company::query()->whereKey($companyId)->value('name').' (cambie de empresa para verla)' : '';
 
-        return back()->with('success', "Cotización {$quote->number} creada correctamente.");
+        return back()->with('success', "Cotización {$quote->number} creada en Borrador{$where}.");
     }
 
-    public function update(Request $request, Quote $quote, QuoteService $quotes): RedirectResponse
+    public function update(QuoteRequest $request, Quote $quote, QuoteService $quotes): RedirectResponse
     {
-        $this->authorize('update', $quote);
+        $quotes->update($quote, $request->safe()->except('company_id'));
 
-        $quotes->update($quote, $this->validated($request));
-
-        return back()->with('success', 'Cotización actualizada correctamente.');
+        return back()->with('success', "Cotización {$quote->number} actualizada.");
     }
 
-    public function destroy(Quote $quote): RedirectResponse
+    public function destroy(Request $request, Quote $quote, QuoteService $quotes): RedirectResponse
     {
         $this->authorize('delete', $quote);
 
-        $quote->delete();
+        $quotes->delete($quote, $request->user());
 
-        return back()->with('success', 'Cotización eliminada.');
+        return back()->with('success', "Cotización {$quote->number} eliminada.");
     }
 
     /**
      * Cambio del estado documental. No altera el resultado comercial.
      */
-    public function status(QuoteStatusRequest $request, Quote $quote): RedirectResponse
+    public function status(QuoteStatusRequest $request, Quote $quote, QuoteService $quotes): RedirectResponse
     {
-        $this->authorize('update', $quote);
+        $updated = $quotes->changeStatus($quote, $request->validated('status'), $request->user());
 
-        $quote->update($request->validated());
+        $extra = $updated->status === 'Presentada' ? ' Se registró nuestra oferta entre los participantes.' : '';
 
-        return back()->with('success', 'Estado actualizado.');
+        return back()->with('success', "Cotización {$updated->number} en estado {$updated->status}.{$extra}");
     }
 
     /**
-     * Registro del resultado comercial: Ganada o Perdida.
+     * PDF generado de la cotización: en línea para el visor o como descarga (`?descargar=1`).
      */
-    public function outcome(Request $request, Quote $quote, AdjudicationService $adjudication): RedirectResponse
-    {
-        $this->authorize('adjudicate', $quote);
-
-        $data = $request->validate([
-            'outcome' => ['required', 'in:Ganada,Perdida'],
-            'awarded_amount' => ['nullable', 'numeric', 'min:0'],
-            'awarded_at' => ['nullable', 'date'],
-            'winner_name' => ['nullable', 'string', 'max:255'],
-            'lost_reason' => ['nullable', 'string', 'max:5000'],
-        ]);
-
-        if ($data['outcome'] === 'Perdida' && blank($data['winner_name'] ?? null)) {
-            return back()->withErrors(['winner_name' => 'Indique quién ganó la oferta.']);
-        }
-
-        if ($data['outcome'] === 'Ganada') {
-            $adjudication->markWon($quote, $data, (int) $request->user()->id);
-
-            return back()->with('success', 'Oferta registrada como ganada. El cliente y el expediente post-adjudicación se crearon automáticamente.');
-        }
-
-        $adjudication->markLost($quote, $data);
-
-        return back()->with('success', 'Oferta registrada como no adjudicada.');
-    }
-
-    /**
-     * Participantes de la oferta presentada.
-     */
-    public function participants(Request $request, Quote $quote, AdjudicationService $adjudication): RedirectResponse
-    {
-        $this->authorize('update', $quote);
-
-        $data = $request->validate([
-            'participants' => ['required', 'array', 'min:1', 'max:50'],
-            'participants.*.name' => ['required', 'string', 'max:255'],
-            'participants.*.tax_id' => ['nullable', 'string', 'max:100'],
-            'participants.*.amount' => ['required', 'numeric', 'min:0'],
-            'participants.*.currency' => ['nullable', 'string', 'max:3'],
-            'participants.*.includes_tax' => ['nullable', 'boolean'],
-            'participants.*.is_ours' => ['nullable', 'boolean'],
-            'participants.*.position' => ['nullable', 'integer', 'min:1', 'max:100'],
-            'participants.*.notes' => ['nullable', 'string', 'max:2000'],
-        ]);
-
-        $adjudication->syncParticipants($quote, $data['participants']);
-
-        return back()->with('success', 'Participantes registrados.');
-    }
-
-    /**
-     * Documentos adjuntos a la cotización.
-     */
-    public function attachDocument(Request $request, Quote $quote, DocumentService $documents): RedirectResponse
-    {
-        $this->authorize('update', $quote);
-
-        $data = $request->validate([
-            'document_id' => ['required', 'integer', new BelongsToActiveCompany(Document::class)],
-            'context' => ['nullable', 'string', 'max:100'],
-        ]);
-
-        $document = Document::query()->findOrFail($data['document_id']);
-
-        abort_unless(
-            $request->user()->canAccessCompany($document->company_id) && $document->company_id === $quote->company_id,
-            403,
-            'El documento no pertenece a la misma empresa de la cotización.',
-        );
-
-        $documents->link($document, $quote, null, $data['context'] ?? 'cotizacion');
-
-        return back()->with('success', 'Documento adjuntado a la cotización.');
-    }
-
-    public function detachDocument(Quote $quote, int $document): RedirectResponse
-    {
-        $this->authorize('update', $quote);
-
-        DocumentLink::query()
-            ->where('linkable_type', Quote::class)
-            ->where('linkable_id', $quote->id)
-            ->where('document_id', $document)
-            ->delete();
-
-        return back()->with('success', 'Documento desvinculado.');
-    }
-
-    /**
-     * Documentos vinculados a la cotización.
-     */
-    public function documents(Quote $quote): JsonResponse
+    public function pdf(Request $request, Quote $quote, QuoteDocumentService $documents): HttpResponse
     {
         $this->authorize('view', $quote);
 
-        $documents = Document::query()
-            ->whereHas('links', fn ($query) => $query
-                ->where('linkable_type', Quote::class)
-                ->where('linkable_id', $quote->id))
-            ->get();
+        $disposition = $request->boolean('descargar') ? 'attachment' : 'inline';
 
-        return response()->json([
-            'data' => $documents->map(fn ($document) => [
-                'id' => $document->id,
-                'nombre' => $document->name,
-                'categoria' => $document->category,
-                'version' => $document->version,
-                'firmado' => $document->signed_at !== null,
-                'vencimiento' => $document->expires_at?->toDateString(),
-                'url' => route('documents.download', $document),
-            ])->all(),
+        return response($documents->pdf($quote), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => "{$disposition}; filename=\"{$quote->number}.pdf\"",
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, no-store',
         ]);
     }
 
     /**
-     * @param  array<string, mixed>  $data
+     * Copia del PDF generado como adjunto, para firmar y sellar esa copia.
      */
-    private function validated(Request $request): array
+    public function snapshot(Request $request, Quote $quote, QuoteDocumentService $documents): JsonResponse
     {
-        $data = $request->validate([
-            'company_id' => ['nullable', 'integer', new AllowedCompany('create')],
-            'institution_id' => ['required', 'integer', 'exists:institutions,id'],
-            'contact_id' => ['nullable', 'integer', Rule::exists('contacts', 'id')->where(fn ($query) => $query->where('institution_id', $request->input('institution_id')))],
-            'opportunity_id' => ['nullable', 'integer', new BelongsToActiveCompany(Opportunity::class)],
-            'tender_id' => ['nullable', 'integer', new BelongsToActiveCompany(Tender::class)],
-            'purchase_type' => ['required', 'string', 'max:100'],
-            'validity_days' => ['required', 'integer', 'min:1', 'max:365'],
-            'status' => ['nullable', 'in:'.implode(',', Quote::STATUSES)],
-            'notes' => ['nullable', 'string', 'max:5000'],
-            'items' => ['required', 'array', 'min:1'],
-            'items.*.description' => ['required', 'string', 'max:255'],
-            'items.*.quantity' => ['required', 'numeric', 'gt:0'],
-            'items.*.unit' => ['required', 'string', 'max:50'],
-            'items.*.unit_cost' => ['nullable', 'numeric', 'min:0'],
-            'items.*.unit_price' => ['nullable', 'numeric', 'min:0'],
-            'items.*.margin' => ['nullable', 'numeric', 'min:0', 'max:95'],
-            'items.*.tax_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
-            'items.*.inventory_item_id' => ['nullable', 'integer', new BelongsToActiveCompany(InventoryItem::class)],
-        ]);
+        $this->authorize('manageAttachments', $quote);
+        abort_unless($request->user()->hasPermission(Permissions::SIGN_DOCUMENTS, $quote->company_id), 403, 'No tiene permiso para firmar documentos.');
 
-        return $data;
+        $document = $documents->snapshot($quote, $request->user());
+
+        return response()->json(['document' => [
+            'id' => $document->id,
+            'name' => $document->name,
+            'mime' => $document->mime_type,
+            'fileName' => $document->original_filename,
+            'previewUrl' => route('documents.preview', $document),
+            'downloadUrl' => route('documents.download', $document),
+            'signed' => $document->signed_at !== null,
+        ]], 201);
     }
 
-    private function currentCompanyId(): ?int
-    {
-        return app(CompanyContext::class)->currentCompanyId();
-    }
-
-    public function filtered(Request $request)
+    /**
+     * Consulta filtrada de la lista y de las exportaciones (empresa activa por el scope).
+     *
+     * @return Builder<Quote>
+     */
+    public function filtered(Request $request): Builder
     {
         $query = Quote::query()->latest('quoted_at')->latest('id');
+        $search = trim((string) $request->query('search', ''));
 
-        if ($search = $request->string('search')->trim()->value()) {
-            $query->where(fn ($q) => $q->where('number', 'like', "%{$search}%")
+        if ($search !== '') {
+            $query->where(fn (Builder $builder) => $builder
+                ->where('number', 'like', "%{$search}%")
                 ->orWhere('purchase_type', 'like', "%{$search}%")
-                ->orWhereHas('institution', fn ($i) => $i->where('name', 'like', "%{$search}%")));
+                ->orWhereHas('institution', fn (Builder $institution) => $institution->where('name', 'like', "%{$search}%")->orWhere('acronym', 'like', "%{$search}%"))
+                ->orWhereHas('tender', fn (Builder $tender) => $tender->where('reference', 'like', "%{$search}%")));
         }
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->string('status'));
-        }
+        match ((string) $request->query('segment', 'all')) {
+            'preparacion' => $query->whereIn('status', ['Borrador', 'Emitida'])->where('outcome', 'Pendiente'),
+            'presentadas' => $query->where('status', 'Presentada')->where('outcome', 'Pendiente'),
+            'ganadas' => $query->where('outcome', 'Ganada'),
+            'perdidas' => $query->where('outcome', 'Perdida'),
+            default => null,
+        };
 
-        if ($request->filled('outcome')) {
-            $query->where('outcome', $request->string('outcome'));
+        if (in_array($request->query('status'), Quote::STATUSES, true)) {
+            $query->where('status', $request->query('status'));
         }
-
-        if ($request->filled('type')) {
-            $query->where('purchase_type', $request->string('type'));
+        if (in_array($request->query('outcome'), Quote::OUTCOMES, true)) {
+            $query->where('outcome', $request->query('outcome'));
+        }
+        if ($request->filled('institution_id')) {
+            $query->where('institution_id', $request->integer('institution_id'));
+        }
+        if ($request->filled('tender_id')) {
+            $query->where('tender_id', $request->integer('tender_id'));
+        }
+        if ($request->filled('opportunity_id')) {
+            $query->where('opportunity_id', $request->integer('opportunity_id'));
+        }
+        if ($from = $this->date($request->query('from'))) {
+            $query->whereDate('quoted_at', '>=', $from);
+        }
+        if ($to = $this->date($request->query('to'))) {
+            $query->whereDate('quoted_at', '<=', $to);
         }
 
         return $query;
+    }
+
+    /**
+     * Fila de la lista con lo que el usuario puede hacer en ella.
+     *
+     * @return array<string, mixed>
+     */
+    protected function row(Quote $quote, User $user): array
+    {
+        return [
+            'id' => $quote->id,
+            'number' => $quote->number,
+            'quoted_at' => $quote->quoted_at?->toDateString(),
+            'valid_until' => $quote->validUntil()?->toDateString(),
+            'purchase_type' => $quote->purchase_type,
+            'institution' => $quote->institution ? ['id' => $quote->institution->id, 'name' => $quote->institution->name, 'acronym' => $quote->institution->acronym] : null,
+            'contact' => $quote->contact?->name,
+            'tender' => $quote->tender ? ['id' => $quote->tender->id, 'reference' => $quote->tender->reference] : null,
+            'opportunity' => $quote->opportunity ? ['id' => $quote->opportunity->id, 'title' => $quote->opportunity->title] : null,
+            'client' => $quote->client ? ['id' => $quote->client->id, 'name' => $quote->client->name, 'url' => "/clientes/{$quote->client->id}"] : null,
+            'contract' => $quote->contract ? ['id' => $quote->contract->id, 'number' => $quote->contract->number, 'url' => '/post-adjudicacion?search='.rawurlencode($quote->contract->number)] : null,
+            'subtotal' => (float) $quote->subtotal,
+            'tax' => (float) $quote->tax,
+            'total' => (float) $quote->total,
+            'status' => $quote->status,
+            'outcome' => $quote->outcome,
+            'awarded_amount' => $quote->awarded_amount !== null ? (float) $quote->awarded_amount : null,
+            'awarded_at' => $quote->awarded_at?->toDateString(),
+            'winner_name' => $quote->winner_name,
+            'participants_count' => (int) $quote->participants_count,
+            'documents_count' => (int) $quote->documents_count,
+            'next_statuses' => $quote->nextStatuses(),
+            'can' => $this->abilities($quote, $user),
+        ];
+    }
+
+    /**
+     * @return array<string, bool>
+     */
+    protected function abilities(Quote $quote, User $user): array
+    {
+        $adjudicate = $user->can('adjudicate', $quote);
+
+        return [
+            'update' => $user->can('update', $quote),
+            'changeStatus' => $user->can('changeStatus', $quote),
+            'attach' => $user->can('manageAttachments', $quote),
+            'participants' => $user->can('manageParticipants', $quote),
+            'win' => $adjudicate && $quote->isAdjudicable(),
+            'lose' => $adjudicate && $quote->isAdjudicable(),
+            'revert' => ! $quote->isPending() && $user->can('revertOutcome', $quote),
+            'send' => $user->can('send', $quote),
+            'delete' => $user->can('delete', $quote),
+            'sign' => $user->hasPermission(Permissions::SIGN_DOCUMENTS, $quote->company_id) && $user->can('manageAttachments', $quote),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function detail(Quote $quote, User $user): array
+    {
+        $document = app(QuoteService::class)->document($quote->items);
+
+        return $this->row($quote->loadCount(['participants', 'documents']), $user) + [
+            'company' => $quote->company ? ['id' => $quote->company->id, 'name' => $quote->company->name] : null,
+            'company_id' => $quote->company_id,
+            'institution_id' => $quote->institution_id,
+            'contact_id' => $quote->contact_id,
+            'contact_option' => $quote->contact ? ['id' => $quote->contact->id, 'name' => $quote->contact->name, 'institution_id' => $quote->contact->institution_id] : null,
+            'tender_id' => $quote->tender_id,
+            'tender_option' => $quote->tender ? ['id' => $quote->tender->id, 'name' => $quote->tender->reference, 'description' => $quote->tender->title] : null,
+            'opportunity_id' => $quote->opportunity_id,
+            'opportunity_option' => $quote->opportunity ? ['id' => $quote->opportunity->id, 'name' => $quote->opportunity->title] : null,
+            'validity_days' => $quote->validity_days,
+            'tax_included' => (bool) $quote->tax_included,
+            'conditions' => $quote->conditions,
+            'notes' => $quote->notes,
+            'lost_reason' => $quote->lost_reason,
+            'pdf_url' => route('quotes.pdf.show', $quote),
+            'pdf_download_url' => route('quotes.pdf.show', [$quote, 'descargar' => 1]),
+            'taxes' => $document->taxes,
+            'items' => $quote->items->map(fn ($item) => [
+                'id' => $item->id,
+                'description' => $item->description,
+                'quantity' => (float) $item->quantity,
+                'unit' => $item->unit,
+                'unit_price' => (float) $item->unit_price,
+                'discount_percent' => (float) $item->discount_percent,
+                'tax_rate' => (float) ($item->tax_rate ?? 0),
+                'tax_included' => (bool) $item->tax_included,
+                'subtotal' => (float) $item->subtotal,
+                'tax' => (float) $item->tax,
+                'total' => (float) $item->total,
+                'unit_cost' => (float) $item->unit_cost,
+                'margin' => (float) $item->margin,
+                'inventory_item_id' => $item->inventory_item_id !== null ? (int) $item->inventory_item_id : null,
+                'sku' => $item->sku,
+                'pricing_source' => $item->pricing_source,
+            ])->values(),
+        ];
+    }
+
+    /**
+     * Cifras de la cabecera en una sola consulta (empresa activa).
+     *
+     * @return array<string, mixed>
+     */
+    protected function stats(): array
+    {
+        $row = Quote::query()->toBase()->selectRaw(
+            "SUM(CASE WHEN status IN ('Borrador', 'Emitida') AND outcome = 'Pendiente' THEN 1 ELSE 0 END) AS preparing,
+             SUM(CASE WHEN status = 'Presentada' AND outcome = 'Pendiente' THEN 1 ELSE 0 END) AS presented,
+             SUM(CASE WHEN status = 'Presentada' AND outcome = 'Pendiente' THEN total ELSE 0 END) AS presented_amount,
+             SUM(CASE WHEN outcome = 'Ganada' THEN 1 ELSE 0 END) AS won,
+             SUM(CASE WHEN outcome = 'Ganada' THEN COALESCE(awarded_amount, total) ELSE 0 END) AS won_amount,
+             SUM(CASE WHEN outcome = 'Perdida' THEN 1 ELSE 0 END) AS lost,
+             COUNT(*) AS total"
+        )->first();
+
+        $won = (int) ($row->won ?? 0);
+        $lost = (int) ($row->lost ?? 0);
+
+        return [
+            'preparing' => (int) ($row->preparing ?? 0),
+            'presented' => (int) ($row->presented ?? 0),
+            'presented_amount' => (float) ($row->presented_amount ?? 0),
+            'won' => $won,
+            'won_amount' => (float) ($row->won_amount ?? 0),
+            'lost' => $lost,
+            'total' => (int) ($row->total ?? 0),
+            'rate' => $won + $lost > 0 ? round($won / ($won + $lost) * 100, 1) : null,
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function filters(Request $request): array
+    {
+        $segment = (string) $request->query('segment', 'all');
+
+        return [
+            'search' => trim((string) $request->query('search', '')),
+            'segment' => in_array($segment, self::SEGMENTS, true) ? $segment : 'all',
+            'institution_id' => $request->filled('institution_id') ? $request->integer('institution_id') : null,
+            'tender_id' => $request->filled('tender_id') ? $request->integer('tender_id') : null,
+            'from' => $this->date($request->query('from')),
+            'to' => $this->date($request->query('to')),
+        ];
+    }
+
+    /**
+     * Textos de los filtros elegidos, para los combos con búsqueda remota.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array<string, mixed>
+     */
+    protected function filterOptions(array $filters): array
+    {
+        return [
+            'institution' => $filters['institution_id'] ? DB::table('institutions')->where('id', $filters['institution_id'])->first(['id', 'name']) : null,
+            'tender' => $filters['tender_id'] ? Tender::query()->whereKey($filters['tender_id'])->first(['id', 'reference as name']) : null,
+            'tenders' => Tender::query()->latest('id')->limit(200)->get(['id', 'reference', 'title'])
+                ->map(fn (Tender $tender) => ['id' => $tender->id, 'name' => $tender->reference, 'description' => $tender->title])->values(),
+            'opportunities' => Opportunity::query()->whereIn('stage', Opportunity::ACTIVE_STAGES)->latest('id')->limit(200)->get(['id', 'title', 'institution_id', 'tender_id'])
+                ->map(fn (Opportunity $opportunity) => ['id' => $opportunity->id, 'name' => $opportunity->title, 'institution_id' => $opportunity->institution_id, 'tender_id' => $opportunity->tender_id])->values(),
+        ];
+    }
+
+    /**
+     * Empresas en las que el usuario puede crear cotizaciones (empresa emisora).
+     *
+     * @return array<int, array{id: int, name: string}>
+     */
+    protected function issuerCompanies(User $user): array
+    {
+        $context = app(CompanyContext::class);
+
+        return Company::query()->orderBy('name')->get(['id', 'name'])
+            ->filter(fn (Company $company) => $context->canAccess($company->id) && $user->hasPermission(Permissions::CREATE, $company->id))
+            ->map(fn (Company $company) => ['id' => $company->id, 'name' => $company->name])
+            ->values()->all();
+    }
+
+    protected function date(mixed $value): ?string
+    {
+        return is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $value) ? $value : null;
     }
 }

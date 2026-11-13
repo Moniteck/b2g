@@ -60,7 +60,7 @@ class RolePermissionsTest extends TestCase
             ['delete', "/pipeline/{$opportunity->id}", []],
             ['post', '/cotizaciones', []],
             ['patch', "/cotizaciones/{$quote->id}/estado", ['status' => 'Emitida']],
-            ['patch', "/cotizaciones/{$quote->id}/resultado", ['outcome' => 'Ganada']],
+            ['post', "/cotizaciones/{$quote->id}/ganada", ['awarded_amount' => 100, 'awarded_at' => '2026-01-01']],
             ['delete', "/cotizaciones/{$quote->id}", []],
             ['post', '/post-adjudicacion', ['number' => 'C-1', 'name' => 'X', 'amount' => 1]],
             ['delete', "/post-adjudicacion/{$contract->id}", []],
