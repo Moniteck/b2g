@@ -38,7 +38,10 @@ const role = computed(() => (props.user.is_root ? 'Usuario raíz' : (ROLE_LABELS
             </div>
         </template>
         <template #default="{ close }">
-            <Link role="menuitem" :href="endpoints.signature" :class="[menuItem, 'mt-1']" @click="close">
+            <Link role="menuitem" href="/mi-cuenta" :class="[menuItem, 'mt-1']" @click="close">
+                <i class="mdi mdi-account-circle-outline text-xl leading-none" aria-hidden="true" /><span>Mi cuenta</span>
+            </Link>
+            <Link role="menuitem" :href="endpoints.signature" :class="menuItem" @click="close">
                 <i class="mdi mdi-draw-pen text-xl leading-none" aria-hidden="true" /><span>Mi firma y sello</span>
             </Link>
             <button type="button" role="menuitem" :class="menuItem" @click="toggleTheme()">

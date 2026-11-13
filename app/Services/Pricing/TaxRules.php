@@ -41,7 +41,21 @@ final class TaxRules
 
     public static function forCompany(?Company $company): self
     {
-        return self::fromSettings($company?->settings);
+        if ($company === null) {
+            return self::defaults();
+        }
+
+        // Fuente única: las columnas `tax_rate` y `prices_include_tax` de la
+        // empresa, que se editan en Empresas. `settings.pricing` queda solo
+        // como respaldo para empresas anteriores a esas columnas.
+        $legacy = self::fromSettings($company->settings);
+        $rate = $company->getAttribute('tax_rate');
+        $included = $company->getAttribute('prices_include_tax');
+
+        return new self(
+            is_numeric($rate) ? max(0.0, min(100.0, (float) $rate)) : $legacy->rate,
+            $included === null ? $legacy->pricesIncludeTax : (bool) $included,
+        );
     }
 
     /**

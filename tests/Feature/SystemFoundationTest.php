@@ -41,7 +41,7 @@ class SystemFoundationTest extends TestCase
 
         $this->actingAs($admin)->get('/configuracion/diagnostico')->assertOk()->assertInertia(fn (Assert $page) => $page
             ->component('Admin/Diagnostics', false)
-            ->has('checks', 7)
+            ->has('checks', 8)
             ->has('generated_at')
             ->where('checks.0.key', 'tesseract')
             ->where('checks.0.status', 'ok')
