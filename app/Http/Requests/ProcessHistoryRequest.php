@@ -1,4 +1,18 @@
 <?php
+
 namespace App\Http\Requests;
+
 use Illuminate\Foundation\Http\FormRequest;
-class ProcessHistoryRequest extends FormRequest { public function authorize(): bool { return true; } public function rules(): array { return ['institution_id'=>['nullable','exists:institutions,id'],'process_number'=>['required','string','max:100'],'name'=>['required','string','max:255'],'modality'=>['nullable','string','max:100'],'category'=>['nullable','string','max:100'],'participated'=>['required','boolean'],'decision'=>['nullable','string','max:100'],'estimated_amount'=>['required','numeric','min:0'],'offered_amount'=>['nullable','numeric','min:0'],'result'=>['nullable','string','max:100'],'result_metadata'=>['nullable','array'],'cause'=>['nullable','string','max:255'],'published_at'=>['nullable','date'],'closed_at'=>['nullable','date','after_or_equal:published_at'],'notes'=>['nullable','string','max:5000']]; } }
+
+class ProcessHistoryRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    public function rules(): array
+    {
+        return ['institution_id' => ['nullable', 'exists:institutions,id'], 'process_number' => ['required', 'string', 'max:100'], 'name' => ['required', 'string', 'max:255'], 'modality' => ['nullable', 'string', 'max:100'], 'category' => ['nullable', 'string', 'max:100'], 'participated' => ['required', 'boolean'], 'decision' => ['nullable', 'string', 'max:100'], 'estimated_amount' => ['required', 'numeric', 'min:0'], 'offered_amount' => ['nullable', 'numeric', 'min:0'], 'result' => ['nullable', 'string', 'max:100'], 'result_metadata' => ['nullable', 'array'], 'cause' => ['nullable', 'string', 'max:255'], 'published_at' => ['nullable', 'date'], 'closed_at' => ['nullable', 'date', 'after_or_equal:published_at'], 'notes' => ['nullable', 'string', 'max:5000']];
+    }
+}
