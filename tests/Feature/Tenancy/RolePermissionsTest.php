@@ -45,7 +45,7 @@ class RolePermissionsTest extends TestCase
         $quote = Quote::factory()->for($this->company)->create();
         $contract = Contract::factory()->for($this->company)->create();
 
-        foreach (['/', '/licitaciones', '/pipeline', '/cotizaciones', '/post-adjudicacion', '/documentos', '/clientes', '/reportes', '/kpis', '/calendario', '/inventario'] as $route) {
+        foreach (['/', '/licitaciones', '/pipeline', '/cotizaciones', '/post-adjudicacion', '/directorio', '/clientes', '/reportes', '/kpis', '/calendario', '/inventario'] as $route) {
             $this->actingAs($this->viewer)->get($route)->assertOk();
         }
 

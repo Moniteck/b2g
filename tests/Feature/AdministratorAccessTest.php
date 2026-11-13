@@ -43,7 +43,7 @@ class AdministratorAccessTest extends TestCase
             '/contactos', '/post-adjudicacion', '/inteligencia-competitiva',
             '/relaciones-institucionales', '/presupuesto-revolvente', '/flujo-caja',
             '/alertas-poa', '/consorcios', '/matriz-cumplimiento', '/calculadora-oferta',
-            '/generador-documentos', '/cobros', '/documentos', '/kpis', '/configuracion',
+            '/generador-documentos', '/cobros', '/directorio', '/kpis', '/configuracion',
             '/configuracion/usuarios', '/configuracion/diagnostico', '/empresas',
             '/sops', '/capacitacion', '/notificaciones', '/calendario', '/firmas',
         ];

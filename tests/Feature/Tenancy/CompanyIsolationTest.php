@@ -175,7 +175,7 @@ class CompanyIsolationTest extends TestCase
         $foreign = Document::factory()->for($this->companyB)->create(['name' => 'RTN ajeno']);
         $file = fn () => UploadedFile::fake()->create('rtn.pdf', 20, 'application/pdf');
 
-        $this->actingAs($this->userA)->get('/documentos')->assertOk()
+        $this->actingAs($this->userA)->get('/directorio')->assertOk()
             ->assertSee('RTN propio')->assertDontSee('RTN ajeno');
 
         $this->actingAs($this->userA)->get("/documentos/{$foreign->id}/download")->assertNotFound();
