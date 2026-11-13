@@ -15,4 +15,9 @@ class ManualCashIncome extends Model
     {
         return ['amount' => 'decimal:2', 'received_at' => 'date'];
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

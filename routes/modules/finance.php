@@ -8,14 +8,19 @@ use App\Http\Controllers\PoaController;
 use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
+/* Reportes e indicadores */
+
 Route::get('/reportes', [ReportController::class, 'index'])->name('reports.index');
 Route::get('/reportes/pdf', [ReportController::class, 'pdf'])->name('reports.pdf');
 Route::get('/reportes/xlsx', [ReportController::class, 'xlsx'])->name('reports.xlsx');
 Route::get('/reportes/csv', [ReportController::class, 'csv'])->name('reports.csv');
 
+/* KPI y metas */
+
 Route::get('/kpis', [KpiGoalController::class, 'index'])->name('kpis.index');
 Route::post('/kpis', [KpiGoalController::class, 'store'])->name('kpis.store');
 Route::put('/kpis/{kpiGoal}', [KpiGoalController::class, 'update'])->name('kpis.update');
+Route::delete('/kpis/{kpiGoal}', [KpiGoalController::class, 'destroy'])->name('kpis.destroy');
 
 /* Cobros */
 
@@ -23,6 +28,7 @@ Route::get('/cobros', [CollectionController::class, 'index'])->name('collections
 Route::post('/cobros', [CollectionController::class, 'store'])->name('collections.store');
 Route::get('/cobros/export/pdf', [CollectionController::class, 'pdf'])->name('collections.pdf');
 Route::get('/cobros/export/xlsx', [CollectionController::class, 'xlsx'])->name('collections.xlsx');
+Route::put('/cobros/{collectionInvoice}', [CollectionController::class, 'update'])->name('collections.update');
 Route::patch('/cobros/{collectionInvoice}/pagar', [CollectionController::class, 'pay'])->name('collections.pay');
 Route::patch('/cobros/{collectionInvoice}/nota', [CollectionController::class, 'note'])->name('collections.note');
 Route::get('/cobros/{collectionInvoice}/whatsapp', [CollectionController::class, 'whatsapp'])->name('collections.whatsapp');
@@ -41,6 +47,7 @@ Route::delete('/presupuesto-revolvente/{budgetMovement}', [BudgetController::cla
 
 Route::get('/flujo-caja', [CashFlowController::class, 'index'])->name('cash-flow.index');
 Route::post('/flujo-caja', [CashFlowController::class, 'store'])->name('cash-flow.store');
+Route::put('/flujo-caja/{cashIncome}', [CashFlowController::class, 'update'])->name('cash-flow.update');
 Route::delete('/flujo-caja/{cashIncome}', [CashFlowController::class, 'destroy'])->name('cash-flow.destroy');
 
 /* Alertas POA */

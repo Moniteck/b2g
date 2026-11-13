@@ -2,11 +2,18 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * Presupuesto revolvente: uno por empresa. El saldo se recalcula a partir del
+ * monto inicial y de sus movimientos (ver RevolvingBudgetService).
+ */
 class RevolvingBudget extends Model
 {
-    protected $fillable = ['initial_amount', 'current_balance'];
+    use BelongsToCompany;
+
+    protected $fillable = ['company_id', 'initial_amount', 'current_balance'];
 
     protected function casts(): array
     {

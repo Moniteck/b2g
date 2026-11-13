@@ -2,77 +2,80 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Finance\PeriodRequest;
+use App\Services\Finance\FinanceExport;
 use App\Services\ReportService;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Http\Request;
+use App\Support\Permissions;
+use Carbon\Carbon;
 use Inertia\Inertia;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Inertia\Response;
 
+/**
+ * Reportes e Indicadores de la empresa activa. Verlos y exportarlos requiere
+ * `view_reports` (todos los roles de la empresa).
+ */
 class ReportController extends Controller
 {
     private const HEADINGS = ['Indicador', 'Módulo', 'Registros', 'Monto (L)'];
 
-    public function index(Request $request, ReportService $reports)
+    public function index(PeriodRequest $request, ReportService $reports): Response
     {
-        $this->authorize('view-reports');
+        $this->authorize(Permissions::gate(Permissions::VIEW_REPORTS));
 
-        return Inertia::render('Reports', ['report' => $reports->summary($reports->filters($request))]);
+        return Inertia::render('Finance/Reports', [
+            'report' => $reports->summary($request->period()),
+            'modules' => collect(ReportService::MODULE_LABELS)->map(fn ($label, $value) => ['value' => $value, 'label' => $label])->values(),
+        ]);
     }
 
-    public function pdf(Request $request, ReportService $reports)
+    public function pdf(PeriodRequest $request, ReportService $reports, FinanceExport $export)
     {
-        $this->authorize('view-reports');
+        $this->authorize(Permissions::gate(Permissions::VIEW_REPORTS));
 
-        $report = $reports->summary($reports->filters($request));
+        $report = $reports->summary($request->period());
 
-        return Pdf::loadView('pdf.report', compact('report'))->setPaper('a4')->download('reporte-b2g.pdf');
+        return $export->pdf('pdf.report', ['report' => $report, 'period' => $this->periodLabel($report['filters'])], 'Reporte de indicadores', 'reporte-indicadores');
     }
 
-    public function xlsx(Request $request, ReportService $reports)
+    public function xlsx(PeriodRequest $request, ReportService $reports, FinanceExport $export)
     {
-        $this->authorize('view-reports');
+        $this->authorize(Permissions::gate(Permissions::VIEW_REPORTS));
 
-        $report = $reports->summary($reports->filters($request));
-        $spreadsheet = new Spreadsheet;
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->fromArray(self::HEADINGS, null, 'A1');
+        $report = $reports->summary($request->period());
 
-        foreach ($report['rows'] as $index => $row) {
-            $sheet->fromArray([$row['label'], $row['module'], $row['count'], $row['amount']], null, 'A'.($index + 2));
-        }
-
-        $totalRow = count($report['rows']) + 2;
-        $sheet->fromArray(['TOTAL', '', '', $report['total']], null, "A{$totalRow}");
-        $sheet->getStyle('A1:D1')->getFont()->setBold(true);
-        $sheet->getStyle("A{$totalRow}:D{$totalRow}")->getFont()->setBold(true);
-
-        foreach (range('A', 'D') as $column) {
-            $sheet->getColumnDimension($column)->setAutoSize(true);
-        }
-
-        $path = tempnam(sys_get_temp_dir(), 'crm-report-');
-        (new Xlsx($spreadsheet))->save($path);
-
-        return response()->download($path, 'reporte-b2g.xlsx')->deleteFileAfterSend(true);
+        return $export->xlsx(
+            'Reporte de indicadores',
+            self::HEADINGS,
+            array_map(fn (array $row) => [$row['label'], $row['module_label'], $row['count'], $row['amount']], $report['rows']),
+            'reporte-indicadores',
+            moneyColumns: ['D'],
+            subtitle: ['Período: '.$this->periodLabel($report['filters']), 'Tasa de adjudicación: '.$this->rate($report['metrics']['award_rate'])],
+        );
     }
 
-    public function csv(Request $request, ReportService $reports)
+    public function csv(PeriodRequest $request, ReportService $reports, FinanceExport $export)
     {
-        $this->authorize('view-reports');
+        $this->authorize(Permissions::gate(Permissions::VIEW_REPORTS));
 
-        $report = $reports->summary($reports->filters($request));
+        $report = $reports->summary($request->period());
 
-        return response()->streamDownload(function () use ($report) {
-            $out = fopen('php://output', 'wb');
-            fputcsv($out, self::HEADINGS);
+        return $export->csv(
+            self::HEADINGS,
+            array_map(fn (array $row) => [$row['label'], $row['module'], $row['count'], $row['amount']], $report['rows']),
+            'reporte-indicadores',
+        );
+    }
 
-            foreach ($report['rows'] as $row) {
-                fputcsv($out, [$row['label'], $row['module'], $row['count'], $row['amount']]);
-            }
+    /**
+     * @param  array{from: string, to: string}  $filters
+     */
+    private function periodLabel(array $filters): string
+    {
+        return Carbon::parse($filters['from'])->format('d/m/Y').' – '.Carbon::parse($filters['to'])->format('d/m/Y');
+    }
 
-            fputcsv($out, ['TOTAL', '', '', $report['total']]);
-            fclose($out);
-        }, 'reporte-b2g.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
+    private function rate(?float $rate): string
+    {
+        return $rate === null ? 'sin cotizaciones decididas' : number_format($rate, 1).' %';
     }
 }

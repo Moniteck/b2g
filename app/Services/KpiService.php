@@ -2,31 +2,47 @@
 
 namespace App\Services;
 
-use App\Models\CollectionInvoice;
-use App\Models\Opportunity;
-use App\Models\PoaEntry;
-use App\Models\Quote;
-use Carbon\Carbon;
-
+/**
+ * Valores reales de los KPI de la empresa activa en un período. Salen de las
+ * mismas cifras de Reportes (ReportService), así que ambas pantallas coinciden.
+ */
 class KpiService
 {
-    public const METRICS = ['pipeline' => 'Pipeline ponderado', 'adjudicaciones' => 'Adjudicaciones', 'cobros' => 'Cobros recibidos', 'tasa_adjudicacion' => 'Tasa de adjudicación', 'ejecucion_poa' => 'Ejecución POA'];
+    public const METRICS = [
+        'pipeline' => 'Pipeline ponderado',
+        'adjudicaciones' => 'Monto adjudicado',
+        'cobros' => 'Cobros recibidos',
+        'tasa_adjudicacion' => 'Tasa de adjudicación',
+        'ejecucion_poa' => 'Ejecución POA',
+    ];
 
+    /** Explicación corta de cada indicador, para la interfaz. */
+    public const DESCRIPTIONS = [
+        'pipeline' => 'Monto × probabilidad de las oportunidades activas creadas en el período.',
+        'adjudicaciones' => 'Monto adjudicado de las cotizaciones ganadas.',
+        'cobros' => 'Facturas cobradas en el período.',
+        'tasa_adjudicacion' => 'Ganadas ÷ (ganadas + perdidas).',
+        'ejecucion_poa' => 'Ejecutado ÷ presupuestado de las partidas POA del período.',
+    ];
+
+    /** Métricas que se expresan en porcentaje; el resto en lempiras. */
+    public const PERCENT_METRICS = ['tasa_adjudicacion', 'ejecucion_poa'];
+
+    public function __construct(private ReportService $reports) {}
+
+    /**
+     * @return array<string, float|null>
+     */
     public function actuals(string $from, string $to): array
     {
-        $fromDate = Carbon::parse($from)->startOfDay();
-        $toDate = Carbon::parse($to)->endOfDay();
-        $presented = Quote::query()->whereBetween('quoted_at', [$fromDate, $toDate])->whereIn('status', ['Presentada', 'Sustituida'])->count();
-        $accepted = Quote::query()->whereBetween('quoted_at', [$fromDate, $toDate])->where('outcome', 'Ganada')->count();
-        $poa = PoaEntry::query()->whereBetween('estimated_date', [$fromDate, $toDate]);
-        $budgeted = (float) (clone $poa)->sum('budgeted_amount');
+        $metrics = $this->reports->summary(['from' => $from, 'to' => $to, 'module' => 'all'])['metrics'];
 
         return [
-            'pipeline' => (float) Opportunity::query()->whereBetween('created_at', [$fromDate, $toDate])->whereNotIn('stage', Opportunity::CLOSED_STAGES)->selectRaw('COALESCE(SUM(amount * probability / 100), 0) total')->value('total'),
-            'adjudicaciones' => (float) Quote::query()->whereBetween('quoted_at', [$fromDate, $toDate])->where('outcome', 'Ganada')->sum('awarded_amount'),
-            'cobros' => (float) CollectionInvoice::query()->where('status', 'Pagada')->whereBetween('paid_at', [$fromDate, $toDate])->sum('amount'),
-            'tasa_adjudicacion' => $presented ? round($accepted / $presented * 100, 2) : 0,
-            'ejecucion_poa' => $budgeted > 0 ? round((float) $poa->sum('executed_amount') / $budgeted * 100, 2) : 0,
+            'pipeline' => $metrics['pipeline_weighted'],
+            'adjudicaciones' => $metrics['won_amount'],
+            'cobros' => $metrics['collected'],
+            'tasa_adjudicacion' => $metrics['award_rate'],
+            'ejecucion_poa' => $metrics['poa_execution'],
         ];
     }
 }

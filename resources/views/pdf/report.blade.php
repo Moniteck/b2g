@@ -1,2 +1,41 @@
-<!doctype html>
-<html lang="es"><head><meta charset="utf-8"><style>body{font-family:DejaVu Sans,sans-serif;color:#1f2937;font-size:12px}h1{color:#0057b8}table{width:100%;border-collapse:collapse;margin-top:18px}th{background:#eff6ff;color:#1e40af;text-align:left}th,td{padding:8px;border-bottom:1px solid #e5e7eb}.right{text-align:right}.total{font-weight:bold;font-size:14px}</style></head><body><h1>Reporte B2G</h1><p>Período: {{ \Carbon\Carbon::parse($report['filters']['from'])->format('d/m/Y') }} al {{ \Carbon\Carbon::parse($report['filters']['to'])->format('d/m/Y') }}</p><table><thead><tr><th>Indicador</th><th>Módulo</th><th class="right">Registros</th><th class="right">Monto</th></tr></thead><tbody>@foreach($report['rows'] as $row)<tr><td>{{ $row['label'] }}</td><td>{{ $row['module'] }}</td><td class="right">{{ $row['count'] }}</td><td class="right">L {{ number_format($row['amount'], 2) }}</td></tr>@endforeach<tr class="total"><td colspan="3">TOTAL</td><td class="right">L {{ number_format($report['total'], 2) }}</td></tr></tbody></table></body></html>
+@extends('pdf.finance-layout', ['subtitle' => 'Período: '.$period])
+
+@section('content')
+    @php($metrics = $report['metrics'])
+    <table class="figures">
+        <tr>
+            <td><div class="label">Pipeline ponderado</div><div class="value">L {{ number_format($metrics['pipeline_weighted'], 2) }}</div><div class="muted">{{ $metrics['pipeline_count'] }} oportunidades activas</div></td>
+            <td><div class="label">Monto adjudicado</div><div class="value">L {{ number_format($metrics['won_amount'], 2) }}</div><div class="muted">{{ $metrics['won_count'] }} cotizaciones ganadas</div></td>
+            <td><div class="label">Tasa de adjudicación</div><div class="value">{{ $metrics['award_rate'] === null ? '—' : number_format($metrics['award_rate'], 1).' %' }}</div><div class="muted">{{ $metrics['won_count'] }} ganadas · {{ $metrics['lost_count'] }} perdidas</div></td>
+            <td><div class="label">Cobros recibidos</div><div class="value">L {{ number_format($metrics['collected'], 2) }}</div><div class="muted">{{ $metrics['collected_count'] }} facturas</div></td>
+        </tr>
+    </table>
+
+    <table class="data">
+        <thead>
+            <tr><th>Indicador</th><th>Módulo</th><th class="right">Registros</th><th class="right">Monto (L)</th></tr>
+        </thead>
+        <tbody>
+            @forelse ($report['rows'] as $row)
+                <tr>
+                    <td>{{ $row['label'] }}</td>
+                    <td>{{ $row['module_label'] }}</td>
+                    <td class="right">{{ $row['count'] }}</td>
+                    <td class="right nowrap">{{ number_format($row['amount'], 2) }}</td>
+                </tr>
+            @empty
+                <tr><td colspan="4" class="empty">Sin datos para el período.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    <p style="margin-top:18px; font-weight:bold;">Embudo comercial (oportunidades creadas en el período)</p>
+    <table class="data">
+        <thead><tr><th>Etapa</th><th class="right">Oportunidades</th><th class="right">Monto (L)</th></tr></thead>
+        <tbody>
+            @foreach ($report['funnel'] as $stage)
+                <tr><td>{{ $stage['label'] }}</td><td class="right">{{ $stage['count'] }}</td><td class="right nowrap">{{ number_format($stage['amount'], 2) }}</td></tr>
+            @endforeach
+        </tbody>
+    </table>
+@endsection
