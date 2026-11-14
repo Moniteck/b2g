@@ -33,7 +33,7 @@ class DashboardMetricsService
             'presented' => ['status IN (?, ?)', self::PRESENTED_QUOTE_STATUSES],
             'accepted' => ['outcome = ?', ['Ganada']],
             'lost' => ['outcome = ?', ['Perdida']],
-            'overdue' => ["status IN (?, ?) AND outcome = ? AND DATE(quoted_at) <= ?", [...self::PRESENTED_QUOTE_STATUSES, 'Pendiente', $today->copy()->subDays(30)->toDateString()]],
+            'overdue' => ['status IN (?, ?) AND outcome = ? AND DATE(quoted_at) <= ?', [...self::PRESENTED_QUOTE_STATUSES, 'Pendiente', $today->copy()->subDays(30)->toDateString()]],
         ]);
 
         $tenders = $this->aggregate(Tender::query(), [

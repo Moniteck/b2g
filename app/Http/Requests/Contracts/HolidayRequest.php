@@ -4,6 +4,7 @@ namespace App\Http\Requests\Contracts;
 
 use App\Models\Contract;
 use App\Models\Holiday;
+use App\Services\Tenancy\CompanyContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -21,7 +22,7 @@ class HolidayRequest extends FormRequest
         return [
             'holiday_date' => ['required', 'date', 'after_or_equal:2000-01-01', 'before_or_equal:2100-12-31',
                 Rule::unique('holidays', 'holiday_date')
-                    ->where('company_id', $holiday instanceof Holiday ? $holiday->company_id : app(\App\Services\Tenancy\CompanyContext::class)->currentCompanyId())
+                    ->where('company_id', $holiday instanceof Holiday ? $holiday->company_id : app(CompanyContext::class)->currentCompanyId())
                     ->whereNull('deleted_at')
                     ->ignore($holiday instanceof Holiday ? $holiday->id : null)],
             'name' => ['required', 'string', 'max:150'],

@@ -8,6 +8,7 @@ use App\Models\ContractFollowUp;
 use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\Documents\DocumentService;
+use App\Services\Tenancy\CompanyContext;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
@@ -46,7 +47,7 @@ class ContractService
 
             if ($creating) {
                 // La empresa hace falta antes de guardar: el plazo en hábiles usa sus feriados.
-                $contract->company_id ??= app(\App\Services\Tenancy\CompanyContext::class)->currentCompanyId();
+                $contract->company_id ??= app(CompanyContext::class)->currentCompanyId();
                 $contract->status = $data['status'] ?? ContractStatus::PENDING;
                 $contract->created_by = $actor->id;
                 $contract->manager_id ??= $actor->id;

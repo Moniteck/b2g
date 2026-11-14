@@ -18,6 +18,7 @@ use App\Services\Notifications\CalendarSyncService;
 use App\Services\Pipeline\OpportunityStageService;
 use App\Services\ProcessExportService;
 use App\Services\Tenancy\CompanyContext;
+use App\Support\Permissions;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -217,10 +218,10 @@ class OpportunityController extends Controller
             'focus' => $focus,
             'can' => [
                 'create' => $user->can('create', Opportunity::class),
-                'update' => $user->hasPermission(\App\Support\Permissions::UPDATE),
-                'adjudicate' => $user->hasPermission(\App\Support\Permissions::ADJUDICATE),
-                'revert' => $user->hasPermission(\App\Support\Permissions::REVERT_OUTCOME),
-                'delete' => $user->hasPermission(\App\Support\Permissions::DELETE),
+                'update' => $user->hasPermission(Permissions::UPDATE),
+                'adjudicate' => $user->hasPermission(Permissions::ADJUDICATE),
+                'revert' => $user->hasPermission(Permissions::REVERT_OUTCOME),
+                'delete' => $user->hasPermission(Permissions::DELETE),
             ],
         ]);
     }

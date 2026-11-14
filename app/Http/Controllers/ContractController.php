@@ -20,6 +20,7 @@ use App\Services\Contracts\ContractService;
 use App\Services\Contracts\ContractStatus;
 use App\Services\Contracts\ContractTerm;
 use App\Services\Tenancy\CompanyContext;
+use App\Support\Permissions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -131,7 +132,7 @@ class ContractController extends Controller
                 'close' => $user->can('close', $contract),
                 'cancel' => $user->can('cancel', $contract),
                 'delete' => $user->can('delete', $contract),
-                'sign' => $user->hasPermission(\App\Support\Permissions::SIGN_DOCUMENTS, $contract->company_id),
+                'sign' => $user->hasPermission(Permissions::SIGN_DOCUMENTS, $contract->company_id),
                 'manageHolidays' => $user->can('manageHolidays', Contract::class),
             ],
         ]);

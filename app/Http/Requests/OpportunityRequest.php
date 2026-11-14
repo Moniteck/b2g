@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Contact;
 use App\Models\Opportunity;
 use App\Models\Tender;
 use App\Models\User;

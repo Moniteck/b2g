@@ -31,6 +31,7 @@ use App\Models\SignatureApplication;
 use App\Models\SigningAsset;
 use App\Models\Tender;
 use App\Models\User;
+use App\Observers\CalendarSourceObserver;
 use App\Policies\CatalogPolicy;
 use App\Policies\ClientPolicy;
 use App\Policies\CompanyPolicy;
@@ -38,6 +39,7 @@ use App\Policies\ContactPolicy;
 use App\Policies\ContractPolicy;
 use App\Policies\DocumentPolicy;
 use App\Policies\InstitutionPolicy;
+use App\Policies\InventoryItemPolicy;
 use App\Policies\KpiGoalPolicy;
 use App\Policies\OperationalPolicy;
 use App\Policies\OpportunityPolicy;
@@ -85,7 +87,7 @@ class AppServiceProvider extends ServiceProvider
         ComplianceMatrix::class => OperationalPolicy::class,
         NotificationTemplate::class => OperationalPolicy::class,
         Event::class => OperationalPolicy::class,
-        InventoryItem::class => \App\Policies\InventoryItemPolicy::class,
+        InventoryItem::class => InventoryItemPolicy::class,
         InventorySyncRun::class => OperationalPolicy::class,
         ReminderRule::class => OperationalPolicy::class,
         ReminderDelivery::class => OperationalPolicy::class,
@@ -116,7 +118,7 @@ class AppServiceProvider extends ServiceProvider
             Gate::policy($model, $policy);
         }
 
-        \App\Observers\CalendarSourceObserver::register(); // Fase 6: plazos al calendario.
+        CalendarSourceObserver::register(); // Fase 6: plazos al calendario.
 
         Passport::authorizationView(function ($parameters) {
             return view('mcp.authorize', $parameters);
