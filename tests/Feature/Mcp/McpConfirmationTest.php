@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Mcp;
 
-use App\Mcp\Tools\RegisterQuoteOutcomeTool;
+use App\Mcp\Tools\RegisterOutcomeTool;
 use App\Mcp\Tools\RemoveAttachmentTool;
 use App\Models\Company;
 use App\Models\Document;
@@ -88,11 +88,11 @@ class McpConfirmationTest extends McpTestCase
         $quote = Quote::factory()->create(['company_id' => $this->company->id, 'status' => 'Presentada']);
         $this->inSession($this->admin, $this->connect($this->admin, [$this->company]));
 
-        $quoteCode = $this->payload($this->tool(RegisterQuoteOutcomeTool::class, ['quote_id' => $quote->id, 'resultado' => 'Perdida', 'ganador' => 'Otra S.A.']))['confirmation_code'];
+        $quoteCode = $this->payload($this->tool(RegisterOutcomeTool::class, ['quote_id' => $quote->id, 'outcome' => 'Perdida', 'winner_name' => 'Otra S.A.', 'winner_amount' => 1000]))['confirmation_code'];
         $this->tool(RemoveAttachmentTool::class, $this->arguments(['confirmation_code' => $quoteCode]))->assertHasErrors(['no corresponde']);
 
         // Mismo código con datos distintos (otro ganador): rechazado y el resultado sigue Pendiente.
-        $this->tool(RegisterQuoteOutcomeTool::class, ['quote_id' => $quote->id, 'resultado' => 'Perdida', 'ganador' => 'Nosotros', 'confirmation_code' => $quoteCode])
+        $this->tool(RegisterOutcomeTool::class, ['quote_id' => $quote->id, 'outcome' => 'Perdida', 'winner_name' => 'Nosotros', 'winner_amount' => 1000, 'confirmation_code' => $quoteCode])
             ->assertHasErrors(['no corresponde']);
         $this->assertSame('Pendiente', $quote->fresh()->outcome);
 
@@ -117,11 +117,11 @@ class McpConfirmationTest extends McpTestCase
         [$viewer] = $this->memberOf($this->company, 'viewer');
         $this->inSession($viewer, $this->connect($viewer, [$this->company]));
 
-        $this->tool(RegisterQuoteOutcomeTool::class, ['quote_id' => $quote->id, 'resultado' => 'Ganada'])->assertHasErrors(['Sin permiso']);
+        $this->tool(RegisterOutcomeTool::class, ['quote_id' => $quote->id, 'outcome' => 'Ganada', 'awarded_amount' => 100])->assertHasErrors(['Sin permiso']);
         $this->assertDatabaseCount('mcp_authorizations', 0);
 
         $this->inSession($this->admin, $this->connect($this->admin, [$this->company]));
-        $this->tool(RegisterQuoteOutcomeTool::class, ['quote_id' => $quote->id, 'resultado' => 'Perdida'])->assertHasErrors(['ganador']);
+        $this->tool(RegisterOutcomeTool::class, ['quote_id' => $quote->id, 'outcome' => 'Perdida', 'winner_amount' => 10])->assertHasErrors(['winner_name']);
     }
 
     private function assertSoftDeletedOrMissing(): void

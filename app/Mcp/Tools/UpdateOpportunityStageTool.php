@@ -20,7 +20,7 @@ use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 
 #[Name('update_opportunity_stage')]
 #[Title('Mover oportunidad en el tablero')]
-#[Description('Mueve una oportunidad entre Prospecto, Oportunidad y Oferta Presentada, y actualiza su próxima acción, monto, probabilidad o cierre esperado. NO registra resultados: Adjudicado y No Adjudicado solo se alcanzan con register_quote_outcome (que crea cliente y contrato), y salir de ellos exige revertir el resultado desde el CRM.')]
+#[Description('Mueve una oportunidad entre Prospecto, Oportunidad y Oferta Presentada, y actualiza su próxima acción, monto, probabilidad o cierre esperado. NO registra resultados: Adjudicado y No Adjudicado solo se alcanzan con register_outcome (que crea cliente y contrato), y salir de ellos exige revertir el resultado (revert_outcome).')]
 #[IsDestructive(false)]
 #[IsIdempotent]
 class UpdateOpportunityStageTool extends BaseTool
@@ -35,11 +35,11 @@ class UpdateOpportunityStageTool extends BaseTool
         return [
             'opportunity_id' => $schema->integer()->description('Id de la oportunidad.')->required(),
             ...$this->companySchema($schema),
-            'etapa' => $schema->string()->enum(array_values(array_diff(array_keys(Opportunity::STAGES), self::OUTCOME_STAGES)))->description('Nueva etapa.')->required(),
-            'siguiente_accion' => $schema->string()->description('Próxima acción acordada.'),
-            'monto' => $schema->number()->description('Monto estimado.'),
-            'probabilidad' => $schema->integer()->description('Probabilidad de cierre, 0 a 100.'),
-            'fecha_cierre' => $schema->string()->description('Cierre esperado «AAAA-MM-DD».'),
+            'stage' => $schema->string()->enum(array_values(array_diff(array_keys(Opportunity::STAGES), self::OUTCOME_STAGES)))->description('Nueva etapa.')->required(),
+            'next_action' => $schema->string()->description('Próxima acción acordada.'),
+            'amount' => $schema->number()->description('Monto estimado.'),
+            'probability' => $schema->integer()->description('Probabilidad de cierre, 0 a 100.'),
+            'expected_close_date' => $schema->string()->description('Cierre esperado «AAAA-MM-DD».'),
         ];
     }
 
@@ -49,23 +49,23 @@ class UpdateOpportunityStageTool extends BaseTool
         $this->authorize('update', $opportunity);
 
         $data = $this->validate($request->all(), [
-            'etapa' => ['required', 'in:'.implode(',', array_keys(Opportunity::STAGES))],
-            'siguiente_accion' => ['nullable', 'string', 'max:255'],
-            'monto' => ['nullable', 'numeric', 'min:0'],
-            'probabilidad' => ['nullable', 'integer', 'between:0,100'],
-            'fecha_cierre' => ['nullable', 'date'],
+            'stage' => ['required', 'in:'.implode(',', array_keys(Opportunity::STAGES))],
+            'next_action' => ['nullable', 'string', 'max:255'],
+            'amount' => ['nullable', 'numeric', 'min:0'],
+            'probability' => ['nullable', 'integer', 'between:0,100'],
+            'expected_close_date' => ['nullable', 'date'],
         ]);
 
-        if (in_array($data['etapa'], self::OUTCOME_STAGES, true)) {
-            throw new ToolError('Adjudicado y No Adjudicado son resultados: regístralos con register_quote_outcome (con confirmación de la persona).');
+        if (in_array($data['stage'], self::OUTCOME_STAGES, true)) {
+            throw new ToolError('Adjudicado y No Adjudicado son resultados: regístralos con register_outcome (con confirmación de la persona).');
         }
 
         if (in_array($opportunity->stage, self::OUTCOME_STAGES, true)) {
-            throw new ToolError('La oportunidad ya tiene resultado ('.$opportunity->stageLabel().'). Para moverla hay que revertir el resultado desde el CRM.');
+            throw new ToolError('La oportunidad ya tiene resultado ('.$opportunity->stageLabel().'). Para moverla hay que revertir el resultado (revert_outcome).');
         }
 
-        $payload = ['stage' => $data['etapa']];
-        foreach (['siguiente_accion' => 'next_action', 'monto' => 'amount', 'probabilidad' => 'probability', 'fecha_cierre' => 'expected_close_date'] as $input => $column) {
+        $payload = ['stage' => $data['stage']];
+        foreach (['next_action' => 'next_action', 'amount' => 'amount', 'probability' => 'probability', 'expected_close_date' => 'expected_close_date'] as $input => $column) {
             if (array_key_exists($input, $data) && $data[$input] !== null) {
                 $payload[$column] = $data[$input];
             }
@@ -74,12 +74,12 @@ class UpdateOpportunityStageTool extends BaseTool
         DB::transaction(fn () => Opportunity::query()->whereKey($opportunity->id)->lockForUpdate()->firstOrFail()->forceFill($payload)->save());
         $opportunity->refresh();
         app(CalendarSyncService::class)->syncForOpportunity($opportunity);
-        app(AuditLogger::class)->record('oportunidad.etapa', $opportunity, ['etapa' => $data['etapa']]);
+        app(AuditLogger::class)->record('oportunidad.etapa', $opportunity, ['stage' => $data['stage']]);
 
         return $this->ok([
             'opportunity_id' => $opportunity->id,
-            'etapa' => $opportunity->stage,
-            'etapa_nombre' => $opportunity->stageLabel(),
+            'stage' => $opportunity->stage,
+            'stage_label' => $opportunity->stageLabel(),
         ], 'Etapa actualizada.');
     }
 }

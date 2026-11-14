@@ -2,14 +2,9 @@
 
 namespace App\Mcp\Tools;
 
-use App\Mcp\Tools\Concerns\ValidatesQuoteItems;
-use App\Models\Contact;
-use App\Models\Institution;
-use App\Models\Opportunity;
+use App\Mcp\Tools\Concerns\DescribesQuoteFields;
 use App\Models\Quote;
-use App\Models\Tender;
 use App\Models\User;
-use App\Rules\BelongsToActiveCompany;
 use App\Services\Business\QuoteService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
@@ -22,60 +17,28 @@ use Laravel\Mcp\Server\Tools\Annotations\IsDestructive;
 
 #[Name('create_quote')]
 #[Title('Crear cotización')]
-#[Description('Crea una cotización en Borrador. Cada línea puede referenciar un producto del inventario (`inventory_item_id` o `sku`) para tomar su precio con el calculador único; el ISV se calcula según la regla de la empresa. Los ids de licitación, oportunidad e inventario deben ser de la empresa.')]
+#[Description('Crea una cotización en Borrador con los mismos campos y reglas que el formulario web. Los importes (subtotal, ISV y total) los calcula el servidor con el calculador único y la regla de ISV de la empresa; con inventory_item_id el precio sale del inventario de Blessing. Numeración única por empresa.')]
 #[IsDestructive(false)]
 class CreateQuoteTool extends BaseTool
 {
-    use ValidatesQuoteItems;
+    use DescribesQuoteFields;
 
     public function schema(JsonSchema $schema): array
     {
-        return [
-            ...$this->companySchema($schema),
-            'institucion_id' => $schema->integer()->description('Institución destinataria.'),
-            'contacto_id' => $schema->integer()->description('Contacto de la institución.'),
-            'oportunidad_id' => $schema->integer()->description('Oportunidad relacionada.'),
-            'licitacion_id' => $schema->integer()->description('Licitación relacionada.'),
-            'tipo' => $schema->string()->description('Tipo de compra o proceso.'),
-            'validez_dias' => $schema->integer()->description('Días de vigencia de la oferta (por defecto 30).'),
-            'notas' => $schema->string()->description('Observaciones.'),
-            'items' => $schema->array()->description('Líneas: [{descripcion, cantidad, unidad?, precio_unitario?, inventory_item_id?, sku?, tasa_impuesto?}].')->required(),
-        ];
+        $fields = $this->quoteFieldSchema($schema);
+        $fields['institution_id'] = $fields['institution_id']->required();
+        $fields['items'] = $fields['items']->required();
+
+        return [...$this->companySchema($schema), ...$fields];
     }
 
     protected function run(Request $request, User $user, int $companyId): Response|ResponseFactory
     {
         $this->authorize('create', Quote::class);
 
-        $data = $this->validate($request->all(), [
-            'institucion_id' => ['nullable', 'integer', new BelongsToActiveCompany(Institution::class)],
-            'contacto_id' => ['nullable', 'integer', new BelongsToActiveCompany(Contact::class)],
-            'oportunidad_id' => ['nullable', 'integer', new BelongsToActiveCompany(Opportunity::class)],
-            'licitacion_id' => ['nullable', 'integer', new BelongsToActiveCompany(Tender::class)],
-            'tipo' => ['nullable', 'string', 'max:100'],
-            'validez_dias' => ['nullable', 'integer', 'min:1', 'max:365'],
-            'notas' => ['nullable', 'string', 'max:5000'],
-            ...$this->itemRules(true),
-        ]);
+        $data = $this->validateQuote($request->all() + ['validity_days' => 30]);
+        $quote = app(QuoteService::class)->create($companyId, $user->id, $data);
 
-        $quote = app(QuoteService::class)->create($companyId, $user->id, [
-            'institution_id' => $data['institucion_id'] ?? null,
-            'contact_id' => $data['contacto_id'] ?? null,
-            'opportunity_id' => $data['oportunidad_id'] ?? null,
-            'tender_id' => $data['licitacion_id'] ?? null,
-            'purchase_type' => $data['tipo'] ?? null,
-            'validity_days' => $data['validez_dias'] ?? 30,
-            'notes' => $data['notas'] ?? null,
-            'items' => $this->mapItems($data['items']),
-        ]);
-
-        return $this->ok([
-            'cotizacion_id' => $quote->id,
-            'numero' => $quote->number,
-            'subtotal' => (float) $quote->subtotal,
-            'impuesto' => (float) $quote->tax,
-            'total' => (float) $quote->total,
-            'estado' => $quote->status,
-        ], 'Cotización creada en borrador.');
+        return $this->ok(['quote' => $this->quoteSummary($quote)], "Cotización {$quote->number} creada en Borrador.");
     }
 }

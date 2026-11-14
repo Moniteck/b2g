@@ -6,7 +6,11 @@ use App\Models\Document;
 use App\Models\DocumentExtraction;
 use App\Models\Event;
 use App\Models\InventoryItem;
+use App\Models\Opportunity;
+use App\Models\Quote;
+use App\Models\QuoteParticipant;
 use App\Models\Tender;
+use App\Services\Business\AdjudicationService;
 use App\Services\Pricing\InventoryPricing;
 
 /**
@@ -185,6 +189,35 @@ final class Present
             'synced_at' => self::dt($item->synced_at),
             ...Untrusted::of(['description' => $item->description], 500),
         ], fn ($value) => $value !== null);
+    }
+
+    /**
+     * Participantes de una cotización u oportunidad con el resumen de `AdjudicationService`.
+     *
+     * @return array<string, mixed>
+     */
+    public static function participants(Quote|Opportunity $subject, string $outcome): array
+    {
+        $service = app(AdjudicationService::class);
+        $participants = $service->participantsOf($subject);
+
+        return [
+            'subject' => $subject instanceof Quote ? ['quote_id' => $subject->id, 'number' => $subject->number] : ['opportunity_id' => $subject->id],
+            'outcome' => $outcome,
+            'reference_amount' => $subject instanceof Quote ? (float) $subject->total : (float) $subject->amount,
+            'summary' => $service->participantSummary($participants),
+            'participants' => $participants->map(fn (QuoteParticipant $participant) => [
+                'id' => $participant->id,
+                'tax_id' => $participant->tax_id,
+                'amount' => (float) $participant->amount,
+                'currency' => $participant->currency,
+                'includes_tax' => (bool) $participant->includes_tax,
+                'is_ours' => (bool) $participant->is_ours,
+                'is_winner' => (bool) $participant->is_winner,
+                'position' => $participant->position,
+                ...Untrusted::of(['name' => $participant->name, 'notes' => $participant->notes], 500),
+            ])->values()->all(),
+        ];
     }
 
     public static function dt(mixed $value): ?string

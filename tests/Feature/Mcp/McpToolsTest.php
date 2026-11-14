@@ -29,8 +29,10 @@ use App\Models\McpConnection;
 use App\Models\Opportunity;
 use App\Models\Tender;
 use App\Models\User;
+use App\Services\AuditLogger;
 use App\Services\Tenders\TenderAttributes;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Mcp\Request;
 
 /**
  * Herramientas MCP: scopes, aislamiento entre empresas, policies por rol, validación, errores
@@ -74,7 +76,7 @@ class McpToolsTest extends McpTestCase
         $this->assertMatchesRegularExpression('/solo lectura|not found/', $errors[0]);
 
         // Defensa en profundidad: aunque se invoque directamente, la herramienta la rechaza.
-        $direct = (new CreateTenderTool)->handle(new \Laravel\Mcp\Request(['reference' => 'LPN-1-2026', 'title' => 'Compra']));
+        $direct = (new CreateTenderTool)->handle(new Request(['reference' => 'LPN-1-2026', 'title' => 'Compra']));
         $this->assertTrue($direct->isError());
         $this->assertStringContainsString('solo lectura', (string) $direct->content());
         $this->assertDatabaseCount('tenders', 0);
@@ -266,7 +268,7 @@ class McpToolsTest extends McpTestCase
         $opportunity = Opportunity::factory()->create(['company_id' => $this->company->id, 'stage' => 'oferta_presentada']);
         $this->inSession($this->admin, $this->connect($this->admin, [$this->company]));
 
-        $this->tool(UpdateOpportunityStageTool::class, ['opportunity_id' => $opportunity->id, 'etapa' => 'adjudicado'])->assertHasErrors(['register_quote_outcome']);
+        $this->tool(UpdateOpportunityStageTool::class, ['opportunity_id' => $opportunity->id, 'stage' => 'adjudicado'])->assertHasErrors(['register_outcome']);
         $this->assertSame('oferta_presentada', $opportunity->fresh()->stage);
     }
 
@@ -287,7 +289,7 @@ class McpToolsTest extends McpTestCase
         $this->tool(CreateInstitutionTool::class, ['name' => 'Secretaría de Salud'])->assertHasErrors(['Ya existe una institución']);
 
         $this->app->bind(TenderAttributes::class, fn () => throw new \RuntimeException('boom'));
-        $this->mock(\App\Services\AuditLogger::class, fn ($mock) => $mock->shouldReceive('record')->andThrow(new \RuntimeException('falla interna')));
+        $this->mock(AuditLogger::class, fn ($mock) => $mock->shouldReceive('record')->andThrow(new \RuntimeException('falla interna')));
         $this->tool(CreateTenderTool::class, ['reference' => 'LPN-9-2026', 'title' => 'Compra'])->assertHasErrors(['error interno', 'Código de seguimiento']);
     }
 }

@@ -2,6 +2,9 @@
 
 namespace App\Mcp\Tools;
 
+use App\Http\Requests\Quotes\ParticipantsRequest;
+use App\Mcp\Support\Present;
+use App\Mcp\Tools\Concerns\TargetsAdjudicable;
 use App\Models\Quote;
 use App\Models\User;
 use App\Services\Business\AdjudicationService;
@@ -15,59 +18,34 @@ use Laravel\Mcp\Server\Attributes\Title;
 use Laravel\Mcp\Server\Tools\Annotations\IsDestructive;
 use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 
-#[Name('set_quote_participants')]
-#[Title('Registrar participantes de la oferta')]
-#[Description('Registra los participantes de una oferta con el monto de cada uno; marque la propia con `nuestra_oferta`. Envíe la lista completa en una sola llamada.')]
+#[Name('set_participants')]
+#[Title('Guardar participantes de la oferta')]
+#[Description('Guarda la lista COMPLETA de participantes de una cotización u oportunidad, por diferencias: las filas con `id` se actualizan, las nuevas se crean (una sin id cuyo nombre ya existe se actualiza, no se duplica) y las que no vienen se quitan. Una sola fila is_ours (nuestra oferta) y, conocido el resultado, una sola is_winner. Campos: id?, name, tax_id?, amount, currency? (HNL o USD), includes_tax?, is_ours?, is_winner?, notes?.')]
 #[IsDestructive(false)]
 #[IsIdempotent]
 class SetParticipantsTool extends BaseTool
 {
-    protected ?array $record = ['quote_id', Quote::class];
+    use TargetsAdjudicable;
 
     public function schema(JsonSchema $schema): array
     {
         return [
-            'quote_id' => $schema->integer()->description('Id de la cotización.')->required(),
+            ...$this->subjectSchema($schema),
             ...$this->companySchema($schema),
-            'participantes' => $schema->array()->description('[{nombre, rtn?, monto, moneda?, incluye_impuesto?, nuestra_oferta?, posicion?, notas?}].')->required(),
+            'participants' => $schema->array()->description('Lista completa de participantes.')->required(),
         ];
     }
 
     protected function run(Request $request, User $user, int $companyId): Response|ResponseFactory
     {
-        $quote = $this->find(Quote::class, $request->get('quote_id'), 'la cotización');
-        $this->authorize('update', $quote);
+        $subject = $this->subject($request);
+        $this->authorize($subject instanceof Quote ? 'manageParticipants' : 'update', $subject);
 
-        $data = $this->validate($request->all(), [
-            'participantes' => ['required', 'array', 'min:1', 'max:50'],
-            'participantes.*.nombre' => ['required', 'string', 'max:255'],
-            'participantes.*.rtn' => ['nullable', 'string', 'max:100'],
-            'participantes.*.monto' => ['required', 'numeric', 'min:0'],
-            'participantes.*.moneda' => ['nullable', 'string', 'max:3'],
-            'participantes.*.incluye_impuesto' => ['nullable', 'boolean'],
-            'participantes.*.nuestra_oferta' => ['nullable', 'boolean'],
-            'participantes.*.posicion' => ['nullable', 'integer', 'min:1', 'max:100'],
-            'participantes.*.notas' => ['nullable', 'string', 'max:2000'],
-        ]);
+        $form = new ParticipantsRequest;
+        $data = $this->validate(['participants' => $request->get('participants')], $form->rules(), [], $form->attributes());
 
-        $updated = app(AdjudicationService::class)->syncParticipants($quote, array_map(fn (array $participant) => [
-            'name' => $participant['nombre'],
-            'tax_id' => $participant['rtn'] ?? null,
-            'amount' => $participant['monto'],
-            'currency' => $participant['moneda'] ?? 'HNL',
-            'includes_tax' => $participant['incluye_impuesto'] ?? true,
-            'is_ours' => $participant['nuestra_oferta'] ?? false,
-            'position' => $participant['posicion'] ?? null,
-            'notes' => $participant['notas'] ?? null,
-        ], $data['participantes']));
+        app(AdjudicationService::class)->saveParticipants($subject, $data['participants'], $user);
 
-        return $this->ok([
-            'cotizacion_id' => $updated->id,
-            'participantes' => $updated->participants->map(fn ($participant) => [
-                'nombre' => $participant->name,
-                'monto' => (float) $participant->amount,
-                'nuestra_oferta' => (bool) $participant->is_ours,
-            ])->all(),
-        ], 'Participantes registrados.');
+        return $this->ok(Present::participants($subject->fresh(), $this->outcomeOf($subject->fresh())), 'Participantes guardados.');
     }
 }
