@@ -104,7 +104,7 @@ empresa, la campana, el menú de usuario, los toasts de `flash` y la confirmaci�
 <StatusBadge :value="tender.status" />
 ```
 
-**StatCard** — una `featured` por fila; `count` anima la cifra al montar.
+**StatCard** — una `featured` por fila; `count` anima la cifra al montar y vuelve a animarla cuando la prop cambia.
 ```vue
 <StatCard variant="featured" label="Pipeline estimado" :count="248300000" format="currency-compact" hint="38 oportunidades" href="/pipeline" />
 <StatCard variant="alert" label="Cartera vencida" :value="money(182450.75)" href="/cobros" />
@@ -201,6 +201,25 @@ const remove = (row) => confirm({ verb: 'Eliminar', object: `el contacto ${row.n
 <Avatar :name="user.name" :initials="user.initials" size="sm" />
 <Tooltip text="Solo un administrador puede cerrar el período."><AppButton disabled>Cerrar período</AppButton></Tooltip>
 ```
+
+**CapKanban** (`resources/design/vue/CapKanban.vue`, paquete del sistema de diseño: **no se edita**).
+Props: `columns` (`[{ id, title, addLabel?, emptyTitle?, emptyHint?, wipLimit? }]`), `cards` (`[{ id, column, title, … }]`),
+`label`, `pickerLabel`. Eventos: `move` (`{ cardId, from, fromIndex, to, index }`: la tarjeta solo cambia de
+columna cuando el padre actualiza `cards`; si no, el movimiento queda rechazado), `add`, `column-menu`, `card-menu`.
+Slot `#card="{ card }"` para dibujar la tarjeta propia. Para extenderlo sin tocar el paquete:
+
+- Contenido: usa el slot `#card` y guarda el registro completo aparte (busca por `card.id`), como `Pages/Pipeline/Index.vue`.
+- Ocultar acciones de cabecera («+» y «⋯»), que no tienen prop: CSS `:deep` con alcance a un contenedor propio,
+  apuntando a `.cap-kanban__action` y al atributo `data-cap-kanban-column="<id>"` de la columna.
+```vue
+<div class="pipeline-board" :data-readonly="can.create ? undefined : 'true'"><CapKanban … /></div>
+<style scoped>
+.pipeline-board :deep(.cap-kanban__action[aria-label='Opciones de la columna']),
+.pipeline-board :deep([data-cap-kanban-column='adjudicado'] .cap-kanban__action),
+.pipeline-board[data-readonly='true'] :deep(.cap-kanban__action) { display: none; }
+</style>
+```
+- Si una necesidad se repite en más de un tablero, pídela como prop al paquete de diseño en lugar de sumar más `:deep`.
 
 ## Utilidades
 
