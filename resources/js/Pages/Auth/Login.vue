@@ -54,6 +54,7 @@ const waiting = ref(false);
 // Escena: elementos para la salida animada, la inclinación y la mirada de Lici.
 const scene = ref(null);
 const tiltEl = ref(null);
+const glareEl = ref(null);
 const cardRef = ref(null);
 const mascotRef = ref(null);
 
@@ -83,7 +84,11 @@ function setMood(value, duration) {
 }
 
 // Si nadie toca nada un rato, Lici se duerme; cualquier gesto la despierta (sorprendida).
+let lastWake = 0;
 function wake() {
+    const now = performance.now();
+    if (!sleepy.value && now - lastWake < 1000) return;
+    lastWake = now;
     if (sleepy.value) {
         sleepy.value = false;
         if (!mood.value) setMood('surprised', 700);
@@ -92,15 +97,31 @@ function wake() {
     sleepTimer = window.setTimeout(() => (sleepy.value = true), SLEEP_AFTER);
 }
 
+// Medidas en caché: el puntero no lee el layout en cada evento (eso forzaba un reflow por
+// fotograma). Se vuelven a medir al cargar, al cambiar el tamaño, al desplazar y al cambiar de cara.
+let rects = null;
+let depthItems = [];
+function measure() {
+    const mascot = mascotRef.value?.root?.getBoundingClientRect();
+    const card = tiltEl.value?.getBoundingClientRect();
+    rects = {
+        mascot: mascot ? { x: mascot.left + mascot.width / 2, y: mascot.top + mascot.height * 0.45 } : null,
+        card: card ? { left: card.left, top: card.top, width: card.width, height: card.height } : null,
+    };
+    depthItems = scene.value ? [...scene.value.querySelectorAll('[data-depth]')].map((element) => ({ element, depth: Number(element.dataset.depth) || 1 })) : [];
+}
+
 function mascotCenter() {
-    const rect = mascotRef.value?.root?.getBoundingClientRect();
-    return rect ? { x: rect.left + rect.width / 2, y: rect.top + rect.height * 0.45 } : null;
+    if (!rects) measure();
+    return rects?.mascot ?? null;
 }
 
 function lookAt(x, y) {
     const center = mascotCenter();
     if (!center) return;
-    look.value = { x: (x - center.x) / Math.max(window.innerWidth / 3, 200), y: (y - center.y) / 320 };
+    // Redondeado: Lici solo se vuelve a pintar cuando la mirada cambia de verdad.
+    const next = { x: Math.round(((x - center.x) / Math.max(window.innerWidth / 3, 200)) * 25) / 25, y: Math.round(((y - center.y) / 320) * 25) / 25 };
+    if (next.x !== look.value.x || next.y !== look.value.y) look.value = next;
 }
 
 // La mirada sigue el texto: el punto de escritura aproximado dentro del campo enfocado.
@@ -133,12 +154,22 @@ function onInput(event) {
 let frame = 0;
 let pointer = null;
 const tilt = { x: 0, y: 0, tx: 0, ty: 0, gx: 50, gy: 30 };
+let pointerDirty = false;
 function onPointerMove(event) {
     wake();
     if (mobile.value || event.pointerType !== 'mouse') return;
     pointer = { x: event.clientX, y: event.clientY };
+    pointerDirty = true;
+    if (!frame) frame = window.requestAnimationFrame(animatePointer);
+}
+
+// Todo el trabajo del puntero en un requestAnimationFrame, con lecturas de la caché y sin
+// lecturas de layout.
+function applyPointer() {
+    pointerDirty = false;
+    if (!rects) measure();
     if (!focus.value) lookAt(pointer.x, pointer.y);
-    const rect = tiltEl.value?.getBoundingClientRect();
+    const rect = rects?.card;
     if (rect) {
         const inside = Math.abs(pointer.x - (rect.left + rect.width / 2)) < rect.width * 0.75 && Math.abs(pointer.y - (rect.top + rect.height / 2)) < rect.height * 0.75;
         tilt.tx = inside ? ((pointer.y - (rect.top + rect.height / 2)) / rect.height) * -7 : 0;
@@ -146,28 +177,34 @@ function onPointerMove(event) {
         tilt.gx = ((pointer.x - rect.left) / rect.width) * 100;
         tilt.gy = ((pointer.y - rect.top) / rect.height) * 100;
     }
-    if (!frame) frame = window.requestAnimationFrame(animatePointer);
+    parallax.tx = pointer.x / window.innerWidth - 0.5;
+    parallax.ty = pointer.y / window.innerHeight - 0.5;
+}
+
+// Parallax suavizado aquí (no con transiciones CSS, que se reiniciarían en cada fotograma).
+const parallax = { x: 0, y: 0, tx: 0, ty: 0 };
+function applyParallax() {
+    parallax.x += (parallax.tx - parallax.x) * 0.08;
+    parallax.y += (parallax.ty - parallax.y) * 0.08;
+    depthItems.forEach(({ element, depth }) => {
+        element.style.translate = `${(parallax.x * 22 * depth).toFixed(1)}px ${(parallax.y * 16 * depth).toFixed(1)}px`;
+    });
+    return Math.abs(parallax.tx - parallax.x) > 0.001 || Math.abs(parallax.ty - parallax.y) > 0.001;
 }
 
 function animatePointer() {
     frame = 0;
     if (!scene.value || prefersReducedMotion()) return;
+    if (pointer && pointerDirty) applyPointer();
     tilt.x += (tilt.tx - tilt.x) * 0.14;
     tilt.y += (tilt.ty - tilt.y) * 0.14;
     if (tiltEl.value) {
         tiltEl.value.style.transform = `perspective(1400px) rotateX(${tilt.x.toFixed(2)}deg) rotateY(${tilt.y.toFixed(2)}deg)`;
-        tiltEl.value.style.setProperty('--glare-x', `${tilt.gx.toFixed(1)}%`);
-        tiltEl.value.style.setProperty('--glare-y', `${tilt.gy.toFixed(1)}%`);
+        // El brillo se mueve con transform (una variable CSS heredada recalcularía toda la tarjeta).
+        if (glareEl.value && rects?.card) glareEl.value.style.transform = `translate(${((tilt.gx / 100 - 0.5) * rects.card.width).toFixed(0)}px, ${((tilt.gy / 100 - 0.5) * rects.card.height).toFixed(0)}px)`;
     }
-    if (pointer) {
-        const dx = pointer.x / window.innerWidth - 0.5;
-        const dy = pointer.y / window.innerHeight - 0.5;
-        scene.value.querySelectorAll('[data-depth]').forEach((element) => {
-            const depth = Number(element.dataset.depth) || 1;
-            element.style.translate = `${(dx * 22 * depth).toFixed(1)}px ${(dy * 16 * depth).toFixed(1)}px`;
-        });
-    }
-    if (Math.abs(tilt.tx - tilt.x) > 0.02 || Math.abs(tilt.ty - tilt.y) > 0.02) frame = window.requestAnimationFrame(animatePointer);
+    const moving = applyParallax();
+    if (moving || Math.abs(tilt.tx - tilt.x) > 0.02 || Math.abs(tilt.ty - tilt.y) > 0.02) frame = window.requestAnimationFrame(animatePointer);
 }
 
 function onLeave() {
@@ -187,6 +224,7 @@ function changeFace(next) {
 }
 
 function onSettled(next) {
+    measure();
     announcement.value = next === 'register' ? 'Formulario para solicitar acceso' : 'Formulario para ingresar';
 }
 
@@ -223,6 +261,11 @@ function onVisibility() {
 
 function onRevealIntro() {
     waiting.value = false;
+    window.setTimeout(measure, 1300);
+}
+
+function onResize() {
+    rects = null;
 }
 
 function onIntroDone() {
@@ -254,6 +297,9 @@ onMounted(() => {
     }
     wake();
     window.addEventListener('pointermove', onPointerMove, { passive: true });
+    window.addEventListener('resize', onResize);
+    window.addEventListener('scroll', onResize, { passive: true, capture: true });
+    window.setTimeout(measure, 1300);
     window.addEventListener('keydown', wake);
     document.addEventListener('visibilitychange', onVisibility);
     removeInterceptor = interceptors.onVisitResponse(async (visit, response) => {
@@ -274,6 +320,8 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     window.removeEventListener('pointermove', onPointerMove);
+    window.removeEventListener('resize', onResize);
+    window.removeEventListener('scroll', onResize, { capture: true });
     window.removeEventListener('keydown', wake);
     document.removeEventListener('visibilitychange', onVisibility);
     window.cancelAnimationFrame(frame);
@@ -327,7 +375,7 @@ onBeforeUnmount(() => {
                                 <RequestForm :companies="companies" @switch="toLogin" @busy="busy = $event" @failed="onFailed" @sent="onSent" @reveal="revealed = $event" @cheer="onCheer" />
                             </template>
                         </AuthCard>
-                        <span class="auth__glare" aria-hidden="true" />
+                        <span class="auth__glare-clip" aria-hidden="true"><span ref="glareEl" class="auth__glare" /></span>
                     </div>
                 </div>
 

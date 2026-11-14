@@ -48,7 +48,7 @@ function seed() {
 function resize() {
     const element = canvas.value;
     if (!element) return;
-    const ratio = Math.min(window.devicePixelRatio || 1, 1.5);
+    const ratio = Math.min(window.devicePixelRatio || 1, 1.25);
     width = window.innerWidth;
     height = window.innerHeight;
     element.width = Math.round(width * ratio);
@@ -168,7 +168,6 @@ onBeforeUnmount(() => {
         <span class="auth__blob auth__blob--red" data-depth="0.6" />
         <span class="auth__blob auth__blob--wine" data-depth="1" />
         <span class="auth__blob auth__blob--taupe" data-depth="1.4" />
-        <span class="auth__aurora" />
         <canvas ref="canvas" class="auth__particles" />
     </div>
 </template>

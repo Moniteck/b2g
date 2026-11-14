@@ -10,7 +10,8 @@
 // (salta y celebra) y wave (saluda). Las alas, los ojos y la cabeza pasan de un estado a otro con
 // transiciones. Los estilos viven en auth.css (no son `scoped`) para que la cortina de salida y la
 // intro puedan clonar el SVG fuera de Vue.
-import { computed, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { prefersReducedMotion } from './motion.js';
 
 const props = defineProps({
     state: { type: String, default: 'idle' },
@@ -38,6 +39,24 @@ const tilt = computed(() => {
     return `rotate(${(lookX.value * 7).toFixed(2)}deg)`;
 });
 const happy = computed(() => ['celebrate', 'wave', 'happy'].includes(props.state));
+
+// Parpadeo con la Web Animations API cada 3-6 s (no una animación CSS infinita que repinte el SVG
+// en cada fotograma). No parpadea con la pestaña oculta, con movimiento reducido ni con los ojos
+// tapados o dormida.
+let blinkTimer = 0;
+function scheduleBlink() {
+    blinkTimer = window.setTimeout(blink, 3000 + Math.random() * 3000);
+}
+function blink() {
+    if (!document.hidden && !prefersReducedMotion() && !['shy', 'sleepy', 'celebrate', 'wave', 'happy'].includes(props.state)) {
+        root.value?.querySelectorAll('.lici__lid').forEach((lid) =>
+            lid.animate?.([{ transform: 'scaleY(0)' }, { transform: 'scaleY(1)', offset: 0.45 }, { transform: 'scaleY(0)' }], { duration: 190, easing: 'ease-in-out' }),
+        );
+    }
+    scheduleBlink();
+}
+onMounted(scheduleBlink);
+onBeforeUnmount(() => window.clearTimeout(blinkTimer));
 </script>
 
 <template>
@@ -116,8 +135,14 @@ const happy = computed(() => ['celebrate', 'wave', 'happy'].includes(props.state
                     </g>
                 </g>
 
-                <path class="lici__wing lici__wing--left" d="M32 84 C16 96 16 124 30 136 C40 126 44 104 32 84 Z" />
-                <path class="lici__wing lici__wing--right" d="M128 84 C144 96 144 124 130 136 C120 126 116 104 128 84 Z" />
+                <g class="lici__wing lici__wing--left">
+                    <path class="lici__wing-shape" d="M28 82 C29 58 48 42 72 41 C83 41 92 45 98 52 L91 57 L99 63 L91 68 L97 75 L88 78 L91 85 L80 86 C68 95 50 101 34 102 C26 101 24 92 28 82 Z" />
+                    <path class="lici__wing-feather" d="M46 58 C58 52 72 52 86 56 M42 72 C56 66 72 66 88 69 M42 86 C56 80 70 80 82 81" />
+                </g>
+                <g class="lici__wing lici__wing--right">
+                    <path class="lici__wing-shape" d="M132 82 C131 58 112 42 88 41 C77 41 68 45 62 52 L69 57 L61 63 L69 68 L63 75 L72 78 L69 85 L80 86 C92 95 110 101 126 102 C134 101 136 92 132 82 Z" />
+                    <path class="lici__wing-feather" d="M114 58 C102 52 88 52 74 56 M118 72 C104 66 88 66 72 69 M118 86 C104 80 90 80 78 81" />
+                </g>
             </g>
         </g>
     </svg>

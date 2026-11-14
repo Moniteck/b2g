@@ -22,7 +22,8 @@ defineProps({
     <div class="auth-field" :class="{ 'auth-field--error': error || invalid, 'auth-field--floated': floated }">
         <div class="auth-field__control">
             <slot />
-            <label class="auth-field__label" :for="id">{{ label }}<span v-if="optional" class="auth-optional"> (opcional)</span></label>
+            <label class="auth-field__label" :for="id">{{ label }}</label>
+            <span v-if="optional" class="auth-field__hint">opcional</span>
             <slot name="trailing" />
             <span class="auth-field__line" aria-hidden="true" />
         </div>

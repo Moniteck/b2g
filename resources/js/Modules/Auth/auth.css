@@ -1016,32 +1016,7 @@
   opacity: 0;
 }
 
-.lici__wing {
-  fill: var(--cap-red-800);
-  transition: transform 340ms cubic-bezier(0.3, 1.35, 0.5, 1);
-}
-
-.lici__wing--left {
-  transform-origin: 32px 86px;
-}
-
-.lici__wing--right {
-  transform-origin: 128px 86px;
-}
-
 /* Se tapa los ojos (contraseña) y espía con un ojo (contraseña visible). */
-.lici--shy .lici__wing--left,
-.lici--peek .lici__wing--left {
-  transform: translateY(-10px) rotate(-126deg);
-}
-
-.lici--shy .lici__wing--right {
-  transform: translateY(-10px) rotate(126deg);
-}
-
-.lici--peek .lici__wing--right {
-  transform: rotate(38deg);
-}
 
 /* Preocupado: cejas, gota y sacudida. */
 .lici--worried .lici__brow,
@@ -1057,18 +1032,7 @@
   animation: lici-drip 1.1s ease-in 2;
 }
 
-.lici--worried .lici__wing--left {
-  transform: rotate(22deg);
-}
-
-.lici--worried .lici__wing--right {
-  transform: rotate(-22deg);
-}
-
 /* Pensando: espera la respuesta del servidor. */
-.lici--thinking .lici__wing--right {
-  transform: rotate(84deg);
-}
 
 .lici--thinking .lici__dots circle {
   opacity: 1;
@@ -1097,23 +1061,8 @@
   animation: lici-shadow 700ms cubic-bezier(0.3, 0, 0.4, 1) infinite;
 }
 
-.lici--celebrate .lici__wing--left {
-  transform: rotate(150deg);
-  animation: lici-flap-left 350ms ease-in-out infinite alternate;
-}
-
-.lici--celebrate .lici__wing--right {
-  transform: rotate(-150deg);
-  animation: lici-flap-right 350ms ease-in-out infinite alternate;
-}
-
 .lici--wave .lici__hop {
   animation: lici-jump 620ms cubic-bezier(0.3, 0, 0.4, 1) 1;
-}
-
-.lici--wave .lici__wing--right {
-  transform: rotate(-146deg);
-  animation: lici-wave 420ms ease-in-out infinite alternate;
 }
 
 /* ---- Cortina de salida y confeti -------------------------------------------------------------- */
@@ -1271,21 +1220,6 @@
 @keyframes lici-shadow {
   0%, 15%, 75%, 100% { transform: scale(1); opacity: 0.12; }
   45% { transform: scale(0.7); opacity: 0.06; }
-}
-
-@keyframes lici-flap-left {
-  from { transform: rotate(132deg); }
-  to { transform: rotate(162deg); }
-}
-
-@keyframes lici-flap-right {
-  from { transform: rotate(-132deg); }
-  to { transform: rotate(-162deg); }
-}
-
-@keyframes lici-wave {
-  from { transform: rotate(-128deg); }
-  to { transform: rotate(-166deg); }
 }
 
 /* ======================================================================================
@@ -1794,14 +1728,6 @@
   transform: rotate(12deg);
 }
 
-.lici--surprised .lici__wing--left {
-  transform: rotate(38deg);
-}
-
-.lici--surprised .lici__wing--right {
-  transform: rotate(-38deg);
-}
-
 .lici--surprised .lici__hop {
   animation: lici-startle 420ms cubic-bezier(0.3, 1.5, 0.5, 1);
 }
@@ -1820,14 +1746,6 @@
 
 .lici--happy .lici__hop {
   animation: lici-jump 560ms cubic-bezier(0.3, 0, 0.4, 1) 1;
-}
-
-.lici--happy .lici__wing--left {
-  transform: rotate(60deg);
-}
-
-.lici--happy .lici__wing--right {
-  transform: rotate(-60deg);
 }
 
 /* Dormido: párpados a media asta, cabeza ladeada, «z z Z» que suben. */
@@ -1856,14 +1774,6 @@
 
 .lici--sleepy .lici__body {
   animation-duration: 5s;
-}
-
-.lici--sleepy .lici__wing--left {
-  transform: rotate(-8deg);
-}
-
-.lici--sleepy .lici__wing--right {
-  transform: rotate(8deg);
 }
 
 /* Mirando: las plumas acompañan la mirada. */
@@ -2045,4 +1955,270 @@
   0% { transform: translate(0, 6px) scale(0.6); opacity: 0; }
   40% { opacity: 1; }
   100% { transform: translate(6px, -10px) scale(1.1); opacity: 0; }
+}
+
+/* ======================================================================================
+ * Tercera pasada: alas que tapan de verdad, campos uniformes, sin scroll de página y
+ * menos trabajo por fotograma (sin backdrop-filter sobre fondos animados, SVG sin
+ * animaciones infinitas, respiración compuesta sobre la caja del SVG).
+ * ====================================================================================== */
+
+/* ---- Rendimiento ------------------------------------------------------------------------------ */
+
+/* El vidrio con desenfoque obliga a volver a desenfocar todo lo que se mueve detrás (partículas,
+ * manchones) en cada fotograma: aquí las superficies son casi opacas y sin backdrop-filter. */
+.auth .cap-glass,
+.auth .cap-glass--light,
+.auth--mobile .auth__theme {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.auth .cap-glass--light {
+  background: color-mix(in srgb, var(--cap-card) 93%, transparent);
+}
+
+.auth .cap-glass {
+  background: color-mix(in srgb, var(--cap-frame) 90%, transparent);
+}
+
+.auth--mobile .auth__theme {
+  background: color-mix(in srgb, var(--cap-frame) 90%, transparent);
+}
+
+/* Respira la caja del SVG (capa compuesta), no un grupo interno del SVG (que repinta). */
+.lici__body {
+  animation: none;
+}
+
+.auth__perch .lici {
+  transform-origin: 50% 100%;
+  animation: lici-breathe 3.4s ease-in-out infinite alternate;
+}
+
+/* El parpadeo lo lanza Mascot.vue cada pocos segundos con la Web Animations API. */
+.lici__lid {
+  animation: none;
+}
+
+/* ---- Lici: alas dibujadas en la pose «me tapo los ojos» ---------------------------------------- */
+
+.lici__wing {
+  transition: transform 480ms cubic-bezier(0.34, 1.25, 0.5, 1);
+}
+
+.lici__wing-shape {
+  fill: var(--cap-red-800);
+}
+
+.lici__wing-feather {
+  fill: none;
+  stroke: var(--cap-red-600);
+  stroke-linecap: round;
+  stroke-width: 2.4;
+}
+
+.lici__wing--left {
+  transform: rotate(110deg) scale(0.62, 0.55);
+  transform-origin: 30px 90px;
+}
+
+.lici__wing--right {
+  transform: rotate(-110deg) scale(0.62, 0.55);
+  transform-origin: 130px 90px;
+}
+
+.lici--shy .lici__wing--left,
+.lici--shy .lici__wing--right {
+  transform: rotate(0deg) scale(1, 1);
+}
+
+.lici--peek .lici__wing--left {
+  transform: rotate(6deg) scale(0.86, 0.96);
+}
+
+.lici--peek .lici__wing--right {
+  transform: rotate(-64deg) scale(0.7, 0.62);
+}
+
+.lici--worried .lici__wing--left {
+  transform: rotate(132deg) scale(0.62, 0.55);
+}
+
+.lici--worried .lici__wing--right {
+  transform: rotate(-132deg) scale(0.62, 0.55);
+}
+
+.lici--thinking .lici__wing--right {
+  transform: rotate(-30deg) scale(0.55, 0.5);
+}
+
+.lici--surprised .lici__wing--left {
+  transform: rotate(148deg) scale(0.62, 0.55);
+}
+
+.lici--surprised .lici__wing--right {
+  transform: rotate(-148deg) scale(0.62, 0.55);
+}
+
+.lici--happy .lici__wing--left {
+  transform: rotate(170deg) scale(0.62, 0.55);
+}
+
+.lici--happy .lici__wing--right {
+  transform: rotate(-170deg) scale(0.62, 0.55);
+}
+
+.lici--sleepy .lici__wing--left {
+  transform: rotate(100deg) scale(0.62, 0.55);
+}
+
+.lici--sleepy .lici__wing--right {
+  transform: rotate(-100deg) scale(0.62, 0.55);
+}
+
+.lici--celebrate .lici__wing--left {
+  transform: rotate(250deg) scale(0.62, 0.55);
+  animation: lici-flap-left 350ms ease-in-out infinite alternate;
+}
+
+.lici--celebrate .lici__wing--right {
+  transform: rotate(-250deg) scale(0.62, 0.55);
+  animation: lici-flap-right 350ms ease-in-out infinite alternate;
+}
+
+.lici--wave .lici__wing--right {
+  transform: rotate(-250deg) scale(0.62, 0.55);
+  animation: lici-wave 420ms ease-in-out infinite alternate;
+}
+
+@keyframes lici-flap-left {
+  from { transform: rotate(232deg) scale(0.62, 0.55); }
+  to { transform: rotate(268deg) scale(0.62, 0.55); }
+}
+
+@keyframes lici-flap-right {
+  from { transform: rotate(-232deg) scale(0.62, 0.55); }
+  to { transform: rotate(-268deg) scale(0.62, 0.55); }
+}
+
+@keyframes lici-wave {
+  from { transform: rotate(-228deg) scale(0.62, 0.55); }
+  to { transform: rotate(-272deg) scale(0.62, 0.55); }
+}
+
+/* ---- Campos: la misma caja en reposo y con foco ------------------------------------------------ */
+
+.auth-field__control:focus-within {
+  transform: none;
+}
+
+/* Halo como anillo exterior: no tapa la caja ni su borde. */
+.auth-field__control::before {
+  inset: -5px;
+  z-index: auto;
+  border: 4px solid var(--cap-red-tint);
+  border-radius: 20px;
+  background: none;
+}
+
+.auth-field__line {
+  display: none;
+}
+
+.auth-field__label {
+  max-width: calc(100% - 58px);
+}
+
+.auth-field__hint {
+  align-self: center;
+  flex-shrink: 0;
+  margin-right: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--cap-card-2);
+  color: var(--cap-text-soft);
+  font-size: 11.5px;
+  pointer-events: none;
+}
+
+/* ---- Escritorio: sin scroll de página; la tarjeta se desplaza por dentro si no cabe -------------- */
+
+.auth:not(.auth--mobile) {
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.auth:not(.auth--mobile) .auth__stage {
+  overflow: hidden;
+  padding-top: clamp(10px, 3.5vh, 48px);
+  padding-bottom: 14px;
+}
+
+.auth__column {
+  width: min(520px, 100%);
+}
+
+.auth:not(.auth--mobile) .auth-card {
+  max-height: calc(100dvh - clamp(10px, 3.5vh, 48px) - 148px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.auth-card {
+  container-type: inline-size;
+}
+
+/* Dos columnas solo si caben las etiquetas completas. */
+@container (max-width: 430px) {
+  .auth-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Celular: la cara inactiva no alarga la página. */
+.auth-card--slide .auth-card__viewport {
+  overflow: clip;
+}
+
+/* Contorno que separa las dos alas cuando se cruzan sobre la cara. */
+.lici__wing-shape {
+  stroke: var(--cap-wine);
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
+
+/* Brillo de la tarjeta: un disco que se traslada (transform) dentro de un recorte. */
+.auth__glare-clip {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  border-radius: var(--cap-radius-sheet);
+  pointer-events: none;
+}
+
+.auth__glare {
+  inset: -50%;
+  border-radius: 0;
+  background: radial-gradient(circle at 50% 50%, var(--cap-glass-light-highlight), transparent 22%);
+  will-change: transform;
+}
+
+.auth__stage:hover .auth__glare {
+  opacity: 0.5;
+}
+
+.auth--mobile .auth__glare-clip {
+  display: none;
+}
+
+/* El parallax lo suaviza Login.vue en su requestAnimationFrame: sin transiciones de `translate`. */
+.auth__blob,
+.auth-brand__blob,
+.auth-brand__float,
+.auth__perch {
+  transition: none;
 }

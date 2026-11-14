@@ -195,7 +195,7 @@ function another() {
                         </template>
                     </AuthField>
 
-                    <AuthField id="request-password-confirmation" label="Confirma la contraseña" :invalid="confirmState === 'mismatch'">
+                    <AuthField id="request-password-confirmation" label="Confirmar contraseña" :invalid="confirmState === 'mismatch'">
                         <input
                             id="request-password-confirmation"
                             v-model="form.password_confirmation"
