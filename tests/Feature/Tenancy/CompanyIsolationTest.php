@@ -236,6 +236,6 @@ class CompanyIsolationTest extends TestCase
 
     private function opportunityPayload(array $overrides = []): array
     {
-        return $overrides + ['title' => 'Nueva oportunidad', 'amount' => 1000, 'probability' => 50, 'stage' => 'prospecto'];
+        return $overrides + ['title' => 'Nueva oportunidad', 'institution_id' => Institution::factory()->create()->id, 'amount' => 1000, 'probability' => 50, 'stage' => 'prospecto'];
     }
 }

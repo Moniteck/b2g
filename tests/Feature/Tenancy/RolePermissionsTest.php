@@ -4,6 +4,7 @@ namespace Tests\Feature\Tenancy;
 
 use App\Models\Company;
 use App\Models\Contract;
+use App\Models\Institution;
 use App\Models\Opportunity;
 use App\Models\Quote;
 use App\Models\Tender;
@@ -121,7 +122,7 @@ class RolePermissionsTest extends TestCase
 
         // Estando en su empresa no puede crear en la otra, donde solo lee.
         $this->actingInCompany($this->admin, $this->company)
-            ->post('/pipeline', ['company_id' => $other->id, 'title' => 'X', 'amount' => 1, 'probability' => 10, 'stage' => 'prospecto'])
+            ->post('/pipeline', ['company_id' => $other->id, 'title' => 'X', 'institution_id' => Institution::factory()->create()->id, 'amount' => 1, 'probability' => 10, 'stage' => 'prospecto'])
             ->assertSessionHasErrors('company_id');
     }
 

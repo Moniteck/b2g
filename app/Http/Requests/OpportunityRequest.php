@@ -6,7 +6,9 @@ use App\Models\Contact;
 use App\Models\Opportunity;
 use App\Models\Tender;
 use App\Models\User;
+use App\Rules\AllowedCompany;
 use App\Rules\BelongsToActiveCompany;
+use App\Support\Permissions;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -53,6 +55,8 @@ class OpportunityRequest extends FormRequest
         $creating = ! $opportunity instanceof Opportunity;
 
         return [
+            // Alta: la empresa activa o una en la que el usuario puede crear; edición: la de la oportunidad.
+            'company_id' => [$creating ? 'nullable' : 'required', 'integer', new AllowedCompany($creating ? Permissions::CREATE : null)],
             'title' => ['required', 'string', 'max:255'],
             'institution_id' => ['required', 'integer', Rule::exists('institutions', 'id')],
             'contact_id' => ['nullable', 'integer', Rule::exists('contacts', 'id')->where(fn ($query) => $query->where('institution_id', $this->input('institution_id')))],
@@ -115,6 +119,6 @@ class OpportunityRequest extends FormRequest
      */
     public function payload(): array
     {
-        return collect($this->validated())->except(['stage'])->all();
+        return collect($this->validated())->except(['stage', 'company_id'])->all();
     }
 }

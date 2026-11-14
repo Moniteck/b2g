@@ -10,6 +10,7 @@ use App\Models\Institution;
 use App\Models\Opportunity;
 use App\Models\Quote;
 use App\Models\QuoteParticipant;
+use App\Models\Tender;
 use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\Business\AdjudicationService;
@@ -81,7 +82,7 @@ class OpportunityController extends Controller
         $opportunity = DB::transaction(function () use ($data, $request) {
             $opportunity = new Opportunity;
             $opportunity->forceFill(array_merge($data, [
-                'company_id' => app(CompanyContext::class)->currentCompanyId(),
+                'company_id' => $request->validated('company_id') ?: app(CompanyContext::class)->currentCompanyId(),
                 'owner_id' => $data['owner_id'] ?? $request->user()->id,
                 'stage' => $request->validated('stage') ?: 'prospecto',
             ]))->save();
@@ -209,6 +210,7 @@ class OpportunityController extends Controller
             'filters' => $filters + ['cerradas' => $showAllClosed],
             'filterOptions' => fn () => [
                 'owners' => $this->members(),
+                'tenders' => $this->tenderOptions(),
                 'institution' => $filters['institution_id'] ? Institution::query()->whereKey($filters['institution_id'])->first(['id', 'name']) : null,
             ],
             'recentDays' => self::RECENT_CLOSED_DAYS,
@@ -365,6 +367,22 @@ class OpportunityController extends Controller
             ->orderBy('name')
             ->get(['id', 'name'])
             ->map(fn (User $user) => ['id' => $user->id, 'name' => $user->name])
+            ->all();
+    }
+
+    /**
+     * Licitaciones que aún no tienen oportunidad (decisión 13: una por licitación), las más recientes.
+     *
+     * @return array<int, array{id: int, name: string, description: string}>
+     */
+    private function tenderOptions(): array
+    {
+        return Tender::query()
+            ->whereNotExists(fn ($query) => $query->from('opportunities')->whereColumn('opportunities.tender_id', 'tenders.id'))
+            ->latest('id')
+            ->limit(200)
+            ->get(['id', 'reference', 'title'])
+            ->map(fn (Tender $tender) => ['id' => $tender->id, 'name' => $tender->reference ?: "Licitación {$tender->id}", 'description' => (string) $tender->title])
             ->all();
     }
 
