@@ -6,9 +6,20 @@ use App\Models\Company;
 use App\Models\User;
 use App\Services\Tenancy\CompanyContext;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Support\Facades\ParallelTesting;
 
 abstract class TestCase extends BaseTestCase
 {
+    protected function setUp(): void
+    {
+        // `Storage::fake()` usa una carpeta fija dentro de storage/: dos
+        // ejecuciones simultáneas de la suite (o de dos agentes) se vaciaban
+        // los archivos entre sí. Con un token por proceso cada una tiene la suya.
+        parent::setUp();
+
+        ParallelTesting::resolveTokenUsing(fn () => 'p'.getmypid());
+    }
+
     /**
      * Crea un usuario miembro de una empresa con el rol indicado.
      *
