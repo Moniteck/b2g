@@ -237,6 +237,19 @@ class PipelineTest extends TestCase
             ->assertJsonPath('can.delete', false);
     }
 
+    public function test_won_or_lost_from_an_earlier_stage_is_rejected(): void
+    {
+        $opportunity = $this->opportunity('prospecto');
+
+        $this->as($this->operator)->postJson("/oportunidades/{$opportunity->id}/ganada", ['awarded_amount' => 47000, 'awarded_at' => now()->toDateString()])
+            ->assertUnprocessable()->assertJsonValidationErrors('stage');
+        $this->as($this->operator)->postJson("/oportunidades/{$opportunity->id}/perdida", ['winner_name' => 'Competidor', 'winner_amount' => 40000])
+            ->assertUnprocessable()->assertJsonValidationErrors('stage');
+
+        $this->assertSame('prospecto', $opportunity->fresh()->stage);
+        $this->assertSame(0, Contract::query()->count());
+    }
+
     public function test_won_with_quote_syncs_the_quote(): void
     {
         $opportunity = $this->opportunity('oportunidad');

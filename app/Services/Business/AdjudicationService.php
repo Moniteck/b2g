@@ -77,6 +77,7 @@ class AdjudicationService
                 if ($opportunity->stage === 'no_adjudicado') {
                     throw ValidationException::withMessages(['outcome' => 'La oportunidad ya está registrada como No Adjudicada. Revierta el resultado primero.']);
                 }
+                $this->assertOfferSubmitted($subject, $opportunity, 'Ganada');
             }
 
             $amount = $this->amount($data['awarded_amount'] ?? null, $quote?->total ?? $opportunity?->amount);
@@ -167,6 +168,7 @@ class AdjudicationService
                 if ($opportunity->stage === 'adjudicado') {
                     throw ValidationException::withMessages(['outcome' => 'La oportunidad ya está registrada como Adjudicada. Revierta el resultado primero.']);
                 }
+                $this->assertOfferSubmitted($subject, $opportunity, 'Perdida');
             }
 
             $winner = $this->winnerFrom($quote, $opportunity, $data);
@@ -464,29 +466,20 @@ class AdjudicationService
         return $participant;
     }
 
-    // ───────────────────────────── Compatibilidad (MCP) ─────────────────────────────
-
-    /** @deprecated Usar win(). Se conserva para las herramientas MCP. */
-    public function markWon(Quote $quote, array $data, ?int $actorId = null): Quote
-    {
-        return $this->win($quote, $data, $actorId ? User::query()->find($actorId) : null)->quote;
-    }
-
-    /** @deprecated Usar lose(). El monto del ganador llega como `awarded_amount`. */
-    public function markLost(Quote $quote, array $data): Quote
-    {
-        return $this->lose($quote, $data + ['winner_amount' => $data['awarded_amount'] ?? null])->quote;
-    }
-
-    /** @deprecated Usar saveParticipants(). */
-    public function syncParticipants(Quote $quote, array $participants): Quote
-    {
-        $this->saveParticipants($quote, $participants);
-
-        return $quote->fresh(['participants']);
-    }
-
     // ───────────────────────────── Internos ─────────────────────────────
+
+    /**
+     * Desde el kanban (sujeto = oportunidad) el resultado solo se registra con la oferta presentada.
+     * Si el sujeto es una cotización manda la regla de la cotización (Emitida o Presentada).
+     */
+    protected function assertOfferSubmitted(Quote|Opportunity $subject, Opportunity $opportunity, string $outcome): void
+    {
+        if ($subject instanceof Opportunity && $opportunity->stage !== 'oferta_presentada') {
+            $stage = Opportunity::STAGES[$opportunity->stage] ?? $opportunity->stage;
+
+            throw ValidationException::withMessages(['stage' => "La oportunidad está en «{$stage}»: solo se marca como {$outcome} cuando está en Oferta Presentada."]);
+        }
+    }
 
     /**
      * Bloquea la cotización y su oportunidad (en ese orden, siempre) y resuelve el sujeto.
