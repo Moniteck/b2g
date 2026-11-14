@@ -3,7 +3,6 @@
 @import '@mdi/font/css/materialdesignicons.min.css';
 @import 'tailwindcss';
 @config '../../tailwind.config.js';
-@import './legacy.css';
 
 /* Todo el contenido se escribe con las clases cap-* del recetario (resources/design/DESIGN_GUIDE.md).
    Aquí solo vive lo que Tailwind no puede expresar, siempre con variables --cap-*. */

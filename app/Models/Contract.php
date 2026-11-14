@@ -73,16 +73,6 @@ class Contract extends Model
         return $this->end_date;
     }
 
-    public function purchaseOrders()
-    {
-        return $this->hasMany(PurchaseOrder::class);
-    }
-
-    public function deliveryCertificates()
-    {
-        return $this->hasMany(DeliveryCertificate::class);
-    }
-
     public function deliveries()
     {
         return $this->hasMany(ContractDelivery::class);

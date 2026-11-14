@@ -80,11 +80,6 @@ class Quote extends Model
         return $this->hasMany(QuoteItem::class)->orderBy('position')->orderBy('id');
     }
 
-    public function deliveryAlarms()
-    {
-        return $this->hasMany(DeliveryAlarm::class);
-    }
-
     /** Participantes guardados desde esta cotización (para el proceso completo: QuoteParticipant::ofProcess). */
     public function participants()
     {

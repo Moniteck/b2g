@@ -77,7 +77,6 @@ class DocumentService
                     'issued_at' => $data['issued_at'] ?? null,
                     'expires_at' => $data['expires_at'] ?? null,
                     'version' => 1,
-                    'is_current' => true,
                     'uploaded_by' => $actor->id,
                     'renewal_owner_id' => $data['renewal_owner_id'] ?? $actor->id,
                     'path' => $path,

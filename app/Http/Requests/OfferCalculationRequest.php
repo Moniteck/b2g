@@ -8,8 +8,7 @@ use App\Services\Pricing\PriceCalculator;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
- * Validación de la calculadora de oferta. A diferencia de la regla antigua
- * (SpecializedActionRequest), conserva `cost`, `margin` y `tax_rate`, que son
+ * Validación de la calculadora de oferta. Conserva `cost`, `margin` y `tax_rate`, que son
  * la base del cálculo.
  */
 class OfferCalculationRequest extends FormRequest

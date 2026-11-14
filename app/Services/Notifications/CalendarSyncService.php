@@ -284,8 +284,8 @@ class CalendarSyncService
 
     public function syncForDocument(Document $document): void
     {
-        // Una versión sustituida (o un documento archivado) ya no vence: vence la vigente.
-        $retired = $document->is_current === false || in_array($document->status, ['Archivado', 'Reemplazado'], true);
+        // Un documento archivado o reemplazado ya no vence (las versiones viven en document_versions).
+        $retired = in_array($document->status, ['Archivado', 'Reemplazado'], true);
 
         $this->upsert('document', $document->id, 'Documento', [
             'company_id' => $document->company_id,

@@ -89,16 +89,6 @@ class InventoryItem extends Model
         return (float) ($this->stock_available ?? $this->stock ?? 0);
     }
 
-    /**
-     * Precio sugerido tal como viene de Blessing (con o sin ISV según `tax_included`).
-     *
-     * @deprecated Usar pricing(): este valor no dice si incluye impuesto.
-     */
-    public function salePrice(): float
-    {
-        return app(InventoryPricing::class)->sourcePrice($this);
-    }
-
     /** Subtotal, ISV y total de `$quantity` unidades con la regla única. */
     public function pricing(float $quantity = 1): PriceLine
     {

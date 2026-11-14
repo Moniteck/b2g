@@ -69,7 +69,7 @@ class Document extends Model
 
     protected $fillable = [
         'company_id', 'institution_id', 'name', 'reference_number', 'description', 'kind', 'owner_name',
-        'required_for', 'category', 'version', 'parent_id', 'is_current', 'hash', 'path', 'issued_at',
+        'required_for', 'category', 'version', 'hash', 'path', 'issued_at',
         'expires_at', 'status', 'original_filename', 'disk', 'mime_type', 'size', 'uploaded_by',
         'signed_at', 'signed_by', 'sealed_at', 'renewal_owner_id',
     ];
@@ -89,7 +89,6 @@ class Document extends Model
             'expires_at' => 'date',
             'signed_at' => 'datetime',
             'sealed_at' => 'datetime',
-            'is_current' => 'boolean',
             'version' => 'integer',
             'size' => 'integer',
         ];

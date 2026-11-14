@@ -87,7 +87,7 @@ class ComplianceMatrixController extends Controller
                 'summary' => $this->counts($complianceMatrix->items),
             ],
             'items' => $complianceMatrix->items->map(fn (ComplianceItem $item) => $this->item($item))->values(),
-            'documents' => Document::query()->where('is_current', true)->orderBy('name')->limit(500)->get(['id', 'name', 'category', 'expires_at'])
+            'documents' => Document::query()->orderBy('name')->limit(500)->get(['id', 'name', 'category', 'expires_at'])
                 ->map(fn (Document $document) => [
                     'id' => $document->id,
                     'name' => $document->name,

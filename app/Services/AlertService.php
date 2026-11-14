@@ -58,7 +58,6 @@ class AlertService
 
         $documents = Document::query()->withoutGlobalScopes()
             ->where('company_id', $companyId)
-            ->where(fn ($query) => $query->where('is_current', true)->orWhereNull('is_current'))
             ->whereNotNull('expires_at')
             ->where('expires_at', '<=', $today->copy()->addDays(30))
             ->orderBy('expires_at')
