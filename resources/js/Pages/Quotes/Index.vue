@@ -217,7 +217,7 @@ onBeforeUnmount(() => stopListener());
             <StatCard label="Tasa de adjudicación" :value="stats.rate === null || stats.rate === undefined ? '—' : `${stats.rate} %`" :hint="`${stats.won ?? 0} ganadas de ${(stats.won ?? 0) + (stats.lost ?? 0)} con resultado`" />
         </div>
 
-        <Toolbar v-model:search="state.search" v-model:filter="state.segment" :filters="segments" filter-label="Filtrar por estado o resultado" search-placeholder="Número, institución o expediente" search-label="Buscar cotizaciones">
+        <Toolbar v-model:search="state.search" v-model:filter="state.segment" :filters="segments" filter-label="Filtrar por estado o resultado" search-placeholder="Número o institución" search-label="Buscar cotizaciones">
             <template #filters>
                 <div class="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:flex lg:w-auto lg:flex-wrap">
                     <SearchSelect v-model="state.institution_id" url="/instituciones/buscar" option-value="id" option-label="name" :selected="filterOptions.institution" placeholder="Institución…" aria-label="Filtrar por institución" class="lg:w-56" />
