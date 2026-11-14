@@ -2,6 +2,7 @@
 
 use App\Mcp\Servers\CrmServer;
 use App\Mcp\Support\ClientJanitor;
+use App\Mcp\Support\LimitClientRegistration;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schedule;
@@ -34,7 +35,7 @@ Route::middleware('throttle:mcp')->group(function () {
 
 // Registro dinámico de clientes: como mucho N registros por hora y por IP.
 Route::post('oauth/register', OAuthRegisterController::class)
-    ->middleware('throttle:'.(int) config('mcp.crm.registrations_per_hour', 10).',60')
+    ->middleware(LimitClientRegistration::class)
     ->name('mcp.oauth.register');
 
 // Limpieza diaria de clientes OAuth huérfanos y de códigos de confirmación vencidos.

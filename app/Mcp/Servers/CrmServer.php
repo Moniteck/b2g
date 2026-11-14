@@ -39,6 +39,11 @@ Reglas
 MD)]
 class CrmServer extends Server
 {
+    /** Todas las herramientas en una sola página de tools/list (algunos clientes no siguen el cursor). */
+    public int $defaultPaginationLength = 100;
+
+    public int $maxPaginationLength = 100;
+
     /**
      * Herramientas por área. Las de escritura se ocultan en conexiones de solo lectura.
      *

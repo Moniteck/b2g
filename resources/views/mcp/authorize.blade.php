@@ -7,7 +7,8 @@
 @php
     $redirectUri = $request->query('redirect_uri', $client->redirect_uris[0] ?? null);
     $screen = \App\Http\Controllers\McpConsentController::screen($user, $client, is_string($redirectUri) ? $redirectUri : null);
-    $selectedCompanies = collect(old('company_ids', collect($screen['companies'])->where('checked', true)->pluck('id')->all()))->map(fn ($id) => (int) $id)->all();
+    // Tras un error se respeta lo que la persona envió (también «ninguna»); si no, la selección por defecto.
+    $selectedCompanies = collect(session()->hasOldInput() ? (array) old('company_ids', []) : collect($screen['companies'])->where('checked', true)->pluck('id')->all())->map(fn ($id) => (int) $id)->all();
     $level = $screen['level'];
     $clientName = $client->name ?: 'Cliente MCP';
 @endphp
