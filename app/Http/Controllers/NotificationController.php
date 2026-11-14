@@ -47,12 +47,12 @@ class NotificationController extends Controller
             ->with(['event' => fn ($query) => $query->withoutGlobalScopes()->select(['id', 'title', 'label', 'type', 'starts_at', 'all_day', 'reference_type', 'reference_id', 'contract_id'])])
             ->orderByDesc('sent_at')
             ->orderByDesc('id')
-            ->paginate(25, ['id', 'event_id', 'offset_key', 'due_at', 'sent_at', 'read_at', 'created_at'])
+            ->paginate(25, ['id', 'event_id', 'offset_key', 'title', 'body', 'href', 'due_at', 'sent_at', 'read_at', 'created_at'])
             ->withQueryString()
             ->through(fn (ReminderDelivery $delivery) => [
                 ...$this->feed->present($delivery),
-                'event_title' => $delivery->event?->title,
-                'type_label' => $delivery->event?->typeLabel(),
+                'event_title' => $delivery->event?->title ?? $delivery->title,
+                'type_label' => $delivery->event?->typeLabel() ?? 'Aviso',
                 'due_at' => ($delivery->due_at ?? $delivery->event?->starts_at)?->toDateTimeString(),
                 'all_day' => (bool) $delivery->event?->all_day,
             ]);
