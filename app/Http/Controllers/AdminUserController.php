@@ -6,6 +6,7 @@ use App\Http\Requests\Admin\StoreUserRequest;
 use App\Models\Company;
 use App\Models\User;
 use App\Services\Admin\MembershipService;
+use App\Services\Auth\AccessRequestService;
 use App\Services\Tenancy\CompanyContext;
 use App\Support\Permissions;
 use Illuminate\Database\Eloquent\Builder;
@@ -70,6 +71,11 @@ class AdminUserController extends Controller
             'company' => ['id' => $company->id, 'name' => $company->name],
             'credentials' => $request->session()->get('temporary_credentials'),
             'isRoot' => $actor->isRoot(),
+            // Solicitudes de acceso pendientes (sección «Solicitudes»); la raíz puede aprobar hacia cualquier empresa.
+            'accessRequests' => Inertia::defer(fn () => app(AccessRequestService::class)->pendingFor($actor, $company)),
+            'approvalCompanies' => fn () => $actor->isRoot()
+                ? Company::query()->orderBy('name')->get(['id', 'name'])->map(fn (Company $item) => ['value' => $item->id, 'label' => $item->name])->all()
+                : [['value' => $company->id, 'label' => $company->name]],
         ]);
     }
 

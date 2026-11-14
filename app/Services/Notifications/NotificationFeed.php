@@ -44,7 +44,7 @@ class NotificationFeed
                 ->orderByDesc('sent_at')
                 ->orderByDesc('id')
                 ->limit(self::ITEMS)
-                ->get(['id', 'event_id', 'offset_key', 'due_at', 'sent_at', 'read_at'])
+                ->get(['id', 'event_id', 'offset_key', 'title', 'body', 'href', 'due_at', 'sent_at', 'read_at'])
                 ->map(fn (ReminderDelivery $delivery) => $this->present($delivery))
                 ->all();
 
@@ -91,6 +91,11 @@ class NotificationFeed
     {
         $event = $delivery->event;
         $dueAt = $delivery->due_at ?? $event?->starts_at;
+
+        // Avisos sin plazo del calendario (p. ej. solicitudes de acceso) traen su propio texto.
+        if ($event === null && $delivery->title !== null) {
+            return ['id' => $delivery->id, 'title' => $delivery->title, 'body' => (string) $delivery->body, 'href' => $delivery->href, 'read_at' => $delivery->read_at?->toDateTimeString(), 'created_at' => ($delivery->sent_at ?? $delivery->created_at)?->toDateTimeString(), 'severity' => 'info', 'type' => null, 'offset' => $delivery->offsetLabel()];
+        }
 
         return [
             'id' => $delivery->id,
