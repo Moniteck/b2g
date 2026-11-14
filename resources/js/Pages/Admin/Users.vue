@@ -22,6 +22,7 @@ import { focusFirstError } from '../../lib/errors.js';
 import { visit } from '../../lib/http.js';
 import { card } from '../../lib/ui.js';
 import { useListFilters } from './Partials/useListFilters.js';
+import AccessRequestsPanel from '../../Modules/Auth/AccessRequestsPanel.vue';
 
 const props = defineProps({
     users: { type: Object, required: true },
@@ -31,6 +32,8 @@ const props = defineProps({
     company: { type: Object, required: true },
     credentials: { type: Object, default: null },
     isRoot: { type: Boolean, default: false },
+    accessRequests: { type: Array, default: undefined },
+    approvalCompanies: { type: Array, default: () => [] },
 });
 
 const { filters, loading, error, active, reset, reload } = useListFilters('/configuracion/usuarios', props.filters, {
@@ -141,6 +144,8 @@ function removeUser(row) {
                 <AppButton class="max-lg:hidden" variant="primary" icon="account-plus-outline" @click="openInvite">Agregar usuario</AppButton>
             </template>
         </PageHeader>
+
+        <AccessRequestsPanel :requests="accessRequests" :roles="roles" :companies="approvalCompanies" :active-company-id="company.id" />
 
         <Toolbar
             v-model:search="filters.search"
