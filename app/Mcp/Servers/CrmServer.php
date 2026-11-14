@@ -25,7 +25,7 @@ Flujo de una licitación
 2. Pliego: upload_bid_document lo analiza en cola; consulta get_bid_analysis hasta «review», revisa cada dato con su cita y página y aplica lo aprobado con confirm_bid_analysis.
 3. Las fechas pasan solas al calendario con sus recordatorios (list_events, list_my_reminders). El cierre de aclaraciones es el último día para hacer preguntas: recuérdalo. mark_event_attended solo cuando la persona diga que el plazo ya se cumplió.
 4. Documentos de la empresa: list_documents y list_expiring_documents (RTN, solvencias…); renew_document para renovar; add_attachment para adjuntar a una licitación, cotización o contrato.
-5. Cotización: search_inventory da precio, ISV y total con el calculador único (no vuelvas a sumar ISV); create_quote, update_quote y change_quote_status (Presentada mueve la oportunidad a Oferta Presentada). Participantes con get_participants y set_participants.
+5. Cotización: search_inventory da precio, ISV y total con el calculador único (no vuelvas a sumar ISV); create_quote, update_quote y change_quote_status (Presentada mueve la oportunidad a Oferta Presentada). Participantes con get_participants y set_participants. El tablero: create_opportunity, get_opportunity y move_opportunity (una etapa a la vez).
 6. Resultado: register_outcome registra Ganada o Perdida (por cotización u oportunidad); revert_outcome lo revierte (administrador, con motivo). Al ganar se crean el cliente y el contrato.
 7. Post-adjudicación: get_contract, update_contract (plazo, fechas, responsables), save_contract_delivery, mark_delivery_delivered, add_contract_follow_up y change_contract_status. Los documentos del contrato van con add_attachment (entity_type=contract).
 
@@ -113,7 +113,7 @@ class CrmServer extends Server
         Tools\ListOpportunitiesTool::class,
         Tools\GetOpportunityTool::class,
         Tools\CreateOpportunityTool::class,
-        Tools\UpdateOpportunityStageTool::class,
+        Tools\MoveOpportunityTool::class,
 
         // Post-adjudicación
         Tools\ListContractsTool::class,

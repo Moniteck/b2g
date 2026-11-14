@@ -11,6 +11,7 @@ use App\Mcp\Tools\GetContractTool;
 use App\Mcp\Tools\GetOpportunityTool;
 use App\Mcp\Tools\GetQuoteTool;
 use App\Mcp\Tools\MarkDeliveryDeliveredTool;
+use App\Mcp\Tools\MoveOpportunityTool;
 use App\Mcp\Tools\RegisterOutcomeTool;
 use App\Mcp\Tools\RevertOutcomeTool;
 use App\Mcp\Tools\SaveContractDeliveryTool;
@@ -137,8 +138,13 @@ class McpCommercialFlowTest extends McpTestCase
 
     public function test_opportunity_without_quote_can_be_lost_with_winner(): void
     {
-        $created = $this->payload($this->tool(CreateOpportunityTool::class, ['title' => 'Compra de llantas', 'institution_id' => $this->institution->id, 'stage' => 'oferta_presentada', 'amount' => 9000])->assertHasNoErrors());
+        $created = $this->payload($this->tool(CreateOpportunityTool::class, ['title' => 'Compra de llantas', 'institution_id' => $this->institution->id, 'stage' => 'oportunidad', 'amount' => 9000])->assertHasNoErrors());
         $id = $created['opportunity']['id'];
+
+        // Oferta Presentada exige nuestra oferta entre los participantes (regla del tablero).
+        $this->tool(MoveOpportunityTool::class, ['opportunity_id' => $id, 'stage' => 'oferta_presentada'])->assertHasErrors(['nuestra oferta']);
+        $this->tool(SetParticipantsTool::class, ['opportunity_id' => $id, 'participants' => [['name' => 'Nosotros', 'amount' => 9000, 'is_ours' => true]]])->assertHasNoErrors();
+        $this->tool(MoveOpportunityTool::class, ['opportunity_id' => $id, 'stage' => 'oferta_presentada'])->assertHasNoErrors();
 
         $this->tool(CreateOpportunityTool::class, ['title' => 'Atajo', 'stage' => 'adjudicado'])->assertHasErrors(['stage']);
 

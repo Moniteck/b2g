@@ -13,11 +13,11 @@ use App\Mcp\Tools\ListEventsTool;
 use App\Mcp\Tools\ListExpiringDocumentsTool;
 use App\Mcp\Tools\ListTendersTool;
 use App\Mcp\Tools\MarkEventAttendedTool;
+use App\Mcp\Tools\MoveOpportunityTool;
 use App\Mcp\Tools\SearchInventoryTool;
 use App\Mcp\Tools\SignDocumentTool;
 use App\Mcp\Tools\SyncInventoryTool;
 use App\Mcp\Tools\UpdateEventTool;
-use App\Mcp\Tools\UpdateOpportunityStageTool;
 use App\Mcp\Tools\UpdateTenderTool;
 use App\Mcp\Tools\UploadDocumentTool;
 use App\Models\AuditLog;
@@ -234,8 +234,11 @@ class McpToolsTest extends McpTestCase
     {
         $this->inSession($this->admin, $this->connect($this->admin, [$this->company]));
 
-        $tooBig = str_repeat('A', (int) ceil(10 * 1024 * 1024 / 3) * 4 + 8192);
-        $this->tool(UploadDocumentTool::class, ['content_base64' => $tooBig, 'file_name' => 'rtn.pdf', 'category' => 'rtn'])->assertHasErrors(['10 MB']);
+        $this->assertSame(10 * 1024, config('mcp.crm.upload_max_kilobytes'));
+        config(['mcp.crm.upload_max_kilobytes' => 64]); // mismo cálculo con un tope chico: la suite no carga 14 MB en memoria
+        $tooBig = str_repeat('A', (int) ceil(64 * 1024 / 3) * 4 + 8192);
+        $this->tool(UploadDocumentTool::class, ['content_base64' => $tooBig, 'file_name' => 'rtn.pdf', 'category' => 'rtn'])->assertHasErrors(['0.1 MB']);
+        config(['mcp.crm.upload_max_kilobytes' => 10 * 1024]);
         $this->tool(UploadDocumentTool::class, ['content_base64' => '###', 'file_name' => 'rtn.pdf', 'category' => 'rtn'])->assertHasErrors(['base64']);
         $this->tool(UploadDocumentTool::class, ['content_base64' => base64_encode('no es un pdf'), 'file_name' => 'rtn.pdf', 'category' => 'rtn'])->assertHasErrors();
         $this->tool(UploadDocumentTool::class, ['content_base64' => base64_encode('x'), 'file_name' => 'rtn.pdf', 'category' => 'inventada'])->assertHasErrors(['category']);
@@ -268,7 +271,7 @@ class McpToolsTest extends McpTestCase
         $opportunity = Opportunity::factory()->create(['company_id' => $this->company->id, 'stage' => 'oferta_presentada']);
         $this->inSession($this->admin, $this->connect($this->admin, [$this->company]));
 
-        $this->tool(UpdateOpportunityStageTool::class, ['opportunity_id' => $opportunity->id, 'stage' => 'adjudicado'])->assertHasErrors(['register_outcome']);
+        $this->tool(MoveOpportunityTool::class, ['opportunity_id' => $opportunity->id, 'stage' => 'adjudicado'])->assertHasErrors(['Ganada']);
         $this->assertSame('oferta_presentada', $opportunity->fresh()->stage);
     }
 
