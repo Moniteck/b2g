@@ -53,7 +53,7 @@ function hide() {
         <slot />
     </span>
     <Teleport :to="teleportTarget">
-        <Transition enter-active-class="transition-opacity duration-cap-fast ease-cap-enter" enter-from-class="opacity-0" leave-active-class="transition-opacity duration-cap-fast ease-cap-exit" leave-to-class="opacity-0">
+        <Transition name="m-pop">
             <span v-if="open" :id="tooltipId" ref="bubble" role="tooltip" :style="style" class="app-tooltip z-cap-dropdown">{{ text }}</span>
         </Transition>
     </Teleport>

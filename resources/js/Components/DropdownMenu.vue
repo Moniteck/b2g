@@ -128,12 +128,8 @@ function itemAttrs(item) {
         </slot>
     </span>
     <Teleport :to="teleportTarget">
-        <Transition
-            enter-active-class="transition duration-cap-fast ease-cap-enter"
-            enter-from-class="opacity-0 scale-[0.98]"
-            leave-active-class="transition-opacity duration-cap-fast ease-cap-exit"
-            leave-to-class="opacity-0"
-        >
+        <!-- Movimiento: cae desde el disparador con un rebote mínimo (m-menu, resources/css/motion.css). -->
+        <Transition name="m-menu">
             <div
                 v-if="open"
                 :id="menuId"
@@ -141,8 +137,8 @@ function itemAttrs(item) {
                 role="menu"
                 :aria-label="label"
                 :style="style"
-                class="z-cap-dropdown max-h-80 origin-top overflow-y-auto py-1"
-                :class="[floatingPanel, width]"
+                class="z-cap-dropdown max-h-80 overflow-y-auto py-1"
+                :class="[floatingPanel, width, align === 'start' ? 'origin-top-left' : 'origin-top-right']"
                 @keydown="onMenuKeydown"
                 @click.stop
             >

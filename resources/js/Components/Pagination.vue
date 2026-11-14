@@ -57,7 +57,9 @@ function changeSize(event) {
             <button type="button" aria-label="Página anterior" title="Página anterior" :disabled="!previousUrl" :class="iconButton" @click="go(previousUrl)">
                 <i class="mdi mdi-chevron-left text-xl leading-none" aria-hidden="true" />
             </button>
-            <span class="tabular-nums" aria-current="page">{{ meta.current_page ?? 1 }} / {{ meta.last_page ?? 1 }}</span>
+            <span class="relative inline-flex overflow-hidden tabular-nums" aria-current="page">
+                <Transition name="m-tick"><span :key="meta.current_page ?? 1">{{ meta.current_page ?? 1 }}</span></Transition>&nbsp;/ {{ meta.last_page ?? 1 }}
+            </span>
             <button type="button" aria-label="Página siguiente" title="Página siguiente" :disabled="!nextUrl" :class="iconButton" @click="go(nextUrl)">
                 <i class="mdi mdi-chevron-right text-xl leading-none" aria-hidden="true" />
             </button>

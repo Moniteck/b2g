@@ -25,7 +25,7 @@ const shownIcon = computed(() => props.icon || (isNoResults.value ? 'magnify-clo
 
 <template>
     <div class="flex flex-col items-center justify-center px-6 text-center" :class="[compact ? 'py-8' : 'py-12', isNoResults ? '' : 'rounded-cap-card border border-dashed border-cap-divider']">
-        <i class="mdi text-cap-icon text-gray-400" :class="`mdi-${shownIcon}`" aria-hidden="true" />
+        <i class="m-empty-icon mdi text-cap-icon text-gray-400" :class="`mdi-${shownIcon}`" aria-hidden="true" />
         <p class="mt-3 font-display text-base font-semibold text-gray-900 dark:text-gray-100">{{ shownTitle }}</p>
         <p v-if="shownDescription" class="mt-1 max-w-md text-sm text-cap-text-soft">{{ shownDescription }}</p>
         <div v-if="isNoResults || $slots.action" class="mt-4">

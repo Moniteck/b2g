@@ -9,6 +9,7 @@ import CapAvatar from '../../../design/vue/CapAvatar.vue';
 import { toggleTheme } from '../../../design/shell/js/theme.js';
 import DropdownMenu from '../../Components/DropdownMenu.vue';
 import { endpoints } from '../../config/navigation.js';
+import { motionPreference, systemReducedMotion, toggleMotionPreference } from '../../lib/motion/index.js';
 import { menuItem } from '../../lib/ui.js';
 
 const props = defineProps({
@@ -19,6 +20,9 @@ const props = defineProps({
 const emit = defineEmits(['logout']);
 
 const ROLE_LABELS = { admin: 'Administrador', operator: 'Operador', viewer: 'Solo lectura' };
+
+// Animaciones: completas / reducidas (se guarda en el navegador; si el sistema pide menos movimiento, manda el sistema).
+const motionLabel = computed(() => (systemReducedMotion.value || motionPreference.value === 'reduced' ? 'reducidas' : 'completas'));
 
 const role = computed(() => (props.user.is_root ? 'Usuario raíz' : (ROLE_LABELS[props.user.company_role] ?? '')));
 </script>
@@ -46,6 +50,17 @@ const role = computed(() => (props.user.is_root ? 'Usuario raíz' : (ROLE_LABELS
             </Link>
             <button type="button" role="menuitem" :class="menuItem" @click="toggleTheme()">
                 <i class="mdi mdi-weather-night text-xl leading-none" aria-hidden="true" /><span>Cambiar a modo <span class="dark:hidden">oscuro</span><span class="hidden dark:inline">claro</span></span>
+            </button>
+            <button
+                type="button"
+                role="menuitem"
+                :disabled="systemReducedMotion"
+                :title="systemReducedMotion ? 'Tu sistema pide menos movimiento' : undefined"
+                :class="[menuItem, systemReducedMotion ? 'cursor-not-allowed opacity-50' : '']"
+                @click="toggleMotionPreference()"
+            >
+                <i class="mdi text-xl leading-none" :class="motionLabel === 'completas' ? 'mdi-motion-play-outline' : 'mdi-motion-pause-outline'" aria-hidden="true" />
+                <span class="min-w-0 flex-1">Animaciones: {{ motionLabel }}</span>
             </button>
             <div class="my-1 border-t border-cap-divider" role="separator" />
             <button type="button" role="menuitem" :class="menuItem" @click="close(); emit('logout')">

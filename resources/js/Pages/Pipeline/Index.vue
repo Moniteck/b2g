@@ -34,6 +34,7 @@ import ParticipantsModal from '../../Modules/Quotes/ParticipantsModal.vue';
 import RevertModal from '../../Modules/Quotes/RevertModal.vue';
 import WonModal from '../../Modules/Quotes/WonModal.vue';
 import { firstError } from '../../Modules/Quotes/api.js';
+import { celebrate } from '../../lib/motion/index.js';
 
 const props = defineProps({
     opportunities: { type: Array, default: () => [] },
@@ -186,6 +187,12 @@ function onPresented(response) {
     refresh();
 }
 
+// Ganada: celebración con confeti de la marca (con animaciones reducidas solo queda el toast).
+function onWon(result, message) {
+    celebrate();
+    onOutcome(result, message);
+}
+
 function onOutcome(result, message) {
     if (message) toasts.show({ status: 'ok', title: message });
     refresh();
@@ -335,7 +342,7 @@ const activeUserId = computed(() => page.props.auth?.user?.id ?? null);
 
         <EmptyState v-else-if="totalCount === 0" variant="no-results" @clear="clearFilters" />
 
-        <div v-else class="pipeline-board min-w-0" :data-readonly="can.create ? undefined : 'true'">
+        <div v-else v-settle class="pipeline-board min-w-0" :data-readonly="can.create ? undefined : 'true'">
             <CapKanban :columns="columns" :cards="boardCards" label="Pipeline de oportunidades" picker-label="Etapa" @move="onBoardMove" @add="onColumnAdd">
                 <template #card="{ card }">
                     <OpportunityCard :card="findCard(card.id) ?? card" :menu="menuOf(findCard(card.id) ?? card)" :show-participants="PARTICIPANT_STAGES.includes(card.column)" @open="openDetail(findCard(card.id))" @participants="open('participants', findCard(card.id))" />
@@ -357,7 +364,7 @@ const activeUserId = computed(() => page.props.auth?.user?.id ?? null);
         <OpportunityDetailModal ref="detailModal" v-model:open="modal.detail" :opportunity-id="detailId" :tab="detailTab" :stages="stages" @edit="editFromDetail" @revert="revertFromDetail" @remove="(detail) => remove(detail.data)" @changed="refresh()" />
         <PresentOfferModal v-model:open="modal.present" :card="selected" @moved="onPresented" />
         <ParticipantsModal v-model:open="modal.participants" :subject="subject" :title="`Participantes · ${selected?.title ?? ''}`" @saved="refresh()" />
-        <WonModal v-model:open="modal.won" :subject="subject" @done="onOutcome" />
+        <WonModal v-model:open="modal.won" :subject="subject" @done="onWon" />
         <LostModal v-model:open="modal.lost" :subject="subject" @done="onOutcome" />
         <RevertModal v-model:open="modal.revert" :subject="subject" @done="onOutcome" />
     </AppLayout>

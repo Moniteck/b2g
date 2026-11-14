@@ -68,7 +68,7 @@ function meta(version) {
             <CapSkeleton variant="line" />
         </div>
         <ErrorState v-else-if="loadError" compact title="No se pudo cargar el historial" :description="loadError" @retry="load" />
-        <ol v-else class="flex flex-col divide-y divide-cap-divider" aria-label="Versiones, la más reciente primero">
+        <ol v-stagger v-else class="flex flex-col divide-y divide-cap-divider" aria-label="Versiones, la más reciente primero">
             <li v-for="version in versions" :key="version.id" class="flex flex-wrap items-center gap-x-3 gap-y-2 py-3 first:pt-0 last:pb-0">
                 <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-cap-control bg-cap-card-2 font-display text-sm font-semibold tabular-nums text-gray-900 dark:text-gray-100" :aria-label="`Versión ${version.version}`">v{{ version.version }}</span>
                 <div class="min-w-0 flex-1 basis-48">

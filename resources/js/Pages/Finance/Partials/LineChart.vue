@@ -80,16 +80,17 @@ const tooltipStyle = computed(() => (active.value < 0 ? {} : { left: `${Math.min
                 <line :x1="PAD.left" :x2="width - PAD.right" :y1="y(tick)" :y2="y(tick)" :stroke="palette.grid" stroke-width="1" />
                 <text :x="PAD.left - 8" :y="y(tick) + 4" text-anchor="end" font-size="12" class="tabular-nums" :fill="palette.text">{{ axisFormat(tick) }}</text>
             </template>
-            <path :d="area" :fill="color" fill-opacity="0.12" />
+            <path :d="area" :fill="color" fill-opacity="0.12" class="m-chart-area" />
             <path :d="line" fill="none" :stroke="color" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" pathLength="1" class="cap-draw" />
             <template v-for="(point, index) in points" :key="point.label + index">
                 <text v-if="index % labelEvery === 0 || index === points.length - 1" :x="x(index)" :y="height - 8" :text-anchor="index === 0 ? 'start' : index === points.length - 1 ? 'end' : 'middle'" font-size="12" :fill="palette.text">{{ point.label }}</text>
             </template>
             <g v-if="active >= 0">
                 <line :x1="x(active)" :x2="x(active)" :y1="PAD.top" :y2="PAD.top + plotHeight" :stroke="palette.grid" stroke-width="1" />
-                <circle :cx="x(active)" :cy="y(values[active])" r="4" :fill="color" />
+                <circle :cx="x(active)" :cy="y(values[active])" r="4" :fill="color" class="m-chart-dot" />
             </g>
         </svg>
+        <Transition name="m-fade">
         <div
             v-if="active >= 0"
             class="pointer-events-none absolute top-2 z-cap-dropdown w-44 -translate-x-1/2 rounded-cap-control border border-cap-divider bg-cap-card p-3 text-xs shadow-md dark:bg-cap-card-2"
@@ -99,6 +100,7 @@ const tooltipStyle = computed(() => (active.value < 0 ? {} : { left: `${Math.min
             <p class="text-cap-text-soft">{{ points[active].label }}</p>
             <p class="mt-1 font-semibold tabular-nums text-gray-900 dark:text-gray-100">{{ format(points[active].value) }}</p>
         </div>
+        </Transition>
         <div class="sr-only">
         <table>
             <caption>{{ title }}</caption>

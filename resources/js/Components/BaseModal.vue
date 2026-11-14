@@ -9,7 +9,9 @@
 // Eventos: update:open, close, submit, opened, closed.
 // Accesible: role="dialog", foco atrapado, foco inicial en `[data-autofocus]` o en el primer campo,
 // Esc cierra y el foco vuelve a quien la abrió. Apilable: una modal puede abrir otra encima.
-import { computed, nextTick, onBeforeUnmount, ref, useId, watch } from 'vue';
+// Movimiento (m-modal en resources/css/motion.css): en escritorio entra con escala y el fondo se
+// desenfoca; en móvil sube desde abajo y se cierra arrastrando la cabecera hacia abajo (si no es persistent).
+import { computed, nextTick, onBeforeUnmount, reactive, ref, useId, watch } from 'vue';
 import { trapFocus } from '../../design/shell/js/focus-trap.js';
 import { useLayer } from '../composables/useLayers.js';
 import { iconButton } from '../lib/ui.js';
@@ -100,24 +102,48 @@ onBeforeUnmount(release);
 
 function afterLeave() {
     rendered.value = false;
+    panelStyle.value = null;
     emit('closed');
+}
+
+// Arrastrar para cerrar (solo móvil, donde la modal es una hoja a pantalla completa).
+const DRAG_CLOSE_PX = 120;
+const DRAG_CLOSE_SPEED = 0.6;
+const drag = reactive({ active: false, startY: 0, dy: 0, startedAt: 0 });
+const panelStyle = ref(null);
+const isDesktop = () => window.matchMedia('(min-width: 768px)').matches;
+
+function dragStart(event) {
+    if (props.persistent || isDesktop() || event.target.closest('button, a, input, select, textarea')) return;
+    Object.assign(drag, { active: true, startY: event.clientY, dy: 0, startedAt: performance.now() });
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+}
+
+function dragMove(event) {
+    if (!drag.active) return;
+    drag.dy = Math.max(0, event.clientY - drag.startY);
+    panelStyle.value = { transform: `translateY(${drag.dy}px)`, transition: 'none' };
+}
+
+function dragEnd() {
+    if (!drag.active) return;
+    drag.active = false;
+    const speed = drag.dy / Math.max(1, performance.now() - drag.startedAt);
+    if (drag.dy > DRAG_CLOSE_PX || (drag.dy > 24 && speed > DRAG_CLOSE_SPEED)) {
+        panelStyle.value = { transform: 'translateY(100%)', transition: 'transform 200ms var(--m-ease-exit)' };
+        close();
+        return;
+    }
+    panelStyle.value = drag.dy ? { transform: 'translateY(0)', transition: 'transform 320ms var(--m-ease-spring)' } : null;
 }
 </script>
 
 <template>
     <!-- El Teleport se monta al abrir: así la modal más reciente queda encima de las anteriores. -->
     <Teleport v-if="rendered" to="body">
-        <Transition
-            appear
-            enter-active-class="transition-opacity duration-cap-base ease-cap-enter"
-            enter-from-class="opacity-0"
-            leave-active-class="transition-opacity duration-cap-fast ease-cap-exit"
-            leave-to-class="opacity-0"
-            @after-enter="emit('opened')"
-            @after-leave="afterLeave"
-        >
+        <Transition name="m-modal" appear :duration="{ enter: 380, leave: 200 }" @after-enter="emit('opened')" @after-leave="afterLeave">
             <div v-if="open" class="fixed inset-0 z-cap-modal flex items-stretch justify-center md:items-center md:p-6" data-floating-root>
-                <div class="absolute inset-0 bg-cap-chrome/35 backdrop-blur-sm" @pointerdown="pressedOnBackdrop = true" @click="onBackdropClick" />
+                <div class="m-modal-backdrop absolute inset-0 bg-cap-chrome/35 backdrop-blur-sm" @pointerdown="pressedOnBackdrop = true" @click="onBackdropClick" />
                 <component
                     :is="as"
                     ref="panel"
@@ -126,12 +152,21 @@ function afterLeave() {
                     :aria-labelledby="titleId"
                     :aria-describedby="description ? descriptionId : undefined"
                     tabindex="-1"
-                    class="relative flex max-h-full w-full animate-cap-rise-in flex-col bg-cap-card shadow-xl focus:outline-none md:max-h-full md:rounded-cap-shell md:border md:border-cap-divider"
+                    class="m-modal-panel relative flex max-h-full w-full flex-col bg-cap-card shadow-xl focus:outline-none md:max-h-full md:rounded-cap-shell md:border md:border-cap-divider"
                     :class="sizeClass"
+                    :style="panelStyle"
                     :novalidate="as === 'form' ? '' : undefined"
                     @submit.prevent="emit('submit', $event)"
                 >
-                    <header class="flex shrink-0 items-start justify-between gap-4 border-b border-cap-divider px-4 py-4 md:px-6">
+                    <header
+                        class="relative flex shrink-0 items-start justify-between gap-4 border-b border-cap-divider px-4 py-4 md:px-6"
+                        :class="persistent ? '' : 'max-md:touch-none max-md:pt-6'"
+                        @pointerdown="dragStart"
+                        @pointermove="dragMove"
+                        @pointerup="dragEnd"
+                        @pointercancel="dragEnd"
+                    >
+                        <span v-if="!persistent" class="absolute left-1/2 top-2 h-1 w-10 -translate-x-1/2 rounded-full bg-cap-divider md:hidden" aria-hidden="true" />
                         <div class="min-w-0">
                             <slot name="header">
                                 <h2 :id="titleId" class="font-display text-lg font-semibold text-gray-900 dark:text-gray-100">{{ title }}</h2>

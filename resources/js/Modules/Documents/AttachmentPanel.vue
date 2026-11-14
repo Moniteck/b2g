@@ -179,7 +179,7 @@ defineExpose({ reload, openUpload, items });
                 <template v-if="editable" #action><AppButton icon="tray-arrow-up" @click="openUpload">{{ addLabel }}</AppButton></template>
             </EmptyState>
 
-            <ul v-else class="flex flex-col divide-y divide-cap-divider" :class="loading ? 'opacity-50' : ''">
+            <ul v-stagger v-else class="flex flex-col divide-y divide-cap-divider" :class="loading ? 'opacity-50' : ''">
                 <li v-for="item in items" :key="item.id" class="flex flex-wrap items-center gap-x-3 gap-y-2 py-3 first:pt-0 last:pb-0">
                     <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-cap-control bg-cap-card-2 text-cap-text-soft" aria-hidden="true">
                         <i class="mdi text-xl leading-none" :class="`mdi-${fileIcon(item.mime, item.fileName)}`" />

@@ -149,7 +149,7 @@ function actionsOf(row) {
                     <div v-if="row.deliveries_total" class="flex min-w-28 flex-col gap-1">
                         <span class="text-xs tabular-nums text-cap-text-soft">{{ row.deliveries_done }} de {{ row.deliveries_total }}</span>
                         <div class="h-1.5 w-full overflow-hidden rounded-full bg-cap-card-2" role="progressbar" :aria-valuenow="percentOf(row.deliveries_done, row.deliveries_total)" aria-valuemin="0" aria-valuemax="100" :aria-label="`Avance de entregas de ${row.number}`">
-                            <div class="h-full rounded-full bg-cap-status-ok dark:bg-cap-status-dark-ok" :style="{ width: `${percentOf(row.deliveries_done, row.deliveries_total)}%` }" />
+                            <div class="m-fill h-full rounded-full bg-cap-status-ok dark:bg-cap-status-dark-ok" :style="{ width: `${percentOf(row.deliveries_done, row.deliveries_total)}%` }" />
                         </div>
                     </div>
                     <span v-else class="text-xs text-cap-text-soft">Sin entregas</span>

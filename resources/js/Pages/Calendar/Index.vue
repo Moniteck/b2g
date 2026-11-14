@@ -38,6 +38,11 @@ const selected = ref('');
 
 const events = ref([]);
 const loading = ref(true);
+// Movimiento: el mes cargado se queda en pantalla (atenuado) mientras llega el siguiente, que entra
+// deslizándose desde el lado hacia el que se avanzó. El esqueleto solo sale en la primera carga.
+const shownMonth = ref(month.value);
+const hasLoaded = ref(false);
+const slide = ref('m-slide-left');
 const error = ref('');
 let controller = null;
 
@@ -78,6 +83,8 @@ async function load() {
         if (type.value) params['types[]'] = type.value;
         const response = await getJson('/calendario/eventos', params, { signal: controller.signal });
         events.value = response.events ?? [];
+        shownMonth.value = month.value;
+        hasLoaded.value = true;
         loading.value = false;
     } catch (exception) {
         if (exception.name === 'AbortError') return;
@@ -100,11 +107,14 @@ function syncUrl() {
 }
 
 function go(delta) {
+    slide.value = delta > 0 ? 'm-slide-left' : 'm-slide-right';
     month.value = shiftMonth(month.value, delta);
 }
 
 function goToday() {
-    month.value = todayKey().slice(0, 7);
+    const today = todayKey().slice(0, 7);
+    slide.value = today >= month.value ? 'm-slide-left' : 'm-slide-right';
+    month.value = today;
     selected.value = todayKey();
 }
 
@@ -152,7 +162,9 @@ onBeforeUnmount(() => controller?.abort());
         <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <div class="flex items-center gap-2">
                 <IconButton icon="chevron-left" label="Mes anterior" @click="go(-1)" />
-                <h2 class="min-w-40 text-center font-display text-lg font-semibold text-gray-900 dark:text-gray-100 sm:min-w-48" aria-live="polite">{{ monthLabel(month) }}</h2>
+                <h2 class="relative min-w-40 overflow-hidden text-center font-display text-lg font-semibold text-gray-900 dark:text-gray-100 sm:min-w-48" aria-live="polite">
+                    <Transition :name="slide" mode="out-in"><span :key="month" class="inline-block">{{ monthLabel(month) }}</span></Transition>
+                </h2>
                 <IconButton icon="chevron-right" label="Mes siguiente" @click="go(1)" />
                 <AppButton class="ml-1" @click="goToday">Hoy</AppButton>
             </div>
@@ -175,13 +187,17 @@ onBeforeUnmount(() => controller?.abort());
         <ErrorState v-if="error" title="No se pudo cargar el calendario" :description="error" @retry="load" />
 
         <template v-else-if="view === 'month'">
-            <div v-if="loading" class="rounded-cap-card border border-cap-divider bg-cap-card p-4" aria-busy="true">
+            <div v-if="loading && !hasLoaded" class="rounded-cap-card border border-cap-divider bg-cap-card p-4" aria-busy="true">
                 <CapSkeleton variant="table" :rows="5" label="Cargando el calendario" />
             </div>
             <template v-else>
-                <MonthGrid :month="month" :events="events" :selected="selected" @open="open" @select="select" @more="showMore" />
-                <CapAlert v-if="!monthEvents.length && type" status="info" title="Ningún plazo de ese tipo este mes" detail="Quita el filtro para ver todos los plazos." />
-                <CapAlert v-else-if="!monthEvents.length" status="info" title="Sin plazos este mes" detail="Los cierres de licitación, entregas, vencimientos y eventos manuales aparecerán aquí." />
+                <div class="overflow-hidden transition-opacity duration-cap-fast ease-cap" :class="loading ? 'opacity-50' : ''" :aria-busy="loading ? 'true' : undefined">
+                    <Transition :name="slide" mode="out-in">
+                        <MonthGrid :key="shownMonth" :month="shownMonth" :events="events" :selected="selected" @open="open" @select="select" @more="showMore" />
+                    </Transition>
+                </div>
+                <CapAlert v-if="!loading && !monthEvents.length && type" status="info" title="Ningún plazo de ese tipo este mes" detail="Quita el filtro para ver todos los plazos." />
+                <CapAlert v-else-if="!loading && !monthEvents.length" status="info" title="Sin plazos este mes" detail="Los cierres de licitación, entregas, vencimientos y eventos manuales aparecerán aquí." />
 
                 <!-- Día elegido (sobre todo en móvil, donde la rejilla solo muestra puntos) -->
                 <section v-if="selected" class="md:hidden" aria-live="polite">

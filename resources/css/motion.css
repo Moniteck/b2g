@@ -1,0 +1,600 @@
+/* ──────────────────────────────────────────────────────────────────────────────────────────────
+   Movimiento del CRM: capa central sobre los tokens de CAP (`--cap-duration-*`, `--cap-ease-*`).
+   Solo `transform`, `opacity` (y `translate`/`scale` sueltos); colores de fondo en resaltes puntuales.
+   Mismos valores que `resources/js/lib/motion/tokens.js`. Sin colores a mano: todo con `--cap-*`.
+
+   <html data-motion="full|reduced"> lo pone `lib/motion/preference.js` (preferencia del usuario +
+   prefers-reduced-motion). Con «reduced» nada se desplaza: quedan fundidos cortos de opacidad.
+   ────────────────────────────────────────────────────────────────────────────────────────────── */
+
+:root {
+    --m-fast: var(--cap-duration-fast);
+    --m-base: var(--cap-duration-base);
+    --m-slow: var(--cap-duration-slow);
+    --m-page: 260ms;
+    --m-spring-time: 420ms;
+    --m-ease: var(--cap-ease-standard);
+    --m-ease-enter: var(--cap-ease-enter);
+    --m-ease-exit: var(--cap-ease-exit);
+    --m-ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+    --m-ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+    --m-rise: 14px;
+    --m-step: 40ms;
+}
+
+@keyframes m-fade-in { from { opacity: 0; } }
+@keyframes m-rise-in { from { opacity: 0; transform: translateY(var(--m-rise)); } }
+@keyframes m-page-in { from { opacity: 0; transform: translateY(18px); } }
+@keyframes m-pop-in { from { opacity: 0; transform: scale(0.92); } }
+@keyframes m-float { 50% { transform: translateY(-5px); } }
+@keyframes m-bob { 50% { transform: translateY(-6px); } }
+@keyframes m-wiggle {
+    20% { transform: rotate(-10deg); }
+    40% { transform: rotate(8deg); }
+    60% { transform: rotate(-5deg); }
+    80% { transform: rotate(2deg); }
+}
+@keyframes m-check-in {
+    from { opacity: 0; transform: scale(0.3) rotate(-35deg); }
+    70% { opacity: 1; transform: scale(1.15) rotate(4deg); }
+}
+@keyframes m-row-new {
+    from { background-color: var(--cap-red-tint); }
+}
+@keyframes m-shimmer {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(100%); }
+}
+
+/* ───────────── 1. Entrada y salida de página ─────────────
+   El envoltorio del contenido (`.m-page`, en AppLayout) no se anima: sus bloques entran en cascada. */
+.cap-shell__content > .m-page {
+    animation: none;
+    transition:
+        opacity 160ms var(--m-ease-exit),
+        transform 160ms var(--m-ease-exit);
+}
+
+.m-page > * {
+    animation: m-page-in var(--m-page) var(--m-ease-expo) backwards;
+}
+.m-page > :nth-child(2) { animation-delay: 35ms; }
+.m-page > :nth-child(3) { animation-delay: 70ms; }
+.m-page > :nth-child(4) { animation-delay: 105ms; }
+.m-page > :nth-child(5) { animation-delay: 140ms; }
+.m-page > :nth-child(n + 6) { animation-delay: 170ms; }
+
+/* Rejillas de tarjetas que son bloques de la página: cada tarjeta entra después de la anterior. */
+.m-page > .grid > * {
+    animation: m-rise-in 380ms var(--m-ease-expo) backwards;
+    animation-delay: 60ms;
+}
+.m-page > .grid > :nth-child(2) { animation-delay: 100ms; }
+.m-page > .grid > :nth-child(3) { animation-delay: 140ms; }
+.m-page > .grid > :nth-child(4) { animation-delay: 180ms; }
+.m-page > .grid > :nth-child(5) { animation-delay: 220ms; }
+.m-page > .grid > :nth-child(6) { animation-delay: 250ms; }
+.m-page > .grid > :nth-child(n + 7) { animation-delay: 280ms; }
+
+/* Salida: mientras llega la página nueva el contenido actual se atenúa y sube un poco. */
+.cap-shell__content[data-m-leaving] > .m-page {
+    opacity: 0.35;
+    transform: translateY(-6px);
+}
+
+/* Barra de progreso de Inertia con el degradado de la marca y un brillo que la recorre. */
+html #nprogress .bar {
+    height: 3px;
+    background: var(--cap-gradient-primary);
+    border-radius: 0 3px 3px 0;
+    overflow: hidden;
+}
+html #nprogress .bar::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, var(--cap-skeleton-sheen), transparent);
+    animation: m-shimmer 1.1s linear infinite;
+}
+html #nprogress .peg {
+    box-shadow: 0 0 10px var(--cap-red), 0 0 5px var(--cap-red);
+}
+
+/* ───────────── 2. Directivas ───────────── */
+.m-stagger > * {
+    animation: m-rise-in 380ms var(--m-ease-expo) backwards;
+    animation-delay: calc(var(--m-i, 0) * var(--m-step));
+}
+
+.m-reveal {
+    opacity: 0;
+    transform: translateY(18px);
+}
+.m-reveal.m-reveal--in {
+    opacity: 1;
+    transform: none;
+    transition:
+        opacity 500ms var(--m-ease-expo) var(--m-delay, 0ms),
+        transform 600ms var(--m-ease-expo) var(--m-delay, 0ms);
+}
+
+.m-magnetic {
+    transition: translate 260ms var(--m-ease-expo);
+}
+
+/* ───────────── 3. Transiciones con nombre (<Transition name="…">) ───────────── */
+.m-fade-enter-active { transition: opacity var(--m-base) var(--m-ease-enter); }
+.m-fade-leave-active { transition: opacity var(--m-fast) var(--m-ease-exit); }
+.m-fade-enter-from,
+.m-fade-leave-to { opacity: 0; }
+
+.m-rise-enter-active { transition: opacity 260ms var(--m-ease-enter), transform 340ms var(--m-ease-expo); }
+.m-rise-leave-active { transition: opacity var(--m-fast) var(--m-ease-exit), transform var(--m-fast) var(--m-ease-exit); }
+.m-rise-enter-from { opacity: 0; transform: translateY(10px); }
+.m-rise-leave-to { opacity: 0; transform: translateY(-4px); }
+
+.m-pop-enter-active { transition: opacity var(--m-base) var(--m-ease-enter), transform var(--m-spring-time) var(--m-ease-spring); }
+.m-pop-leave-active { transition: opacity var(--m-fast) var(--m-ease-exit), transform var(--m-fast) var(--m-ease-exit); }
+.m-pop-enter-from { opacity: 0; transform: scale(0.94); }
+.m-pop-leave-to { opacity: 0; transform: scale(0.98); }
+
+/* Menús y popovers: caen desde el disparador. */
+.m-menu-enter-active { transition: opacity 140ms var(--m-ease-enter), transform 280ms var(--m-ease-spring); }
+.m-menu-leave-active { transition: opacity 100ms var(--m-ease-exit), transform 100ms var(--m-ease-exit); }
+.m-menu-enter-from { opacity: 0; transform: translateY(-6px) scale(0.96); }
+.m-menu-leave-to { opacity: 0; transform: scale(0.98); }
+
+/* Deslizamiento lateral (mes siguiente / anterior, pestañas). */
+.m-slide-left-enter-active,
+.m-slide-right-enter-active { transition: opacity 220ms var(--m-ease-enter), transform 320ms var(--m-ease-expo); }
+.m-slide-left-leave-active,
+.m-slide-right-leave-active { transition: opacity 110ms var(--m-ease-exit), transform 110ms var(--m-ease-exit); }
+.m-slide-left-enter-from { opacity: 0; transform: translateX(28px); }
+.m-slide-left-leave-to { opacity: 0; transform: translateX(-12px); }
+.m-slide-right-enter-from { opacity: 0; transform: translateX(-28px); }
+.m-slide-right-leave-to { opacity: 0; transform: translateX(12px); }
+
+.m-slide-up-enter-active { transition: opacity 220ms var(--m-ease-enter), transform 380ms var(--m-ease-expo); }
+.m-slide-up-leave-active { transition: opacity var(--m-fast) var(--m-ease-exit), transform var(--m-base) var(--m-ease-exit); }
+.m-slide-up-enter-from,
+.m-slide-up-leave-to { opacity: 0; transform: translateY(100%); }
+
+/* Acordeón: anima filas de rejilla, no la altura. El hijo debe llevar `min-h-0 overflow-hidden`. */
+.m-collapse-enter-active,
+.m-collapse-leave-active {
+    display: grid;
+    transition: grid-template-rows var(--m-base) var(--m-ease), opacity var(--m-base) var(--m-ease);
+}
+.m-collapse-enter-from,
+.m-collapse-leave-to { grid-template-rows: 0fr; opacity: 0; }
+.m-collapse-enter-to,
+.m-collapse-leave-from { grid-template-rows: 1fr; }
+
+/* Listas (<TransitionGroup name="m-list">): entra subiendo, sale fundiéndose, el resto se acomoda. */
+.m-list-enter-active { transition: opacity 260ms var(--m-ease-enter), transform 380ms var(--m-ease-spring); }
+.m-list-leave-active { position: absolute; transition: opacity var(--m-fast) var(--m-ease-exit), transform var(--m-fast) var(--m-ease-exit); }
+.m-list-enter-from { opacity: 0; transform: translateY(10px) scale(0.98); }
+.m-list-leave-to { opacity: 0; transform: translateY(-6px); }
+.m-list-move { transition: transform var(--m-spring-time) var(--m-ease-spring); }
+
+/* ───────────── 4. Marco ───────────── */
+
+/* Íconos del menú con un gesto al pasar el cursor. */
+.cap-shell-sidebar__icon,
+.cap-shell-tabbar__tab .mdi {
+    transition: transform 320ms var(--m-ease-spring);
+}
+.cap-shell-sidebar__item:hover .cap-shell-sidebar__icon {
+    transform: translateX(2px) rotate(-8deg) scale(1.1);
+}
+.cap-shell-sidebar__item:active,
+.cap-shell-tabbar__tab:active {
+    scale: 0.97;
+}
+.cap-shell-sidebar__item,
+.cap-shell-tabbar__tab {
+    transition-property: background-color, border-color, color, scale;
+    transition-duration: var(--m-fast);
+    transition-timing-function: var(--m-ease);
+}
+.cap-shell-tabbar__tab {
+    position: relative;
+}
+
+/* Indicador activo que se desliza: el fantasma pinta el resalte mientras el ítem lo oculta. */
+.m-nav-ghost {
+    position: absolute;
+    z-index: 0;
+    box-sizing: border-box;
+    pointer-events: none;
+    will-change: transform;
+}
+.cap-shell-sidebar__item[data-m-ghosting],
+.cap-shell-sidebar__child[data-m-ghosting],
+.cap-shell-tabbar__tab[data-m-ghosting] {
+    border-color: transparent !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
+[data-m-ghosting]::before {
+    opacity: 0 !important;
+}
+
+/* Cabecera: sombra que aparece al bajar. */
+.cap-shell-header::after,
+.cap-shell-topbar::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    box-shadow: var(--cap-shadow-floating);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--m-slow) var(--m-ease);
+}
+.cap-shell-header[data-m-scrolled]::after,
+.cap-shell-topbar[data-m-scrolled]::after {
+    opacity: 1;
+}
+
+/* Campana: se mece al pasar el cursor. */
+.cap-shell-header__icon-button:hover .mdi-bell-outline {
+    animation: m-wiggle 600ms var(--m-ease) 1;
+    transform-origin: 50% 0;
+}
+
+/* Botones de la cabecera: un toque elástico al pulsar. */
+.cap-shell-header__icon-button:active,
+.cap-shell-topbar__icon-button:active,
+.app-header-chip:active,
+.app-header-avatar:active {
+    scale: 0.94;
+}
+.cap-shell-header__icon-button,
+.cap-shell-topbar__icon-button,
+.app-header-avatar {
+    transition: background-color var(--m-fast) var(--m-ease), scale 260ms var(--m-ease-spring);
+}
+.app-header-chip {
+    transition: background-color var(--m-fast) var(--m-ease), scale 260ms var(--m-ease-spring);
+}
+
+/* Hoja «Más»: su contenido entra en cascada al abrirse. */
+.cap-shell-sheet[data-open="true"] .cap-shell-sheet__panel > * {
+    animation: m-rise-in 340ms var(--m-ease-expo) backwards;
+    animation-delay: 80ms;
+}
+.cap-shell-sheet[data-open="true"] .cap-shell-sheet__panel > :nth-child(n + 4) { animation-delay: 110ms; }
+.cap-shell-sheet[data-open="true"] .cap-shell-sheet__panel > :nth-child(n + 8) { animation-delay: 140ms; }
+.cap-shell-sheet[data-open="true"] .cap-shell-sheet__panel > :nth-child(n + 12) { animation-delay: 170ms; }
+
+/* Toasts: entran con un rebote suave; el ícono de éxito se dibuja. */
+.cap-toast {
+    animation: m-toast-in 460ms var(--m-ease-spring) both;
+}
+@keyframes m-toast-in {
+    from { opacity: 0; transform: translateX(32px) scale(0.96); }
+}
+@media (max-width: 1023.98px) {
+    @keyframes m-toast-in {
+        from { opacity: 0; transform: translateY(-20px) scale(0.96); }
+    }
+}
+.cap-toast__icon {
+    animation: m-pop-in 420ms var(--m-ease-spring) 120ms backwards;
+}
+.cap-toast--ok .cap-toast__icon .mdi {
+    display: inline-block;
+    animation: m-check-in 560ms var(--m-ease-spring) 160ms backwards;
+}
+.cap-toast--error .cap-toast__icon .mdi,
+.cap-toast--warning .cap-toast__icon .mdi {
+    display: inline-block;
+    animation: m-wiggle 520ms var(--m-ease) 200ms 1;
+}
+
+/* Confirmación: aparece con escala y un rebote mínimo. */
+.cap-dialog__panel {
+    animation: m-dialog-in 360ms var(--m-ease-spring) both;
+}
+@keyframes m-dialog-in {
+    from { opacity: 0; transform: translateY(10px) scale(0.95); }
+}
+.cap-dialog__icon {
+    animation: m-pop-in 420ms var(--m-ease-spring) 120ms backwards;
+}
+
+/* ───────────── 5. Componentes ───────────── */
+
+/* Botones: levantan un poco al pasar; check animado tras un envío correcto. */
+.cap-button {
+    transition:
+        background-color var(--m-fast) var(--m-ease),
+        opacity var(--m-fast) var(--m-ease),
+        transform var(--m-fast) var(--m-ease),
+        translate 260ms var(--m-ease-spring);
+}
+.cap-button--primary:hover:not(:disabled, [aria-busy="true"]) {
+    translate: 0 -1px;
+}
+.cap-button[data-m-success] {
+    position: relative;
+}
+.cap-button[data-m-success]::after {
+    content: "\F012C";
+    position: absolute;
+    top: -8px;
+    right: -6px;
+    display: grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--cap-status-ok-solid);
+    color: var(--cap-on-accent);
+    font: 14px/1 "Material Design Icons";
+    animation: m-check-in 520ms var(--m-ease-spring) both;
+}
+
+/* Tarjetas clicables de las páginas: se levantan al pasar el cursor. */
+.m-page :is(a, button).rounded-cap-card:not(:disabled),
+.m-lift {
+    transition:
+        translate 260ms var(--m-ease-spring),
+        background-color var(--m-fast) var(--m-ease),
+        border-color var(--m-fast) var(--m-ease),
+        color var(--m-fast) var(--m-ease);
+}
+.m-page :is(a, button).rounded-cap-card:not(:disabled):hover,
+.m-lift:hover {
+    translate: 0 -3px;
+}
+
+/* Íconos dentro de una tarjeta o fila con `group`: saltan un poco al pasar el cursor. */
+.m-hop {
+    display: inline-block;
+    transition: transform 320ms var(--m-ease-spring);
+}
+.group:hover .m-hop,
+.m-hop-host:hover .m-hop {
+    transform: translateY(-2px) rotate(-8deg) scale(1.08);
+}
+
+/* Kanban: tarjetas en cascada, se levantan al pasar y se acomodan con resorte al soltarlas. */
+.cap-kanban__list > .cap-kanban-card {
+    animation: m-rise-in 360ms var(--m-ease-expo) backwards;
+}
+.cap-kanban__list > .cap-kanban-card:nth-of-type(2) { animation-delay: 40ms; }
+.cap-kanban__list > .cap-kanban-card:nth-of-type(3) { animation-delay: 80ms; }
+.cap-kanban__list > .cap-kanban-card:nth-of-type(4) { animation-delay: 120ms; }
+.cap-kanban__list > .cap-kanban-card:nth-of-type(n + 5) { animation-delay: 150ms; }
+.cap-kanban__column:nth-child(2) .cap-kanban-card { animation-delay: 60ms; }
+.cap-kanban-card {
+    transition:
+        transform 260ms var(--m-ease-spring),
+        translate 260ms var(--m-ease-spring),
+        box-shadow var(--m-fast) var(--m-ease),
+        border-color var(--m-fast) var(--m-ease);
+}
+.cap-kanban-card:hover:not([data-dragging="true"]) {
+    translate: 0 -2px;
+}
+.cap-kanban-card[data-dragging="true"] {
+    transform: rotate(2.5deg) scale(1.04);
+}
+.cap-kanban__list[data-over="true"] {
+    transition: background-color var(--m-fast) var(--m-ease), outline-color var(--m-fast) var(--m-ease);
+}
+.cap-kanban-card.m-settle {
+    animation: m-settle 520ms var(--m-ease-spring) both;
+}
+@keyframes m-settle {
+    from { transform: translateY(-10px) scale(1.04) rotate(1.5deg); }
+}
+.cap-kanban__count {
+    display: inline-block;
+}
+
+/* Tablas: fila nueva resaltada, flecha de orden que gira. */
+.m-row-new > td,
+.m-row-new {
+    animation: m-row-new 1600ms var(--m-ease) 1;
+}
+.m-stagger-cards > li {
+    animation: m-rise-in 360ms var(--m-ease-expo) backwards;
+}
+.m-stagger-cards > li:nth-child(2) { animation-delay: 40ms; }
+.m-stagger-cards > li:nth-child(3) { animation-delay: 80ms; }
+.m-stagger-cards > li:nth-child(4) { animation-delay: 120ms; }
+.m-stagger-cards > li:nth-child(5) { animation-delay: 160ms; }
+.m-stagger-cards > li:nth-child(6) { animation-delay: 190ms; }
+.m-stagger-cards > li:nth-child(n + 7) { animation-delay: 220ms; }
+/* La cascada de las filas de escritorio sube un poco más y con la curva del CRM. */
+.cap-stagger-rows > tr {
+    animation-name: m-rise-in;
+    animation-duration: 360ms;
+    animation-timing-function: var(--m-ease-expo);
+}
+.m-sort-arrow {
+    display: inline-block;
+    transition: transform 280ms var(--m-ease-spring), opacity var(--m-fast) var(--m-ease);
+}
+.m-sort-arrow[data-direction="desc"] {
+    transform: rotate(180deg);
+}
+
+/* Estados vacíos y de error: ilustración con movimiento sutil. */
+.m-empty-icon {
+    display: inline-block;
+    animation: m-pop-in 480ms var(--m-ease-spring) backwards, m-float 4.5s ease-in-out 600ms infinite;
+}
+.m-error-icon {
+    display: inline-block;
+    animation: m-pop-in 420ms var(--m-ease-spring) backwards, m-wiggle 600ms var(--m-ease) 420ms 1;
+}
+
+/* Zona de archivos. */
+.m-dropzone {
+    transition:
+        background-color var(--m-fast) var(--m-ease),
+        border-color var(--m-fast) var(--m-ease),
+        scale 300ms var(--m-ease-spring);
+}
+.m-dropzone[data-dragging] {
+    scale: 1.015;
+}
+.m-dropzone .m-dropzone__icon {
+    display: inline-block;
+    transition: transform 300ms var(--m-ease-spring);
+}
+.m-dropzone:hover:not(:disabled) .m-dropzone__icon {
+    transform: translateY(-3px);
+}
+.m-dropzone[data-dragging] .m-dropzone__icon {
+    animation: m-bob 700ms ease-in-out infinite;
+}
+.m-check {
+    display: inline-block;
+    animation: m-check-in 560ms var(--m-ease-spring) backwards;
+}
+
+/* Campos: la etiqueta acompaña al foco; el error entra y el control se sacude (v-shake). */
+.m-field > label {
+    transition: color var(--m-fast) var(--m-ease), translate 240ms var(--m-ease-spring);
+}
+.m-field:focus-within > label {
+    color: var(--cap-text);
+    translate: 2px 0;
+}
+.m-field-error {
+    animation: m-rise-in 240ms var(--m-ease-expo) backwards;
+    --m-rise: -4px;
+}
+
+/* Pestañas: indicador que se desliza bajo la pestaña activa. */
+.m-tab-indicator {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--cap-brand);
+    transform-origin: 0 0;
+    pointer-events: none;
+    transition: transform 380ms var(--m-ease-expo);
+}
+.dark .m-tab-indicator {
+    background: var(--cap-red-200);
+}
+.m-tab-indicator[data-instant] {
+    transition: none;
+}
+
+/* Modal (BaseModal): fondo que se desenfoca y panel con escala; en móvil, hoja que sube. */
+.m-modal-enter-active .m-modal-backdrop { transition: opacity 260ms var(--m-ease-enter); }
+.m-modal-leave-active .m-modal-backdrop { transition: opacity 180ms var(--m-ease-exit); }
+.m-modal-enter-from .m-modal-backdrop,
+.m-modal-leave-to .m-modal-backdrop { opacity: 0; }
+.m-modal-enter-active .m-modal-panel { transition: opacity 200ms var(--m-ease-enter), transform 380ms var(--m-ease-expo); }
+.m-modal-leave-active .m-modal-panel { transition: opacity 150ms var(--m-ease-exit), transform 180ms var(--m-ease-exit); }
+.m-modal-enter-from .m-modal-panel { opacity: 0; transform: translateY(16px) scale(0.95); }
+.m-modal-leave-to .m-modal-panel { opacity: 0; transform: scale(0.97); }
+@media (max-width: 767.98px) {
+    .m-modal-enter-from .m-modal-panel { opacity: 1; transform: translateY(100%); }
+    .m-modal-leave-to .m-modal-panel { opacity: 1; transform: translateY(100%); }
+    .m-modal-leave-active .m-modal-panel { transition: transform 200ms var(--m-ease-exit); }
+}
+
+/* Contador de páginas, chips y cifras que cambian. */
+.m-tick-enter-active { transition: opacity 180ms var(--m-ease-enter), transform 280ms var(--m-ease-spring); }
+.m-tick-leave-active { position: absolute; transition: opacity 100ms var(--m-ease-exit), transform 100ms var(--m-ease-exit); }
+.m-tick-enter-from { opacity: 0; transform: translateY(8px); }
+.m-tick-leave-to { opacity: 0; transform: translateY(-8px); }
+
+/* Gráficas SVG: barras que crecen desde la base, área que aparece tras el trazo, punto que salta. */
+.m-bar {
+    transform-box: fill-box;
+    transform-origin: bottom;
+    animation: m-grow-y 700ms var(--m-ease-expo) backwards;
+    animation-delay: calc(120ms + var(--m-i, 0) * 45ms);
+    transition: opacity var(--m-fast) var(--m-ease);
+}
+@keyframes m-grow-y {
+    from { transform: scaleY(0); }
+}
+.m-chart-area {
+    animation: m-fade-in 700ms var(--m-ease-enter) 450ms backwards;
+}
+.m-chart-dot {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: m-pop-in 260ms var(--m-ease-spring) backwards;
+}
+/* Barras de progreso y de cumplimiento: se llenan de izquierda a derecha al aparecer. */
+.m-fill {
+    transform-origin: left center;
+    animation: m-grow-x 900ms var(--m-ease-expo) 150ms backwards;
+}
+@keyframes m-grow-x {
+    from { transform: scaleX(0); }
+}
+/* Trazo y anillo de CAP con la curva del CRM. */
+.cap-draw { animation-timing-function: var(--m-ease-expo); }
+
+/* Confeti. */
+.m-confetti {
+    position: fixed;
+    inset: 0;
+    z-index: calc(var(--cap-z-toast) + 1);
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+}
+
+/* Lo decorativo se pausa con la pestaña oculta. */
+html[data-tab-hidden] :is(.m-empty-icon, #nprogress .bar, .m-dropzone__icon) ,
+html[data-tab-hidden] #nprogress .bar::after {
+    animation-play-state: paused;
+}
+
+/* ───────────── 6. Animaciones reducidas ─────────────
+   Con la preferencia «reducidas» (o el sistema) nada se desplaza ni rebota. `tokens.css` ya anula
+   todo con prefers-reduced-motion; esto hace lo mismo para la preferencia de la app y deja fundidos
+   cortos donde ayudan a entender el cambio (página, modal, menú, toast). */
+html[data-motion="reduced"] *,
+html[data-motion="reduced"] *::before,
+html[data-motion="reduced"] *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+}
+html[data-motion="reduced"] .m-page > *,
+html[data-motion="reduced"] .m-modal-panel,
+html[data-motion="reduced"] .cap-toast,
+html[data-motion="reduced"] .cap-dialog__panel {
+    animation: m-fade-in 140ms linear backwards !important;
+}
+html[data-motion="reduced"] .cap-shell__content > .m-page,
+html[data-motion="reduced"] .m-fade-enter-active,
+html[data-motion="reduced"] .m-menu-enter-active,
+html[data-motion="reduced"] .m-modal-enter-active,
+html[data-motion="reduced"] .m-modal-enter-active .m-modal-panel {
+    transition: opacity 120ms linear !important;
+}
+html[data-motion="reduced"] :is(.m-menu-enter-from, .m-modal-enter-from .m-modal-panel, .m-slide-left-enter-from, .m-slide-right-enter-from, .m-rise-enter-from, .m-pop-enter-from) {
+    transform: none !important;
+}
+html[data-motion="reduced"] .cap-shell__content[data-m-leaving] > .m-page {
+    transform: none;
+}
+html[data-motion="reduced"] .m-nav-ghost,
+html[data-motion="reduced"] .m-confetti {
+    display: none;
+}
+html[data-motion="reduced"] :is(.m-dropzone[data-dragging], .cap-kanban-card[data-dragging="true"]) {
+    scale: none;
+}

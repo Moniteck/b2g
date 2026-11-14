@@ -83,7 +83,7 @@ function toggleRead() {
 
                     <section>
                         <h3 class="mb-4 font-display text-base font-semibold text-gray-900 dark:text-gray-100">Procedimiento</h3>
-                        <ol class="flex flex-col gap-4">
+                        <ol v-stagger class="flex flex-col gap-4">
                             <li v-for="(step, index) in sop.steps" :key="step.title" class="flex gap-4">
                                 <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cap-red-50 text-sm font-semibold tabular-nums text-cap-brand dark:bg-cap-red-600/15 dark:text-cap-brand-soft" aria-hidden="true">{{ index + 1 }}</span>
                                 <div class="min-w-0">

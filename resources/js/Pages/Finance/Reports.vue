@@ -114,13 +114,13 @@ function apply(changes = {}) {
 
         <div class="grid grid-cols-1 gap-6 xl:grid-cols-2" :class="{ 'opacity-50': loading }">
             <ChartCard title="Embudo comercial" description="Oportunidades creadas en el período, por etapa del kanban." :empty="funnelEmpty" empty-text="No se crearon oportunidades en el período.">
-                <ol class="flex flex-col gap-3">
+                <ol v-stagger class="flex flex-col gap-3">
                     <li v-for="stage in report.funnel" :key="stage.stage" class="grid grid-cols-[minmax(0,8rem)_1fr] items-center gap-3 sm:grid-cols-[10rem_1fr]">
                         <span class="truncate text-sm text-gray-900 dark:text-gray-100" :title="stage.label">{{ stage.label }}</span>
                         <div class="flex min-w-0 items-center gap-3">
                             <div class="h-7 min-w-0 flex-1 rounded-md bg-cap-card-2">
                                 <div
-                                    class="h-full rounded-md transition-[width] duration-cap-slow ease-cap"
+                                    class="m-fill h-full rounded-md transition-[width] duration-cap-slow ease-cap"
                                     :style="{ width: `${Math.max(stage.count ? 3 : 0, (stage.count / funnelMax) * 100)}%`, backgroundColor: stageColor(stage.stage) }"
                                 />
                             </div>

@@ -135,7 +135,7 @@ defineExpose({ reload });
                             <span v-else class="text-cap-text-soft">—</span>
                         </template>
                         <template #quotes>
-                            <ul v-if="detail.quotes.length" class="flex flex-col gap-1">
+                            <ul v-stagger v-if="detail.quotes.length" class="flex flex-col gap-1">
                                 <li v-for="quote in detail.quotes" :key="quote.id" class="flex flex-wrap items-center gap-2">
                                     <Link :href="`/cotizaciones?search=${encodeURIComponent(quote.number)}`" :class="tableLink" class="tabular-nums">{{ quote.number }}</Link>
                                     <span class="tabular-nums text-cap-text-soft">{{ money(quote.total) }}</span>

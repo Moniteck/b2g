@@ -125,7 +125,7 @@ async function recommend() {
             <div class="mt-4">
                 <EmptyState v-if="items.length === 0" compact icon="file-search-outline" title="Aún no se ha analizado un pliego" :description="can.useAi ? 'Sube el PDF para extraer fechas, garantías, documentos y productos.' : 'Tu rol no permite usar el análisis con IA.'" />
 
-                <ol v-else class="flex flex-col gap-3">
+                <ol v-stagger v-else class="flex flex-col gap-3">
                     <li v-for="analysis in items" :key="analysis.id" class="rounded-cap-control bg-cap-card-2 p-3" :data-analysis-status="analysis.status">
                         <div class="flex flex-wrap items-center justify-between gap-3">
                             <div class="flex min-w-0 items-center gap-3">

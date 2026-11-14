@@ -33,14 +33,14 @@ provide(FIELD_KEY, {
 </script>
 
 <template>
-    <div class="min-w-0">
+    <div v-shake="message" class="m-field min-w-0">
         <label v-if="label" :for="id" class="mb-1 block text-xs font-semibold text-gray-700 dark:text-gray-300" :class="{ 'sr-only': hideLabel }">
             {{ label }}
             <span v-if="required" class="text-cap-brand dark:text-cap-brand-soft" aria-hidden="true">*</span>
             <span v-else-if="optional" class="font-normal text-cap-text-soft">(opcional)</span>
         </label>
         <slot :id="id" :invalid="Boolean(message)" :described-by="describedBy" />
-        <p v-if="message" :id="errorId" class="mt-1 text-xs text-cap-status-error dark:text-cap-status-dark-error">{{ message }}</p>
+        <p v-if="message" :id="errorId" :key="message" class="m-field-error mt-1 text-xs text-cap-status-error dark:text-cap-status-dark-error">{{ message }}</p>
         <p v-if="help" :id="helpId" class="mt-1 text-xs text-cap-text-soft">{{ help }}</p>
     </div>
 </template>

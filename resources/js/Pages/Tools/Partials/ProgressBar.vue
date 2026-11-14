@@ -26,7 +26,7 @@ const clamped = computed(() => Math.min(100, Math.max(0, Number(props.value) || 
 <template>
     <div class="flex items-center gap-3">
         <div class="h-2 min-w-0 flex-1 overflow-hidden rounded-full bg-cap-card-2" role="progressbar" :aria-label="label" aria-valuemin="0" aria-valuemax="100" :aria-valuenow="Math.round(clamped)">
-            <div class="h-full rounded-full transition-[width] duration-cap-slow ease-cap" :class="FILL[status] ?? FILL.ok" :style="{ width: `${clamped}%` }" />
+            <div class="m-fill h-full rounded-full transition-[width] duration-cap-slow ease-cap" :class="FILL[status] ?? FILL.ok" :style="{ width: `${clamped}%` }" />
         </div>
         <span v-if="showValue" class="w-12 shrink-0 text-right text-xs font-medium tabular-nums text-cap-text-soft">{{ percent(clamped, 0) }}</span>
     </div>

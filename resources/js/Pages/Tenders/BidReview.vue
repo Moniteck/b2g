@@ -134,7 +134,7 @@ const LIST_SECTIONS = [
         <form class="flex flex-col gap-6" data-bid-review novalidate @submit.prevent="submit">
             <section :class="card" class="p-5">
                 <h3 class="font-display text-base font-semibold text-gray-900 dark:text-gray-100">Datos del proceso</h3>
-                <ol class="mt-4 flex flex-col divide-y divide-cap-divider">
+                <ol v-stagger class="mt-4 flex flex-col divide-y divide-cap-divider">
                     <li v-for="row in rows" :key="row.key" class="flex flex-col gap-3 py-4 first:pt-0 last:pb-0" :data-row="row.key" :data-evidence="row.found ? row.status : 'missing'">
                         <div class="flex flex-wrap items-center justify-between gap-2">
                             <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ row.label }}</p>
@@ -186,7 +186,7 @@ const LIST_SECTIONS = [
                     <Checkbox v-if="section.key === 'evaluation_criteria' && lists.evaluation_criteria?.length" v-model="listChoices.criteria" :disabled="!editable" label="Guardar como requisitos" />
                 </div>
                 <EmptyState v-if="!lists[section.key]?.length" compact class="mt-3" icon="text-search" :title="section.empty" />
-                <ul v-else class="mt-3 flex flex-col gap-2">
+                <ul v-stagger v-else class="mt-3 flex flex-col gap-2">
                     <li v-for="(item, index) in lists[section.key]" :key="index" class="rounded-cap-control bg-cap-card-2 p-3">
                         <div class="flex flex-wrap items-start justify-between gap-2">
                             <p class="min-w-0 flex-1 text-sm text-gray-900 dark:text-gray-100">{{ section.text(item) }}</p>

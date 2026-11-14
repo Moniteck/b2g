@@ -100,6 +100,8 @@ function move(event) {
                         :fill="colorOf(sIndex)"
                         :opacity="active < 0 || active === cIndex ? 1 : 0.45"
                         rx="3"
+                        class="m-bar"
+                        :style="{ '--m-i': Math.min(cIndex, 12) }"
                     />
                     <text
                         v-if="cIndex % labelEvery === 0"
@@ -112,6 +114,7 @@ function move(event) {
                     <rect :x="PAD.left + slot * cIndex" :y="PAD.top" :width="slot" :height="plotHeight" fill="transparent" @mouseenter="active = cIndex" />
                 </g>
             </svg>
+            <Transition name="m-fade">
             <div
                 v-if="active >= 0"
                 class="pointer-events-none absolute top-2 z-cap-dropdown w-44 -translate-x-1/2 rounded-cap-control border border-cap-divider bg-cap-card p-3 text-xs shadow-md dark:bg-cap-card-2"
@@ -124,6 +127,7 @@ function move(event) {
                     <span class="tabular-nums text-gray-900 dark:text-gray-100">{{ format(serie.values[active]) }}</span>
                 </p>
             </div>
+            </Transition>
         </div>
         <div class="sr-only">
         <table>

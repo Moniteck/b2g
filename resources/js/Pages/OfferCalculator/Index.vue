@@ -239,7 +239,7 @@ const bestScenario = computed(() => (totals.value ? totals.value.margin : null))
                 <AppButton icon="plus" @click="addLine">Agregar línea</AppButton>
             </div>
 
-            <ol class="mt-4 flex flex-col gap-4">
+            <ol v-stagger class="mt-4 flex flex-col gap-4">
                 <li v-for="(line, index) in form.lines" :key="line.key" class="rounded-cap-control bg-cap-card-2 p-3" :data-testid="`linea-${index}`">
                     <div class="grid grid-cols-2 gap-x-4 gap-y-3 lg:grid-cols-12">
                         <FormField label="Producto del inventario" optional class="col-span-2 lg:col-span-4">

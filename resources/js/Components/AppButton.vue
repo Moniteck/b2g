@@ -3,6 +3,8 @@
 // Props: variant ('primary' | 'secondary' | 'danger'; un solo primario por pantalla), type, href,
 //        external (usa <a>, para descargas y enlaces fuera de Inertia), icon (sin `mdi-`),
 //        disabled, loading (spinner y bloqueo mientras envía).
+// Movimiento: presión al pulsar, el primario se inclina hacia el puntero (v-magnetic) y, tras un envío
+// correcto de Inertia, muestra un check animado (lib/motion/navigation.js).
 import { Link } from '@inertiajs/vue3';
 import CapButton from '../../design/vue/CapButton.vue';
 
@@ -18,7 +20,7 @@ defineProps({
 </script>
 
 <template>
-    <CapButton :variant="variant" :type="type" :href="href" :icon="icon" :disabled="disabled" :loading="loading" :link-component="external ? 'a' : Link">
+    <CapButton v-magnetic="variant === 'primary' && !disabled ? 3 : 0" :variant="variant" :type="type" :href="href" :icon="icon" :disabled="disabled" :loading="loading" :link-component="external ? 'a' : Link">
         <slot />
     </CapButton>
 </template>

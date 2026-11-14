@@ -238,7 +238,7 @@ function isPdf(item) {
                     <span class="tabular-nums">{{ done }} de {{ counted.length }} · {{ percentOf(done, counted.length) }} %</span>
                 </div>
                 <div class="h-2 w-full overflow-hidden rounded-full bg-cap-card-2" role="progressbar" :aria-valuenow="percentOf(done, counted.length)" aria-valuemin="0" aria-valuemax="100" aria-label="Avance de entregas">
-                    <div class="h-full rounded-full bg-cap-status-ok dark:bg-cap-status-dark-ok" :style="{ width: `${percentOf(done, counted.length)}%` }" />
+                    <div class="m-fill h-full rounded-full bg-cap-status-ok dark:bg-cap-status-dark-ok" :style="{ width: `${percentOf(done, counted.length)}%` }" />
                 </div>
             </div>
         </section>
@@ -305,7 +305,7 @@ function isPdf(item) {
                         <AppButton v-if="can.followUp" icon="plus" @click="newDelivery">Nueva entrega</AppButton>
                     </div>
                     <EmptyState v-if="!deliveries.length" compact icon="truck-outline" title="Sin entregas" description="Registra cada entrega comprometida: su fecha va al calendario con recordatorios." />
-                    <ul v-else class="divide-y divide-cap-divider">
+                    <ul v-stagger v-else class="divide-y divide-cap-divider">
                         <li v-for="delivery in deliveries" :key="delivery.id" class="flex flex-col gap-2 py-3 sm:flex-row sm:items-center">
                             <div class="min-w-0 flex-1">
                                 <div class="flex flex-wrap items-center gap-2">

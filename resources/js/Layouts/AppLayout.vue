@@ -19,6 +19,7 @@ import ConfirmDialog from '../Components/ConfirmDialog.vue';
 import { SYSTEM_NAME, currentEntry, endpoints, visibleMenu, visibleTabs } from '../config/navigation.js';
 import { daysUntil, relativeTime } from '../lib/format.js';
 import { postJson } from '../lib/http.js';
+import { useShellMotion } from '../lib/motion/index.js';
 import CompanySwitcher from './Partials/CompanySwitcher.vue';
 import UserMenu from './Partials/UserMenu.vue';
 
@@ -69,6 +70,9 @@ const notifications = computed(() =>
         href: item.href || undefined,
     })),
 );
+
+// Movimiento del marco: indicador del menú que se desliza, sombra de la cabecera y campana (lib/motion).
+useShellMotion({ unread: () => notifications.value.filter((item) => item.unread).length });
 
 async function markNotificationRead(id) {
     const item = notifications.value.find((notification) => notification.id === id);
@@ -139,7 +143,7 @@ let lastFlash = null;
             <CompanySwitcher :companies="companies" :active="activeCompany" compact />
         </template>
 
-        <div class="flex min-w-0 flex-col gap-6 [&>*]:min-w-0">
+        <div class="m-page flex min-w-0 flex-col gap-6 [&>*]:min-w-0">
             <slot />
         </div>
     </CapAppLayout>

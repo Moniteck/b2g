@@ -97,7 +97,7 @@ const tile = 'rounded-cap-card border border-cap-divider bg-cap-card p-4 transit
                     <Link href="/calendario" class="text-sm text-gray-900 dark:text-gray-100" :class="textLink">Ver calendario</Link>
                 </div>
                 <EmptyState v-if="sortedDeadlines.length === 0" compact icon="calendar-check-outline" title="Sin plazos en los próximos 7 días" description="Los cierres de licitación, vencimientos y entregas aparecerán aquí." />
-                <ul v-else class="flex flex-col gap-2">
+                <ul v-else v-stagger class="flex flex-col gap-2">
                     <li v-for="deadline in sortedDeadlines" :key="deadline.id ?? `${deadline.title}-${deadline.due_at}`">
                         <component :is="deadline.href ? Link : 'div'" :href="deadline.href || undefined" class="flex min-h-16 items-center gap-3 rounded-cap-control bg-cap-card-2 p-3" :class="deadline.href ? 'transition-colors duration-cap-fast ease-cap hover:bg-cap-divider focus:outline-none focus-visible:ring-2 focus-visible:ring-cap-chrome dark:focus-visible:ring-gray-100' : ''">
                             <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-cap-control bg-cap-card text-cap-text-soft" aria-hidden="true">
@@ -119,14 +119,14 @@ const tile = 'rounded-cap-card border border-cap-divider bg-cap-card p-4 transit
                     <StatusBadge v-if="alerts.length" status="error" :label="String(alerts.length)" />
                 </div>
                 <EmptyState v-if="alerts.length === 0" compact icon="check-circle-outline" title="No hay alertas activas" description="Cuando algo requiera tu atención lo verás aquí." />
-                <ul v-else class="flex flex-col gap-2">
+                <ul v-else v-stagger class="flex flex-col gap-2">
                     <li v-for="alert in alerts" :key="`${alert.type}-${alert.message}`">
-                        <Link :href="`/${alert.type}`" class="flex min-h-12 items-center gap-3 rounded-cap-control bg-cap-card-2 p-3 transition-colors duration-cap-fast ease-cap hover:bg-cap-divider focus:outline-none focus-visible:ring-2 focus-visible:ring-cap-chrome dark:focus-visible:ring-gray-100">
+                        <Link :href="`/${alert.type}`" class="group flex min-h-12 items-center gap-3 rounded-cap-control bg-cap-card-2 p-3 transition-colors duration-cap-fast ease-cap hover:bg-cap-divider focus:outline-none focus-visible:ring-2 focus-visible:ring-cap-chrome dark:focus-visible:ring-gray-100">
                             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" :class="ALERT_TONES[alert.severity] ?? ALERT_TONES.warning" aria-hidden="true">
                                 <i class="mdi text-base leading-none" :class="`mdi-${ALERT_ICONS[alert.severity] ?? ALERT_ICONS.warning}`" />
                             </span>
                             <span class="min-w-0 flex-1 text-sm text-gray-900 dark:text-gray-100">{{ alert.message }}</span>
-                            <i class="mdi mdi-chevron-right shrink-0 text-xl leading-none text-cap-text-soft" aria-hidden="true" />
+                            <i class="mdi mdi-chevron-right shrink-0 text-xl leading-none text-cap-text-soft transition-transform duration-cap-base ease-cap group-hover:translate-x-1" aria-hidden="true" />
                         </Link>
                     </li>
                 </ul>
@@ -139,9 +139,9 @@ const tile = 'rounded-cap-card border border-cap-divider bg-cap-card p-4 transit
                     <h2 id="dashboard-tenders" class="font-display text-base font-semibold text-gray-900 dark:text-gray-100">Licitaciones</h2>
                     <Link href="/licitaciones" class="text-sm text-gray-900 dark:text-gray-100" :class="textLink">Ver procesos</Link>
                 </div>
-                <div class="grid grid-cols-3 gap-3">
+                <div v-stagger class="grid grid-cols-3 gap-3">
                     <Link v-for="counter in tenderCounters" :key="counter.label" href="/licitaciones" :class="tile">
-                        <p class="font-display text-3xl font-semibold tabular-nums text-gray-900 dark:text-gray-100">{{ counter.value }}</p>
+                        <p v-count="counter.value" class="font-display text-3xl font-semibold tabular-nums text-gray-900 dark:text-gray-100" />
                         <p class="mt-1 flex items-center gap-1.5 text-xs text-cap-text-soft"><span class="h-1.5 w-1.5 shrink-0 rounded-full" :class="counter.dot" aria-hidden="true" />{{ counter.label }}</p>
                     </Link>
                 </div>
@@ -152,9 +152,9 @@ const tile = 'rounded-cap-card border border-cap-divider bg-cap-card p-4 transit
                     <h2 id="dashboard-institutions" class="font-display text-base font-semibold text-gray-900 dark:text-gray-100">Instituciones por potencial</h2>
                     <Link href="/instituciones" class="text-sm text-gray-900 dark:text-gray-100" :class="textLink">Ver instituciones</Link>
                 </div>
-                <div class="grid grid-cols-3 gap-3">
+                <div v-stagger class="grid grid-cols-3 gap-3">
                     <Link v-for="counter in institutionCounters" :key="counter.label" href="/instituciones" :class="tile">
-                        <p class="font-display text-3xl font-semibold tabular-nums text-gray-900 dark:text-gray-100">{{ counter.value }}</p>
+                        <p v-count="counter.value" class="font-display text-3xl font-semibold tabular-nums text-gray-900 dark:text-gray-100" />
                         <p class="mt-1 flex items-center gap-1.5 text-xs text-cap-text-soft"><span class="h-1.5 w-1.5 shrink-0 rounded-full" :class="counter.dot" aria-hidden="true" />{{ counter.label }}</p>
                     </Link>
                 </div>
@@ -163,16 +163,16 @@ const tile = 'rounded-cap-card border border-cap-divider bg-cap-card p-4 transit
 
         <section aria-labelledby="dashboard-shortcuts">
             <h2 id="dashboard-shortcuts" class="mb-3 font-display text-base font-semibold text-gray-900 dark:text-gray-100">Accesos</h2>
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                <Link v-for="shortcut in shortcuts" :key="shortcut.href" :href="shortcut.href" class="flex min-h-16 items-center gap-3" :class="tile">
+            <div v-stagger class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                <Link v-for="shortcut in shortcuts" :key="shortcut.href" :href="shortcut.href" class="group flex min-h-16 items-center gap-3" :class="tile">
                     <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-cap-control bg-cap-red-200 text-cap-red-800 dark:bg-cap-red-600/20 dark:text-cap-brand-soft" aria-hidden="true">
-                        <i class="mdi text-xl leading-none" :class="`mdi-${shortcut.icon}`" />
+                        <i class="m-hop mdi text-xl leading-none" :class="`mdi-${shortcut.icon}`" />
                     </span>
                     <span class="min-w-0 flex-1">
                         <span class="block truncate text-sm font-semibold text-gray-900 dark:text-gray-100">{{ shortcut.label }}</span>
                         <span class="block truncate text-xs text-cap-text-soft">{{ shortcut.hint }}</span>
                     </span>
-                    <i class="mdi mdi-arrow-right shrink-0 text-xl leading-none text-cap-text-soft" aria-hidden="true" />
+                    <i class="mdi mdi-arrow-right shrink-0 text-xl leading-none text-cap-text-soft transition-transform duration-cap-base ease-cap group-hover:translate-x-1" aria-hidden="true" />
                 </Link>
             </div>
         </section>

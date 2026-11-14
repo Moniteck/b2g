@@ -61,7 +61,7 @@ defineExpose({ scrollTo });
 </script>
 
 <template>
-    <div ref="root" class="flex flex-col gap-4">
+    <div v-stagger ref="root" class="flex flex-col gap-4">
         <section v-for="day in days" :key="day.key" :data-day="day.key" :class="[card, 'scroll-mt-28 overflow-hidden']" :aria-label="heading(day.key)">
             <h3 class="border-b border-cap-divider px-4 py-2.5 font-display text-sm font-semibold" :class="day.key === today ? 'text-cap-brand dark:text-cap-brand-soft' : 'text-gray-900 dark:text-gray-100'">{{ heading(day.key) }}</h3>
             <ul class="divide-y divide-cap-divider">

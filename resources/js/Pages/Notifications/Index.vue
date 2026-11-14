@@ -84,7 +84,7 @@ function reset() {
         <EmptyState v-if="!reminders.data.length && filtered" variant="no-results" @clear="reset" />
         <EmptyState v-else-if="!reminders.data.length" icon="bell-check-outline" title="Aún no tienes recordatorios" description="Cuando se acerque un plazo del que seas responsable te avisaremos aquí y en la campana." />
 
-        <ul v-else :class="[card, 'divide-y divide-cap-divider overflow-hidden', loading ? 'opacity-60' : '']" :aria-busy="loading ? 'true' : 'false'">
+        <ul v-stagger v-else :class="[card, 'divide-y divide-cap-divider overflow-hidden', loading ? 'opacity-60' : '']" :aria-busy="loading ? 'true' : 'false'">
             <li v-for="item in reminders.data" :key="item.id">
                 <component
                     :is="item.href ? 'button' : 'div'"

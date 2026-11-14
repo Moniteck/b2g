@@ -30,6 +30,7 @@ import RevertModal from '../../Modules/Quotes/RevertModal.vue';
 import StatusModal from '../../Modules/Quotes/StatusModal.vue';
 import WonModal from '../../Modules/Quotes/WonModal.vue';
 import { lineFromSelection } from '../../Modules/Quotes/quotes.js';
+import { celebrate } from '../../lib/motion/index.js';
 
 const props = defineProps({
     quotes: { type: Object, required: true },
@@ -148,6 +149,12 @@ function remove(row) {
         message: 'Solo se eliminan cotizaciones en Borrador. Se quitan sus líneas y sus adjuntos dejan de estar enlazados.',
         action: () => visit('delete', `/cotizaciones/${row.id}`),
     });
+}
+
+// Ganada: celebración con confeti de la marca (con animaciones reducidas solo queda el toast).
+function onWon(result, message) {
+    celebrate();
+    onOutcome(result, message);
 }
 
 function onOutcome(result, message) {
@@ -299,7 +306,7 @@ onBeforeUnmount(() => stopListener());
         <QuoteFormModal v-model:open="modal.form" :quote-id="editingId" :prefill="prefill" :issuer-companies="issuerCompanies" :active-company-id="activeCompanyId" :tax-rules="taxRules" :tenders="filterOptions.tenders ?? []" :opportunities="filterOptions.opportunities ?? []" @saved="refresh" />
         <QuoteViewerModal v-model:open="modal.viewer" :quote="selected" :start-with-upload="uploadOnOpen" @changed="refresh" />
         <ParticipantsModal v-model:open="modal.participants" :subject="subject" :title="`Participantes · ${selected?.number ?? ''}`" @saved="refresh" />
-        <WonModal v-model:open="modal.won" :subject="subject" @done="onOutcome" />
+        <WonModal v-model:open="modal.won" :subject="subject" @done="onWon" />
         <LostModal v-model:open="modal.lost" :subject="subject" @done="onOutcome" />
         <RevertModal v-model:open="modal.revert" :subject="subject" @done="onOutcome" />
         <StatusModal v-model:open="modal.status" :quote="selected" />

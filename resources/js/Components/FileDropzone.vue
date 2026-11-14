@@ -120,22 +120,23 @@ defineExpose({ open: () => input.value?.click() });
             type="button"
             v-bind="aria"
             :disabled="disabled || busy"
-            class="flex w-full flex-col items-center justify-center gap-1 rounded-cap-card border border-dashed px-4 py-8 text-center transition-colors duration-cap-fast ease-cap focus:outline-none focus-visible:ring-2 focus-visible:ring-cap-chrome focus-visible:ring-offset-2 focus-visible:ring-offset-cap-card disabled:cursor-not-allowed disabled:opacity-50 dark:focus-visible:ring-gray-100"
+            class="m-dropzone flex w-full flex-col items-center justify-center gap-1 rounded-cap-card border border-dashed px-4 py-8 text-center focus:outline-none focus-visible:ring-2 focus-visible:ring-cap-chrome focus-visible:ring-offset-2 focus-visible:ring-offset-cap-card disabled:cursor-not-allowed disabled:opacity-50 dark:focus-visible:ring-gray-100"
             :class="[dragging ? 'border-cap-brand bg-cap-card-2 dark:border-cap-brand-soft' : isInvalid ? 'border-cap-status-error bg-cap-card dark:border-cap-status-dark-error' : 'border-cap-input-line bg-cap-card hover:bg-cap-card-2']"
+            :data-dragging="dragging ? '' : undefined"
             @click="input.click()"
             @dragenter.prevent="onDragEnter"
             @dragover.prevent
             @dragleave.prevent="onDragLeave"
             @drop.prevent="onDrop"
         >
-            <i class="mdi mdi-tray-arrow-up text-cap-icon text-gray-400" aria-hidden="true" />
+            <i class="m-dropzone__icon mdi mdi-tray-arrow-up text-cap-icon" :class="dragging ? 'text-cap-brand dark:text-cap-brand-soft' : 'text-gray-400'" aria-hidden="true" />
             <span class="mt-2 text-sm font-semibold text-gray-900 dark:text-gray-100">{{ dragging ? 'Suelta para agregar' : shownTitle }}</span>
             <span class="text-xs text-cap-text-soft">{{ limits }}</span>
             <span v-if="hint" class="text-xs text-cap-text-soft">{{ hint }}</span>
         </button>
         <input ref="input" type="file" class="sr-only" tabindex="-1" aria-hidden="true" :accept="accept || undefined" :multiple="multiple" :disabled="disabled" @change="onPick">
 
-        <ul v-if="modelValue.length || rejected.length" class="mt-3 flex flex-col gap-2" aria-label="Archivos elegidos">
+        <TransitionGroup v-if="modelValue.length || rejected.length" tag="ul" name="m-list" class="relative mt-3 flex flex-col gap-2 [&>.m-list-leave-active]:w-full" aria-label="Archivos elegidos">
             <li v-for="(file, index) in modelValue" :key="`${file.name}-${file.size}-${file.lastModified}`" class="rounded-cap-control bg-cap-card-2 p-3">
                 <div class="flex items-center gap-3">
                     <i class="mdi shrink-0 text-xl leading-none text-cap-text-soft" :class="`mdi-${iconOf(file)}`" aria-hidden="true" />
@@ -149,7 +150,7 @@ defineExpose({ open: () => input.value?.click() });
                             <template v-else-if="stateOf(file, index).status === 'done'"> · Subido</template>
                         </p>
                     </div>
-                    <i v-if="stateOf(file, index).status === 'done'" class="mdi mdi-check-circle shrink-0 text-xl leading-none text-cap-status-ok dark:text-cap-status-dark-ok" aria-hidden="true" />
+                    <i v-if="stateOf(file, index).status === 'done'" class="m-check mdi mdi-check-circle shrink-0 text-xl leading-none text-cap-status-ok dark:text-cap-status-dark-ok" aria-hidden="true" />
                     <i v-else-if="stateOf(file, index).status === 'error'" class="mdi mdi-alert-circle shrink-0 text-xl leading-none text-cap-status-error dark:text-cap-status-dark-error" aria-hidden="true" />
                     <button v-if="!['uploading', 'pending'].includes(stateOf(file, index).status)" type="button" :aria-label="`Quitar ${file.name}`" title="Quitar" :class="iconButton" @click="remove(file)">
                         <i class="mdi mdi-close text-xl leading-none" aria-hidden="true" />
@@ -169,6 +170,6 @@ defineExpose({ open: () => input.value?.click() });
                     <i class="mdi mdi-close text-xl leading-none" aria-hidden="true" />
                 </button>
             </li>
-        </ul>
+        </TransitionGroup>
     </div>
 </template>

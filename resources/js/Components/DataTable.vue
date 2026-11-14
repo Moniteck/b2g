@@ -93,13 +93,30 @@ function ariaSort(column) {
     return activeSort.value.direction === 'desc' ? 'descending' : 'ascending';
 }
 
-// El escalonado es solo del primer montaje: al cambiar las filas (ordenar, filtrar, paginar) se quita.
+// Movimiento: las filas entran en cascada al montar y al cambiar de página (ninguna fila en común con
+// las anteriores); al ordenar o filtrar se reemplazan al instante. Las filas que aparecen nuevas entre
+// las que ya estaban (un registro recién creado) se resaltan un momento.
+const staggerKey = ref(0);
+const freshKeys = ref(new Set());
+let freshTimer = null;
 watch(
     () => props.rows,
-    () => {
-        staggered.value = false;
+    (rows, previous) => {
+        const before = new Set((previous ?? []).map((row, index) => keyOf(row, index)));
+        const now = rows.map((row, index) => keyOf(row, index));
+        const added = now.filter((key) => !before.has(key));
+        if (now.length && added.length === now.length) {
+            staggered.value = true;
+            if (before.size) staggerKey.value += 1;
+        } else {
+            staggered.value = false;
+        }
+        clearTimeout(freshTimer);
+        freshKeys.value = before.size && added.length && added.length <= 3 && added.length < now.length ? new Set(added) : new Set();
+        if (freshKeys.value.size) freshTimer = setTimeout(() => (freshKeys.value = new Set()), 1700);
     },
 );
+onBeforeUnmount(() => clearTimeout(freshTimer));
 
 // El esqueleto espera 120 ms para no parpadear en cargas cortas.
 watch(
@@ -171,19 +188,24 @@ const rowFocus = 'focus:outline-none focus-visible:bg-cap-card-2';
                                     @click="toggleSort(column)"
                                 >
                                     {{ column.label }}
-                                    <i class="mdi text-base leading-none text-current" :class="activeSort?.key === column.key ? (activeSort.direction === 'desc' ? 'mdi-arrow-down' : 'mdi-arrow-up') : 'mdi-unfold-more-horizontal opacity-0'" aria-hidden="true" />
+                                    <i
+                                        class="m-sort-arrow mdi mdi-arrow-up text-base leading-none text-current"
+                                        :class="activeSort?.key === column.key ? '' : 'opacity-0'"
+                                        :data-direction="activeSort?.key === column.key ? activeSort.direction : undefined"
+                                        aria-hidden="true"
+                                    />
                                 </button>
                                 <template v-else>{{ column.label }}</template>
                             </th>
                             <th v-if="$slots.actions" scope="col" :class="[headClass, 'sticky right-0 w-12 rounded-tr-cap-card px-1', stickyHeader ? 'lg:sticky lg:top-cap-below-header z-cap-header' : '']"><span class="sr-only">Acciones</span></th>
                         </tr>
                     </thead>
-                    <tbody class="[&>tr:last-child>td:first-child]:rounded-bl-cap-card [&>tr:last-child>td:last-child]:rounded-br-cap-card" :class="staggered ? 'cap-stagger-rows' : ''">
+                    <tbody :key="staggerKey" class="[&>tr:last-child>td:first-child]:rounded-bl-cap-card [&>tr:last-child>td:last-child]:rounded-br-cap-card" :class="staggered ? 'cap-stagger-rows' : ''">
                         <tr
                             v-for="(row, index) in sortedRows"
                             :key="keyOf(row, index)"
                             class="group transition-colors duration-cap-fast ease-cap hover:bg-cap-card-2"
-                            :class="[clickable ? `cursor-pointer ${rowFocus}` : '', selectedKey !== null && keyOf(row, index) === selectedKey ? 'bg-cap-card-2' : '']"
+                            :class="[clickable ? `cursor-pointer ${rowFocus}` : '', selectedKey !== null && keyOf(row, index) === selectedKey ? 'bg-cap-card-2' : '', freshKeys.has(keyOf(row, index)) ? 'm-row-new' : '']"
                             :tabindex="clickable ? 0 : undefined"
                             :aria-selected="selectedKey !== null ? (keyOf(row, index) === selectedKey ? 'true' : 'false') : undefined"
                             @click="clickable && emit('row-click', row)"
@@ -211,12 +233,12 @@ const rowFocus = 'focus:outline-none focus-visible:bg-cap-card-2';
             </div>
 
             <!-- Móvil: tarjetas apiladas -->
-            <ul class="flex flex-col gap-3 lg:hidden" :class="loading ? 'opacity-50' : ''" :aria-label="caption || undefined" :aria-busy="loading ? 'true' : undefined">
+            <ul :key="`cards-${staggerKey}`" class="flex flex-col gap-3 lg:hidden" :class="[loading ? 'opacity-50' : '', staggered ? 'm-stagger-cards' : '']" :aria-label="caption || undefined" :aria-busy="loading ? 'true' : undefined">
                 <li
                     v-for="(row, index) in sortedRows"
                     :key="keyOf(row, index)"
                     class="rounded-cap-card border bg-cap-card p-4"
-                    :class="[selectedKey !== null && keyOf(row, index) === selectedKey ? 'border-cap-brand dark:border-cap-brand-soft' : 'border-cap-divider', clickable ? 'cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-cap-chrome focus-visible:ring-offset-2 focus-visible:ring-offset-cap-page dark:focus-visible:ring-gray-100' : '']"
+                    :class="[freshKeys.has(keyOf(row, index)) ? 'm-row-new' : '', selectedKey !== null && keyOf(row, index) === selectedKey ? 'border-cap-brand dark:border-cap-brand-soft' : 'border-cap-divider', clickable ? 'cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-cap-chrome focus-visible:ring-offset-2 focus-visible:ring-offset-cap-page dark:focus-visible:ring-gray-100' : '']"
                     :tabindex="clickable ? 0 : undefined"
                     @click="clickable && emit('row-click', row)"
                     @keydown="clickable && onRowKeydown($event, row)"

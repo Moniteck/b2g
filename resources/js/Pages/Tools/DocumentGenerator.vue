@@ -130,7 +130,7 @@ function actionsOf(row) {
 
         <section v-if="can.generate">
             <h2 class="mb-3 font-display text-base font-semibold text-gray-900 dark:text-gray-100">¿Qué necesitas redactar?</h2>
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            <div v-stagger class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
                 <button v-for="type in types" :key="type.value" type="button" class="flex h-full flex-col gap-2 rounded-cap-card border border-cap-divider bg-cap-card p-4 text-left transition-transform duration-cap-fast ease-cap hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-cap-chrome focus-visible:ring-offset-2 focus-visible:ring-offset-cap-card dark:focus-visible:ring-gray-100" @click="open(type.value)">
                     <span class="flex h-9 w-9 items-center justify-center rounded-full bg-cap-red-50 text-cap-brand dark:bg-cap-red-600/15 dark:text-cap-brand-soft" aria-hidden="true"><i class="mdi text-xl leading-none" :class="`mdi-${ICONS[type.value] ?? 'file-document-outline'}`" /></span>
                     <span class="font-display text-sm font-semibold text-gray-900 dark:text-gray-100">{{ type.label }}</span>

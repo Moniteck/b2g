@@ -171,7 +171,7 @@ const goalActions = (goal) => [
                     aria-valuemax="100"
                     :aria-valuenow="Math.min(100, compliance(kpi) ?? 0)"
                 >
-                    <div class="h-full rounded-full transition-[width] duration-cap-slow ease-cap" :style="{ width: `${Math.min(100, compliance(kpi) ?? 0)}%`, backgroundColor: barColor(kpi) }" />
+                    <div class="m-fill h-full rounded-full transition-[width] duration-cap-slow ease-cap" :style="{ width: `${Math.min(100, compliance(kpi) ?? 0)}%`, backgroundColor: barColor(kpi) }" />
                 </div>
                 <p class="text-xs text-cap-text-soft">
                     <template v-if="kpi.goal">{{ percent(compliance(kpi)) }} de la meta · </template>{{ kpi.description }}
@@ -185,12 +185,12 @@ const goalActions = (goal) => [
             :empty="withGoal.length === 0"
             :empty-text="can.manage ? 'Ningún indicador tiene meta para este período. Fija una para medir el cumplimiento.' : 'Ningún indicador tiene meta para este período.'"
         >
-            <ol class="flex flex-col gap-3" :class="{ 'opacity-50': loading }">
+            <ol v-stagger class="flex flex-col gap-3" :class="{ 'opacity-50': loading }">
                 <li v-for="kpi in withGoal" :key="kpi.metric" class="grid grid-cols-1 gap-1 sm:grid-cols-[12rem_1fr] sm:items-center sm:gap-3">
                     <span class="truncate text-sm text-gray-900 dark:text-gray-100" :title="kpi.label">{{ kpi.label }}</span>
                     <div class="flex min-w-0 items-center gap-3">
                         <div class="relative h-6 min-w-0 flex-1 rounded-md bg-cap-card-2">
-                            <div class="h-full rounded-md transition-[width] duration-cap-slow ease-cap" :style="{ width: `${Math.max(1, ((compliance(kpi) ?? 0) / chartMax) * 100)}%`, backgroundColor: barColor(kpi) }" />
+                            <div class="m-fill h-full rounded-md transition-[width] duration-cap-slow ease-cap" :style="{ width: `${Math.max(1, ((compliance(kpi) ?? 0) / chartMax) * 100)}%`, backgroundColor: barColor(kpi) }" />
                             <span class="absolute inset-y-0 w-0.5 bg-gray-900 dark:bg-gray-100" :style="{ left: `${(100 / chartMax) * 100}%` }" aria-hidden="true" />
                         </div>
                         <span class="w-16 shrink-0 text-right text-sm font-semibold tabular-nums text-gray-900 dark:text-gray-100">{{ percent(compliance(kpi)) }}</span>

@@ -127,7 +127,7 @@ function actionsOf(row) {
                     <Link href="/cobros" :class="['text-sm', textLink]">Ver cartera</Link>
                 </header>
                 <EmptyState v-if="pendingInvoices.length === 0" compact icon="cash-check" title="Sin facturas pendientes" description="Toda la cartera registrada está cobrada." />
-                <ul v-else class="flex flex-col divide-y divide-cap-divider">
+                <ul v-stagger v-else class="flex flex-col divide-y divide-cap-divider">
                     <li v-for="invoice in pendingInvoices" :key="invoice.id" class="flex items-center justify-between gap-3 py-2.5">
                         <span class="min-w-0">
                             <span class="block truncate text-sm font-medium text-gray-900 dark:text-gray-100" :title="invoice.concept">{{ invoice.number }}</span>

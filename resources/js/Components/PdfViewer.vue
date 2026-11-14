@@ -15,6 +15,7 @@
 // cambian de página y de zoom.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
 import { httpErrorMessage } from '../lib/errors.js';
+import { EASE, play } from '../lib/motion/index.js';
 import { iconButton, inputClass } from '../lib/ui.js';
 import ErrorState from './ErrorState.vue';
 
@@ -152,6 +153,7 @@ async function renderPage(number) {
     const canvas = canvases.get(number);
     if (!loaded || !canvas || renderedScale.get(number) === scale.value) return;
     const targetScale = scale.value;
+    const firstPaint = !renderedScale.has(number);
     renderTasks.get(number)?.cancel();
     try {
         const pdfPage = await loaded.getPage(number);
@@ -170,6 +172,8 @@ async function renderPage(number) {
         await task.promise;
         renderTasks.delete(number);
         renderedScale.set(number, targetScale);
+        // Movimiento: la hoja aparece con un fundido la primera vez que se pinta.
+        if (firstPaint) play(canvas, [{ opacity: 0, transform: 'scale(0.985)' }, { opacity: 1, transform: 'none' }], { duration: 320, easing: EASE.expo, reduced: 'fade' });
         if (entry) emitRendered(entry);
     } catch (error) {
         if (error?.name !== 'RenderingCancelledException') renderedScale.delete(number);

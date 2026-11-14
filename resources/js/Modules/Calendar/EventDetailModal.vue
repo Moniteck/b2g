@@ -150,7 +150,7 @@ function remove() {
             <section aria-labelledby="event-scheduled">
                 <h3 id="event-scheduled" class="mb-2 font-display text-sm font-semibold text-gray-900 dark:text-gray-100">Recordatorios programados</h3>
                 <p v-if="!detail.deliveries.scheduled.length" class="text-sm text-cap-text-soft">No hay avisos pendientes para este plazo.</p>
-                <ul v-else class="divide-y divide-cap-divider rounded-cap-control border border-cap-divider">
+                <ul v-stagger v-else class="divide-y divide-cap-divider rounded-cap-control border border-cap-divider">
                     <li v-for="delivery in detail.deliveries.scheduled" :key="delivery.id" class="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-sm">
                         <span class="min-w-0 flex-1 truncate text-gray-900 dark:text-gray-100">{{ delivery.offset }} · {{ delivery.channel }} · {{ delivery.recipient }}</span>
                         <span class="text-xs tabular-nums text-cap-text-soft">{{ dateTime(delivery.scheduled_for) }}</span>
@@ -161,7 +161,7 @@ function remove() {
             <section aria-labelledby="event-history">
                 <h3 id="event-history" class="mb-2 font-display text-sm font-semibold text-gray-900 dark:text-gray-100">Historial de envíos</h3>
                 <p v-if="!history.length" class="text-sm text-cap-text-soft">Todavía no se ha enviado ningún aviso.</p>
-                <ul v-else class="divide-y divide-cap-divider rounded-cap-control border border-cap-divider">
+                <ul v-stagger v-else class="divide-y divide-cap-divider rounded-cap-control border border-cap-divider">
                     <li v-for="delivery in history" :key="delivery.id" class="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-sm">
                         <span class="min-w-0 flex-1 truncate text-gray-900 dark:text-gray-100" :title="delivery.error || ''">{{ delivery.offset }} · {{ delivery.channel }} · {{ delivery.recipient }}</span>
                         <span class="text-xs tabular-nums text-cap-text-soft">{{ delivery.sent_at ? dateTime(delivery.sent_at) : time(delivery.scheduled_for) }}</span>

@@ -194,7 +194,7 @@ function isPreviewable(document) {
                     <Deferred data="documents">
                         <template #fallback><CapSkeleton variant="line" :rows="3" label="Cargando documentos" /></template>
                         <EmptyState v-if="!documents?.length" compact icon="paperclip" title="Sin documentos" description="La captura importada y los pliegos analizados aparecen aquí." />
-                        <ul v-else class="divide-y divide-cap-divider">
+                        <ul v-stagger v-else class="divide-y divide-cap-divider">
                             <li v-for="document in documents" :key="document.id" class="flex items-center gap-3 py-3">
                                 <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-cap-control bg-cap-card-2 text-cap-text-soft" aria-hidden="true">
                                     <i class="mdi text-xl leading-none" :class="document.mime === 'application/pdf' ? 'mdi-file-pdf-box' : 'mdi-file-image-outline'" />
@@ -229,7 +229,7 @@ function isPreviewable(document) {
                         <EmptyState v-else compact icon="briefcase-outline" title="Sin oportunidad" description="Se crea al importar la captura, o desde el Pipeline." />
 
                         <h3 class="mt-6 font-display text-base font-semibold text-gray-900 dark:text-gray-100">Matriz documental</h3>
-                        <ul v-if="matrices.length" class="mt-3 flex flex-col gap-2">
+                        <ul v-stagger v-if="matrices.length" class="mt-3 flex flex-col gap-2">
                             <li v-for="matrix in matrices" :key="matrix.id" class="flex items-center justify-between gap-3 rounded-cap-control bg-cap-card-2 p-3 text-sm">
                                 <Link :href="`/matriz-cumplimiento/${matrix.id}`" :class="tableLink">{{ matrix.name }}</Link>
                                 <span class="tabular-nums text-cap-text-soft">{{ matrix.completed_count }} de {{ matrix.items_count }} listos</span>
@@ -240,7 +240,7 @@ function isPreviewable(document) {
 
                     <section :class="card" class="p-5">
                         <h3 class="font-display text-base font-semibold text-gray-900 dark:text-gray-100">Cotizaciones vinculadas</h3>
-                        <ul v-if="quotes.length" class="mt-3 divide-y divide-cap-divider">
+                        <ul v-stagger v-if="quotes.length" class="mt-3 divide-y divide-cap-divider">
                             <li v-for="quote in quotes" :key="quote.id" class="flex items-center justify-between gap-3 py-3 text-sm">
                                 <span class="min-w-0">
                                     <Link :href="`/cotizaciones?search=${encodeURIComponent(quote.number)}`" :class="tableLink">{{ quote.number }}</Link>

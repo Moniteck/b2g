@@ -18,7 +18,7 @@ const TONES = {
 
 <template>
     <p v-if="items.length === 0" class="text-sm text-cap-text-soft">{{ emptyText }}</p>
-    <ol v-else class="space-y-4">
+    <ol v-else v-stagger class="space-y-4">
         <li v-for="(item, index) in items" :key="item.id ?? index" class="flex gap-3">
             <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" :class="TONES[item.status] ?? 'bg-cap-card-2 text-cap-text-soft'" aria-hidden="true">
                 <i class="mdi text-base leading-none" :class="`mdi-${item.icon ?? 'circle-small'}`" />

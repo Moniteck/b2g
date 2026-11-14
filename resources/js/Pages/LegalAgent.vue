@@ -155,7 +155,7 @@ function remove(conversation) {
                 <section class="rounded-cap-card border border-cap-divider bg-cap-card p-4">
                     <h2 class="mb-3 px-1 font-display text-base font-semibold text-gray-900 dark:text-gray-100">Conversaciones</h2>
                     <p v-if="!history.length" class="px-1 text-sm text-cap-text-soft">Tus consultas aparecerán aquí para retomarlas después.</p>
-                    <ul v-else class="flex flex-col gap-1">
+                    <ul v-stagger v-else class="flex flex-col gap-1">
                         <li v-for="conversation in history" :key="conversation.id" class="flex items-center gap-1 rounded-cap-control border-l-[3px] transition-colors duration-cap-fast ease-cap hover:bg-cap-card-2" :class="conversation.id === activeId ? 'border-cap-brand bg-cap-card-2 dark:border-cap-brand-soft' : 'border-transparent'">
                             <button type="button" class="min-w-0 flex-1 rounded-cap-control px-3 py-2 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-cap-chrome dark:focus-visible:ring-gray-100" :aria-current="conversation.id === activeId ? 'true' : undefined" @click="openConversation(conversation)">
                                 <span class="block truncate text-sm font-medium text-gray-900 dark:text-gray-100" :title="conversation.title">{{ conversation.title }}</span>
@@ -185,7 +185,7 @@ function remove(conversation) {
                             <button v-for="suggestion in SUGGESTIONS" :key="suggestion" type="button" class="rounded-cap-control border border-cap-divider bg-cap-card px-4 py-3 text-left text-sm text-gray-800 transition-colors duration-cap-fast ease-cap hover:bg-cap-card-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-cap-chrome disabled:opacity-50 dark:text-gray-200 dark:focus-visible:ring-gray-100" :disabled="sending" @click="send(suggestion)">{{ suggestion }}</button>
                         </div>
                     </template>
-                    <ol v-else ref="thread" class="flex flex-col gap-4">
+                    <ol v-stagger v-else ref="thread" class="flex flex-col gap-4">
                         <li v-for="message in messages" :key="message.id" class="flex gap-3" :class="message.role === 'user' ? 'justify-end' : ''">
                             <span v-if="message.role !== 'user'" class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cap-card-2 text-cap-text-soft" aria-hidden="true"><i class="mdi mdi-scale-balance text-base leading-none" /></span>
                             <div class="min-w-0 max-w-[85%]">
@@ -229,7 +229,7 @@ function remove(conversation) {
 
         <BaseModal v-model:open="historyOpen" size="md" title="Conversaciones">
             <p v-if="!history.length" class="text-sm text-cap-text-soft">Tus consultas aparecerán aquí para retomarlas después.</p>
-            <ul v-else class="flex flex-col gap-1">
+            <ul v-stagger v-else class="flex flex-col gap-1">
                 <li v-for="conversation in history" :key="conversation.id" class="flex items-center gap-1 rounded-cap-control" :class="conversation.id === activeId ? 'bg-cap-card-2' : ''">
                     <button type="button" class="min-w-0 flex-1 rounded-cap-control px-3 py-2 text-left" @click="openConversation(conversation)">
                         <span class="block truncate text-sm font-medium text-gray-900 dark:text-gray-100">{{ conversation.title }}</span>
