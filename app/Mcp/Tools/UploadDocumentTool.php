@@ -2,104 +2,65 @@
 
 namespace App\Mcp\Tools;
 
-use App\Models\Contract;
+use App\Mcp\Support\Base64File;
+use App\Mcp\Support\Present;
 use App\Models\Document;
-use App\Models\Quote;
+use App\Models\User;
 use App\Services\Documents\DocumentService;
+use App\Services\Documents\FileTypes;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
-use Illuminate\Http\UploadedFile;
+use Illuminate\Validation\Rule;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
+use Laravel\Mcp\ResponseFactory;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Attributes\Title;
+use Laravel\Mcp\Server\Tools\Annotations\IsDestructive;
 
 #[Name('upload_document')]
-#[Title('Adjuntar documento')]
-#[Description('Sube un archivo al expediente y lo vincula a una cotizacion, un contrato o el directorio documental de la empresa. El contenido se envia en base64; los originales nunca se sobrescriben, cada carga crea una version nueva.')]
+#[Title('Subir documento al Directorio')]
+#[Description('Sube un documento de la empresa al Directorio Institucional (RTN, solvencias, escritura…) con su categoría, emisión y vencimiento; el vencimiento crea su evento y sus avisos (30, 7 y 1 día). Archivo en base64, máx. 10 MB (PDF, JPG, PNG, WebP, Word o Excel); el servidor revisa el tipo real y que el PDF se pueda abrir. Para adjuntar un archivo a una licitación, cotización o contrato use add_attachment.')]
+#[IsDestructive(false)]
 class UploadDocumentTool extends BaseTool
 {
     public function schema(JsonSchema $schema): array
     {
         return [
-            'nombre' => $schema->string()->description('Nombre del documento.')->required(),
-            'nombre_archivo' => $schema->string()->description('Nombre original del archivo, con extension.')->required(),
-            'contenido_base64' => $schema->string()->description('Contenido del archivo codificado en base64.')->required(),
-            'tipo' => $schema->string()->enum(array_keys(Document::KINDS))->description('Tipo de expediente: empresa, institucion, proceso o contrato.'),
-            'categoria' => $schema->string()->description('Categoria del documento (RTN, DNI, Solvencia, etc.).'),
-            'titular' => $schema->string()->description('Titular del documento, por ejemplo el nombre del representante.'),
-            'emision' => $schema->string()->description('Fecha de emision en formato YYYY-MM-DD.'),
-            'vencimiento' => $schema->string()->description('Fecha de vencimiento en formato YYYY-MM-DD.'),
-            'cotizacion_id' => $schema->integer()->description('Cotizacion a la que se vincula el documento.'),
-            'contrato_id' => $schema->integer()->description('Contrato al que se vincula el documento.'),
-            'empresa_id' => $schema->integer()->description('Empresa propietaria. Omitirlo usa la empresa activa.'),
+            ...$this->companySchema($schema),
+            'content_base64' => $schema->string()->description('Archivo en base64.')->required(),
+            'file_name' => $schema->string()->description('Nombre del archivo con extensión.')->required(),
+            'category' => $schema->string()->enum(array_keys(Document::CATEGORIES))->description('Categoría del Directorio.')->required(),
+            'name' => $schema->string()->description('Nombre visible (por defecto, el del archivo).'),
+            'reference_number' => $schema->string()->description('Número o referencia del documento.'),
+            'owner_name' => $schema->string()->description('Titular.'),
+            'description' => $schema->string()->description('Descripción.'),
+            'issued_at' => $schema->string()->description('Emisión, «AAAA-MM-DD».'),
+            'expires_at' => $schema->string()->description('Vencimiento, «AAAA-MM-DD».'),
         ];
     }
 
-    public function handle(Request $request): Response
+    protected function run(Request $request, User $user, int $companyId): Response|ResponseFactory
     {
-        $user = $this->user($request);
-        $companyId = $this->resolveCompanyId($request, $request->get('empresa_id') ? (int) $request->get('empresa_id') : null);
+        $this->authorize('create', Document::class);
 
-        $data = $request->validate([
-            'nombre' => 'required|string|max:255',
-            'nombre_archivo' => 'required|string|max:255',
-            'contenido_base64' => 'required|string',
-            'tipo' => 'nullable|in:'.implode(',', array_keys(Document::KINDS)),
-            'categoria' => 'nullable|string|max:100',
-            'titular' => 'nullable|string|max:255',
-            'emision' => 'nullable|date',
-            'vencimiento' => 'nullable|date|after_or_equal:emision',
-            'cotizacion_id' => 'nullable|integer|exists:quotes,id',
-            'contrato_id' => 'nullable|integer|exists:contracts,id',
+        $data = $this->validate($request->all(), [
+            'category' => ['required', Rule::in(array_keys(Document::CATEGORIES))],
+            'name' => ['nullable', 'string', 'max:255'],
+            'reference_number' => ['nullable', 'string', 'max:100'],
+            'description' => ['nullable', 'string', 'max:500'],
+            'owner_name' => ['nullable', 'string', 'max:255'],
+            'issued_at' => ['nullable', 'date'],
+            'expires_at' => ['nullable', 'date', 'after_or_equal:issued_at'],
+        ], ['expires_at.after_or_equal' => 'El vencimiento no puede ser anterior a la emisión.']);
+
+        $file = Base64File::decode($request->get('content_base64'), $request->get('file_name'));
+
+        $document = app(DocumentService::class)->create($data + ['company_id' => $companyId, 'kind' => 'empresa'], $file, $user, null, [
+            'field' => 'content_base64',
+            'allowed' => FileTypes::ALL,
         ]);
 
-        $contents = base64_decode($data['contenido_base64'], true);
-
-        if ($contents === false || $contents === '') {
-            return $this->fail('El contenido enviado no es base64 valido.');
-        }
-
-        $temporary = tempnam(sys_get_temp_dir(), 'mcp-upload-');
-        file_put_contents($temporary, $contents);
-
-        $file = new UploadedFile($temporary, $data['nombre_archivo'], null, null, true);
-
-        $document = app(DocumentService::class)->create([
-            'company_id' => $companyId,
-            'name' => $data['nombre'],
-            'kind' => $data['tipo'] ?? 'proceso',
-            'owner_name' => $data['titular'] ?? null,
-            'category' => $data['categoria'] ?? null,
-            'issued_at' => $data['emision'] ?? null,
-            'expires_at' => $data['vencimiento'] ?? null,
-            'status' => 'Vigente',
-        ], $file, $user);
-
-        @unlink($temporary);
-
-        $linked = null;
-
-        if (! empty($data['cotizacion_id'])) {
-            $quote = Quote::query()->find($data['cotizacion_id']);
-            abort_unless($quote && $user->canAccessCompany($quote->company_id), 403, 'No tiene acceso a esa cotizacion.');
-            app(DocumentService::class)->link($document, $quote, null, 'cotizacion');
-            $linked = 'cotizacion';
-        }
-
-        if (! empty($data['contrato_id'])) {
-            $contract = Contract::query()->find($data['contrato_id']);
-            abort_unless($contract && $user->canAccessCompany($contract->company_id), 403, 'No tiene acceso a ese contrato.');
-            app(DocumentService::class)->link($document, $contract, null, 'contrato');
-            $linked = 'contrato';
-        }
-
-        return $this->ok([
-            'documento_id' => $document->id,
-            'nombre' => $document->name,
-            'version' => $document->version,
-            'tamano' => $document->size,
-            'vinculado_a' => $linked,
-        ], 'Documento cargado.');
+        return $this->ok(['document' => Present::document($document)], 'Documento subido al Directorio Institucional.');
     }
 }
