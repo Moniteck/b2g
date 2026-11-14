@@ -1,11 +1,11 @@
 <script setup>
 // Tarjeta de cifra del recetario. Una sola `featured` por fila, para lo principal.
 // Props: label, value (texto ya formateado: «L 48,300.00»), count (número: la cifra sube de 0 al
-//        montar; con `format` 'integer' | 'percent' | 'currency-compact'), hint (línea bajo la cifra),
+//        montar y vuelve a subir cuando cambia; con `format` 'integer' | 'percent' | 'currency-compact'), hint (línea bajo la cifra),
 //        chip (variación o dato corto en la esquina de la cifra), href (lleva a un detalle: muestra ↗),
 //        variant ('normal' | 'featured' | 'alert'), icon (sin `mdi-`; por defecto en alerta, alert-circle-outline).
 import { Link } from '@inertiajs/vue3';
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { bindCountUp, formatCount } from '../../design/shell/js/count-up.js';
 
 const props = defineProps({
@@ -54,9 +54,28 @@ const look = computed(() => VARIANTS[props.variant] ?? VARIANTS.normal);
 const shownIcon = computed(() => props.icon || (props.variant === 'alert' ? 'alert-circle-outline' : ''));
 const text = computed(() => (props.count !== null ? formatCount(props.count, props.format) : props.value));
 
-onMounted(() => {
-    if (props.count !== null && figure.value) releaseCount = bindCountUp(figure.value);
-});
+function animate() {
+    releaseCount();
+    releaseCount = () => {};
+    if (props.count === null || !figure.value) return;
+    // La animación marca el elemento como hecho y escribe el texto directamente en el DOM:
+    // se desmarca para volver a animar hasta la cifra nueva.
+    delete figure.value.dataset.capCountDone;
+    releaseCount = bindCountUp(figure.value);
+}
+
+onMounted(animate);
+// La cifra cambia (filtros, recarga parcial, props diferidas): se anima otra vez hasta el valor nuevo.
+// Si deja de haber `count`, se cancela la animación y Vue pinta `value`.
+watch(
+    () => [props.count, props.format],
+    async () => {
+        releaseCount();
+        releaseCount = () => {};
+        await nextTick();
+        animate();
+    },
+);
 onBeforeUnmount(() => releaseCount());
 </script>
 
