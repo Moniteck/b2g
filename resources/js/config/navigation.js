@@ -60,7 +60,7 @@ export const navigation = [
             { label: 'KPIs', icon: 'bullseye-arrow', href: '/kpis' },
             { label: 'Empresas', icon: 'domain', href: '/empresas', can: 'manage_companies' },
             { label: 'Usuarios', icon: 'account-cog-outline', href: '/configuracion/usuarios', can: 'manage_users' },
-            { label: 'Conexiones MCP', icon: 'connection', href: '/configuracion/mcp', can: 'manage_settings' },
+            { label: 'Conexiones MCP', icon: 'connection', href: '/configuracion/mcp' },
             { label: 'Auditoría', icon: 'shield-search', href: '/configuracion/auditoria', can: 'view_audit' },
             { label: 'Diagnóstico', icon: 'stethoscope', href: '/configuracion/diagnostico', can: 'view_diagnostics' },
             { label: 'Mis recordatorios', icon: 'bell-ring-outline', href: '/notificaciones' },
