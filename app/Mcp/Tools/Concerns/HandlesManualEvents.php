@@ -3,16 +3,12 @@
 namespace App\Mcp\Tools\Concerns;
 
 use App\Http\Requests\Calendar\EventRequest;
-use App\Models\Event;
-use App\Services\Notifications\DeadlineService;
-use App\Services\Notifications\ReminderService;
+use App\Services\Notifications\CalendarEventService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Cache;
 
 /**
  * Eventos manuales del calendario por MCP con las mismas reglas que la web
- * (`EventRequest` y `CalendarController::manualAttributes`). Los plazos derivados (licitación,
+ * (`EventRequest` y `CalendarEventService`). Los plazos derivados (licitación,
  * contrato, documento…) no se editan aquí: se cambian en su registro de origen.
  */
 trait HandlesManualEvents
@@ -51,30 +47,14 @@ trait HandlesManualEvents
         $form = new EventRequest;
         $data = $this->validate($input, $form->rules(), $form->messages(), $form->attributes());
 
-        $startsAt = Carbon::parse($data['starts_at']);
-        $endsAt = isset($data['ends_at']) ? Carbon::parse($data['ends_at']) : null;
+        // Por MCP solo se crean eventos «Manual»: el tipo no se acepta.
+        unset($data['type']);
 
-        if ($data['all_day']) {
-            $startsAt = $startsAt->startOfDay();
-            $endsAt = $endsAt?->endOfDay();
-        }
-
-        return [
-            'title' => $data['title'],
-            'type' => 'Manual',
-            'label' => $data['title'],
-            'description' => $data['description'] ?? null,
-            'starts_at' => $startsAt,
-            'ends_at' => $endsAt,
-            'all_day' => $data['all_day'],
-            'reminder_offsets' => $data['custom_reminders'] ? ReminderService::normalizeDays($data['reminders'] ?? []) : null,
-            'recipients' => array_values(array_map('intval', $data['recipients'] ?? [])),
-        ];
+        return $this->calendarEvents()->attributes($data);
     }
 
-    protected function afterEventChange(Event $event): void
+    protected function calendarEvents(): CalendarEventService
     {
-        app(ReminderService::class)->syncEvent($event);
-        Cache::forget(DeadlineService::cacheKey((int) $event->company_id));
+        return app(CalendarEventService::class);
     }
 }

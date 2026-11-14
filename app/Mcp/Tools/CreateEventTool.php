@@ -6,9 +6,7 @@ use App\Mcp\Support\Present;
 use App\Mcp\Tools\Concerns\HandlesManualEvents;
 use App\Models\Event;
 use App\Models\User;
-use App\Services\AuditLogger;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
-use Illuminate\Support\Facades\DB;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
@@ -40,23 +38,7 @@ class CreateEventTool extends BaseTool
 
         $attributes = $this->eventAttributes($request->all());
 
-        $event = DB::transaction(function () use ($attributes, $user, $companyId) {
-            $event = new Event;
-            $event->forceFill($attributes + [
-                'company_id' => $companyId,
-                'user_id' => $user->id,
-                'owner_id' => $user->id,
-                'created_by' => $user->id,
-                'origin' => 'manual',
-                'remindable' => true,
-                'priority' => 'Normal',
-            ])->save();
-
-            return $event;
-        });
-
-        $this->afterEventChange($event);
-        app(AuditLogger::class)->record('calendar.event.created', $event, ['title' => $event->title, 'starts_at' => $event->starts_at?->toDateTimeString()]);
+        $event = $this->calendarEvents()->create($attributes, $user, $companyId);
 
         return $this->ok(['event' => Present::event($event->fresh())], 'Evento creado. Sus recordatorios quedaron programados.');
     }

@@ -9,7 +9,7 @@ use App\Models\ReminderDelivery;
 use App\Models\ReminderRule;
 use App\Models\User;
 use App\Services\AuditLogger;
-use App\Services\Notifications\DeadlineService;
+use App\Services\Notifications\CalendarEventService;
 use App\Services\Notifications\ReminderService;
 use App\Services\Tenancy\CompanyContext;
 use App\Support\Permissions;
@@ -17,7 +17,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
@@ -37,6 +36,7 @@ class CalendarController extends Controller
         protected CompanyContext $context,
         protected ReminderService $reminders,
         protected AuditLogger $audit,
+        protected CalendarEventService $events,
     ) {}
 
     public function index(Request $request): Response
@@ -158,24 +158,7 @@ class CalendarController extends Controller
     {
         $this->authorize('create', Event::class);
 
-        $event = DB::transaction(function () use ($request) {
-            $event = new Event;
-            $event->forceFill($this->manualAttributes($request) + [
-                'company_id' => $this->context->currentCompanyId(),
-                'user_id' => $request->user()->id,
-                'owner_id' => $request->user()->id,
-                'created_by' => $request->user()->id,
-                'origin' => 'manual',
-                'remindable' => true,
-                'priority' => 'Normal',
-            ])->save();
-
-            return $event;
-        });
-
-        $this->reminders->syncEvent($event);
-        $this->forgetCaches();
-        $this->audit->record('calendar.event.created', $event, ['title' => $event->title, 'starts_at' => $event->starts_at?->toDateTimeString()]);
+        $this->events->create($this->events->attributes($request->validated()), $request->user(), (int) $this->context->currentCompanyId());
 
         return back()->with('success', 'Evento creado. Sus recordatorios quedaron programados.');
     }
@@ -185,11 +168,7 @@ class CalendarController extends Controller
         $this->authorize('update', $event);
         $this->ensureManual($event);
 
-        $before = $event->starts_at?->toDateTimeString();
-        $event->forceFill($this->manualAttributes($request))->save();
-        $this->reminders->syncEvent($event);
-        $this->forgetCaches();
-        $this->audit->record('calendar.event.updated', $event, ['starts_at' => ['antes' => $before, 'despues' => $event->starts_at?->toDateTimeString()]]);
+        $this->events->update($event, $this->events->attributes($request->validated()), $request->user());
 
         return back()->with('success', 'Evento actualizado. Los recordatorios pendientes se reprogramaron.');
     }
@@ -199,12 +178,7 @@ class CalendarController extends Controller
         $this->ensureManual($event);
         abort_unless($this->canDelete($request->user(), $event), 403);
 
-        DB::transaction(function () use ($event) {
-            $this->reminders->cancelPending($event, 'El evento se eliminó.');
-            $event->delete();
-        });
-        $this->forgetCaches();
-        $this->audit->record('calendar.event.deleted', $event, ['title' => $event->title]);
+        $this->events->delete($event, $request->user());
 
         return back()->with('success', 'Evento eliminado.');
     }
@@ -216,23 +190,7 @@ class CalendarController extends Controller
     {
         $this->authorize('update', $event);
 
-        $done = DB::transaction(function () use ($request, $event) {
-            $locked = Event::query()->whereKey($event->id)->lockForUpdate()->first();
-            if ($locked === null || $locked->attended_at !== null) {
-                return false;
-            }
-
-            $locked->forceFill(['attended_at' => now(), 'attended_by' => $request->user()->id])->save();
-            $this->reminders->cancelPending($locked, "Atendido por {$request->user()->name}.");
-
-            return true;
-        });
-
-        $this->forgetCaches();
-
-        if ($done) {
-            $this->audit->record('calendar.event.attended', $event);
-        }
+        $done = $this->events->attend($event, $request->user());
 
         return back()->with('success', $done ? 'Plazo marcado como atendido. Ya no enviará avisos.' : 'Este plazo ya estaba atendido.');
     }
@@ -241,12 +199,7 @@ class CalendarController extends Controller
     {
         $this->authorize('update', $event);
 
-        if ($event->attended_at !== null) {
-            $event->forceFill(['attended_at' => null, 'attended_by' => null])->save();
-            $this->reminders->syncEvent($event);
-            $this->forgetCaches();
-            $this->audit->record('calendar.event.reopened', $event);
-        }
+        $this->events->reopen($event, $request->user());
 
         return back()->with('success', 'El plazo vuelve a estar pendiente y sus avisos se reprogramaron.');
     }
@@ -302,34 +255,6 @@ class CalendarController extends Controller
             'href' => $event->isManual() ? null : $event->sourceHref(),
             'attended' => $event->attended_at !== null,
             'completed' => (bool) $event->completed,
-        ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    protected function manualAttributes(EventRequest $request): array
-    {
-        $data = $request->validated();
-        $allDay = (bool) ($data['all_day'] ?? false);
-        $startsAt = Carbon::parse($data['starts_at']);
-        $endsAt = isset($data['ends_at']) ? Carbon::parse($data['ends_at']) : null;
-
-        if ($allDay) {
-            $startsAt = $startsAt->startOfDay();
-            $endsAt = $endsAt?->endOfDay();
-        }
-
-        return [
-            'title' => $data['title'],
-            'type' => $data['type'] ?? 'Manual',
-            'label' => $data['title'],
-            'description' => $data['description'] ?? null,
-            'starts_at' => $startsAt,
-            'ends_at' => $endsAt,
-            'all_day' => $allDay,
-            'reminder_offsets' => ($data['custom_reminders'] ?? false) ? ReminderService::normalizeDays($data['reminders'] ?? []) : null,
-            'recipients' => array_values(array_map('intval', $data['recipients'] ?? [])),
         ];
     }
 
@@ -389,14 +314,5 @@ class CalendarController extends Controller
     protected function monthParam(?string $month): string
     {
         return is_string($month) && preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', $month) ? $month : now()->format('Y-m');
-    }
-
-    protected function forgetCaches(): void
-    {
-        $companyId = $this->context->currentCompanyId();
-
-        if ($companyId !== null) {
-            Cache::forget(DeadlineService::cacheKey($companyId));
-        }
     }
 }

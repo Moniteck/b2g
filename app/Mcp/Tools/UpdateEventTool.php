@@ -7,7 +7,6 @@ use App\Mcp\Support\ToolError;
 use App\Mcp\Tools\Concerns\HandlesManualEvents;
 use App\Models\Event;
 use App\Models\User;
-use App\Services\AuditLogger;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -65,11 +64,7 @@ class UpdateEventTool extends BaseTool
             throw new ToolError('Indica al menos un campo para actualizar.');
         }
 
-        $before = $event->starts_at?->toDateTimeString();
-        $event->forceFill($this->eventAttributes($input + $current))->save();
-        $this->afterEventChange($event);
-
-        app(AuditLogger::class)->record('calendar.event.updated', $event, ['starts_at' => ['antes' => $before, 'despues' => $event->starts_at?->toDateTimeString()]]);
+        $this->calendarEvents()->update($event, $this->eventAttributes($input + $current), $user);
 
         return $this->ok(['event' => Present::event($event->fresh())], 'Evento actualizado. Los recordatorios pendientes se reprogramaron.');
     }

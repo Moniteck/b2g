@@ -5,12 +5,8 @@ namespace App\Mcp\Tools;
 use App\Mcp\Support\Present;
 use App\Models\Event;
 use App\Models\User;
-use App\Services\AuditLogger;
-use App\Services\Notifications\DeadlineService;
-use App\Services\Notifications\ReminderService;
+use App\Services\Notifications\CalendarEventService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\DB;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
 use Laravel\Mcp\ResponseFactory;
@@ -42,24 +38,7 @@ class MarkEventAttendedTool extends BaseTool
         $event = $this->find(Event::query()->visible(), $request->get('event_id'), 'el evento');
         $this->authorize('update', $event);
 
-        $done = DB::transaction(function () use ($event, $user) {
-            $locked = Event::query()->whereKey($event->id)->lockForUpdate()->first();
-
-            if ($locked === null || $locked->attended_at !== null) {
-                return false;
-            }
-
-            $locked->forceFill(['attended_at' => now(), 'attended_by' => $user->id])->save();
-            app(ReminderService::class)->cancelPending($locked, "Atendido por {$user->name}.");
-
-            return true;
-        });
-
-        Cache::forget(DeadlineService::cacheKey($companyId));
-
-        if ($done) {
-            app(AuditLogger::class)->record('calendar.event.attended', $event);
-        }
+        $done = app(CalendarEventService::class)->attend($event, $user);
 
         return $this->ok(['changed' => $done, 'event' => Present::event($event->fresh())], $done ? 'Plazo marcado como atendido. Ya no enviará avisos.' : 'Este plazo ya estaba atendido.');
     }
