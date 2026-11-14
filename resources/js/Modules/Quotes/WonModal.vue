@@ -3,14 +3,18 @@
 // Props: open (v-model:open), subject ({ type: 'quote' | 'opportunity', id, label, amount, quoteId? }).
 // Eventos: done (resultado del servidor: { outcome, already_applied, client, contract, … }).
 // Crea o reutiliza el cliente y abre el contrato en «Pendiente de contrato»; repetir no duplica.
+// Si el sujeto es una oportunidad con varias cotizaciones vivas, pide cuál se ganó (`quote_id`):
+// las lee del detalle de la oportunidad (`GET /pipeline/{id}`).
 import { Link } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import CapAlert from '../../../design/vue/CapAlert.vue';
 import AppButton from '../../Components/AppButton.vue';
 import BaseModal from '../../Components/BaseModal.vue';
 import DateInput from '../../Components/DateInput.vue';
 import FormField from '../../Components/FormField.vue';
 import MoneyInput from '../../Components/MoneyInput.vue';
+import SelectInput from '../../Components/SelectInput.vue';
+import { getJson } from '../../lib/http.js';
 import { money } from '../../lib/format.js';
 import { textLink } from '../../lib/ui.js';
 import { flatErrors, markWon } from './api.js';
@@ -23,7 +27,14 @@ const props = defineProps({
 
 const emit = defineEmits(['update:open', 'done']);
 
-const form = ref({ awarded_amount: null, awarded_at: today() });
+// Estados que ya no cuentan como cotización viva (Quote::CLOSED_STATUSES).
+const CLOSED_STATUSES = ['Sustituida', 'Anulada'];
+
+const form = ref({ awarded_amount: null, awarded_at: today(), quote_id: null });
+const liveQuotes = ref([]);
+const loadingQuotes = ref(false);
+const quoteOptions = computed(() => liveQuotes.value.map((quote) => ({ value: quote.id, label: `${quote.number} · ${quote.status} · ${money(quote.total)}` })));
+const needsQuote = computed(() => liveQuotes.value.length > 1);
 const errors = ref({});
 const sending = ref(false);
 const result = ref(null);
@@ -33,19 +44,52 @@ watch(
     () => props.open,
     (open) => {
         if (!open) return;
-        form.value = { awarded_amount: props.subject?.amount ?? null, awarded_at: today() };
+        form.value = { awarded_amount: props.subject?.amount ?? null, awarded_at: today(), quote_id: props.subject?.quoteId ?? null };
         errors.value = {};
         result.value = null;
         message.value = '';
+        liveQuotes.value = [];
+        loadLiveQuotes();
+    },
+);
+
+async function loadLiveQuotes() {
+    if (props.subject?.type !== 'opportunity' || props.subject?.quoteId) return;
+    const subjectId = props.subject.id;
+    loadingQuotes.value = true;
+    try {
+        const detail = await getJson(`/pipeline/${subjectId}`);
+        if (!props.open || props.subject?.id !== subjectId) return;
+        liveQuotes.value = (detail?.quotes ?? []).filter((quote) => !CLOSED_STATUSES.includes(quote.status) && (quote.outcome ?? 'Pendiente') === 'Pendiente');
+    } catch {
+        // Sin el detalle se intenta igual: el servidor pedirá la cotización si hace falta.
+        liveQuotes.value = [];
+    } finally {
+        loadingQuotes.value = false;
+    }
+}
+
+// Al elegir la cotización, el monto propuesto pasa a ser su total (si el usuario no lo cambió).
+watch(
+    () => form.value.quote_id,
+    (quoteId, previous) => {
+        const chosen = liveQuotes.value.find((quote) => quote.id === quoteId);
+        const before = liveQuotes.value.find((quote) => quote.id === previous);
+        const untouched = form.value.awarded_amount === null || form.value.awarded_amount === (before?.total ?? props.subject?.amount ?? null);
+        if (chosen && untouched) form.value.awarded_amount = chosen.total;
     },
 );
 
 async function submit() {
     if (sending.value || result.value) return;
+    if (needsQuote.value && !form.value.quote_id) {
+        errors.value = { quote_id: 'Elija la cotización que se ganó.' };
+        return;
+    }
     sending.value = true;
     errors.value = {};
     try {
-        const response = await markWon(props.subject, { ...form.value, quote_id: props.subject?.quoteId ?? null });
+        const response = await markWon(props.subject, { ...form.value, quote_id: form.value.quote_id ?? props.subject?.quoteId ?? null });
         result.value = response.result;
         message.value = response.message;
         emit('done', response.result);
@@ -74,9 +118,12 @@ async function submit() {
             </ul>
         </div>
         <div v-else class="flex flex-col gap-4">
-            <CapAlert v-if="errors.outcome || errors.quote_id" status="error" title="No se pudo registrar" :detail="errors.outcome || errors.quote_id" />
+            <CapAlert v-if="errors.outcome || errors.stage || (errors.quote_id && !needsQuote)" status="error" title="No se pudo registrar" :detail="errors.outcome || errors.stage || errors.quote_id" />
             <p class="text-sm text-cap-text-soft">Se registra el cliente (o se reutiliza si ya existe), se abre el contrato en «Pendiente de contrato», la oportunidad pasa a Adjudicado y las demás cotizaciones de la oportunidad quedan Sustituidas.</p>
             <div class="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
+                <FormField v-if="needsQuote" label="Cotización ganada" required class="sm:col-span-2" :error="errors.quote_id" help="La oportunidad tiene varias cotizaciones vivas; las demás quedarán Sustituidas.">
+                    <SelectInput v-model="form.quote_id" :options="quoteOptions" placeholder="Elegir cotización" required />
+                </FormField>
                 <FormField label="Monto adjudicado" required :error="errors.awarded_amount" :help="subject?.amount ? `Total cotizado: ${money(subject.amount)}` : ''">
                     <MoneyInput v-model="form.awarded_amount" :min="0" data-autofocus />
                 </FormField>
@@ -91,7 +138,7 @@ async function submit() {
             </template>
             <template v-else>
                 <AppButton :disabled="sending" @click="emit('update:open', false)">Cancelar</AppButton>
-                <AppButton variant="primary" type="submit" icon="trophy-outline" :loading="sending" :disabled="sending">Registrar como Ganada</AppButton>
+                <AppButton variant="primary" type="submit" icon="trophy-outline" :loading="sending" :disabled="sending || loadingQuotes">Registrar como Ganada</AppButton>
             </template>
         </template>
     </BaseModal>
