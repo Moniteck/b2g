@@ -2,210 +2,152 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Documents\RenewDocumentRequest;
+use App\Http\Requests\Documents\ReplaceDocumentRequest;
+use App\Http\Requests\Documents\StoreDocumentRequest;
+use App\Http\Requests\Documents\UpdateDocumentRequest;
 use App\Models\Document;
 use App\Models\DocumentVersion;
-use App\Models\McpAuthorization;
-use App\Models\SigningAsset;
+use App\Models\Quote;
+use App\Rules\BelongsToActiveCompany;
+use App\Services\AuditLogger;
+use App\Services\Documents\DocumentPresenter;
 use App\Services\Documents\DocumentService;
-use App\Services\Documents\SignatureService;
-use App\Services\Notifications\CalendarSyncService;
+use App\Services\Documents\FileTypes;
+use App\Support\Permissions;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\HeaderUtils;
+use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 
+/**
+ * Directorio Institucional (documentos de la empresa) y acceso a los archivos de cualquier
+ * documento: vista previa, descarga, versiones, reemplazo, renovación y eliminación.
+ */
 class DocumentController extends Controller
 {
+    private const PER_PAGE = [25, 50, 100];
+
     public function index(Request $request): Response
     {
         $this->authorize('viewAny', Document::class);
 
-        $query = Document::query()->with('institution:id,name')->latest('id');
+        $filters = [
+            'search' => trim((string) $request->query('search', '')),
+            'category' => (string) $request->query('category', ''),
+            'status' => (string) $request->query('status', ''),
+        ];
+        $perPage = in_array((int) $request->query('per_page'), self::PER_PAGE, true) ? (int) $request->query('per_page') : self::PER_PAGE[0];
 
-        if ($kind = $request->string('kind')->trim()->value()) {
-            $query->where('kind', $kind);
+        $query = Document::query()->directory()
+            ->select(['id', 'company_id', 'name', 'reference_number', 'description', 'kind', 'owner_name', 'category', 'version', 'issued_at', 'expires_at', 'status', 'original_filename', 'mime_type', 'size', 'signed_at', 'uploaded_by', 'updated_at'])
+            ->with('uploader:id,name');
+
+        if ($filters['search'] !== '') {
+            $term = '%'.str_replace(['%', '_'], ['\%', '\_'], $filters['search']).'%';
+            $query->where(fn ($inner) => $inner->where('name', 'like', $term)
+                ->orWhere('reference_number', 'like', $term)
+                ->orWhere('owner_name', 'like', $term)
+                ->orWhere('original_filename', 'like', $term));
         }
 
-        if ($category = $request->string('category')->trim()->value()) {
-            $query->where('category', $category);
+        if (array_key_exists($filters['category'], Document::CATEGORIES)) {
+            $query->where('category', $filters['category']);
         }
 
-        if ($search = $request->string('search')->trim()->value()) {
-            $query->where('name', 'like', "%{$search}%");
+        if (array_key_exists($filters['status'], Document::STATUSES)) {
+            $query->withStatus($filters['status']);
         }
 
-        if ($request->boolean('only_expired')) {
-            $query->whereNotNull('expires_at')->whereDate('expires_at', '<', now()->toDateString());
-        }
+        $documents = $query
+            ->orderByRaw('case when expires_at is null then 1 else 0 end')
+            ->orderBy('expires_at')
+            ->orderBy('name')
+            ->paginate($perPage)
+            ->withQueryString()
+            ->through(fn (Document $document) => DocumentPresenter::directoryRow($document));
 
-        return Inertia::render('Documents', [
-            'records' => $query->paginate(20)->withQueryString()->through(fn (Document $document) => [
-                'id' => (string) $document->id,
-                'nombre' => $document->name,
-                'tipo' => $document->kind,
-                'tipoNombre' => $document->kindLabel(),
-                'categoria' => $document->category,
-                'titular' => $document->owner_name,
-                'institucion' => $document->institution?->name,
-                'emision' => $document->issued_at?->toDateString(),
-                'vencimiento' => $document->expires_at?->toDateString(),
-                'vencido' => $document->isExpired(),
-                'estado' => $document->status,
-                'version' => $document->version,
-                'firmado' => $document->signed_at !== null,
-                'sello' => $document->sealed_at !== null,
-                'tamano' => $document->size,
-            ]),
-            'kinds' => Document::KINDS,
-            'categories' => Document::CATEGORIES,
-            'assets' => SigningAsset::query()->where('is_active', true)->orderBy('type')->get(['id', 'type', 'name', 'width', 'height']),
-            'filters' => $request->only('search', 'kind', 'category'),
+        $user = $request->user();
+
+        return Inertia::render('Directory/Index', [
+            'documents' => $documents,
+            'stats' => $this->stats(),
+            'categories' => collect(Document::CATEGORIES)->map(fn ($label, $value) => ['value' => $value, 'label' => $label])->values(),
+            'filters' => $filters,
+            'limits' => FileTypes::limits() + ['accept' => FileTypes::acceptAttribute(), 'types' => FileTypes::label()],
+            'can' => [
+                'create' => $user->can('create', Document::class),
+                'update' => $user->hasPermission(Permissions::UPDATE),
+                'delete' => $user->hasPermission(Permissions::DELETE),
+            ],
         ]);
     }
 
-    public function store(Request $request, DocumentService $documents): RedirectResponse
+    /** `/documentos` es el nombre antiguo del directorio. */
+    public function legacyIndex(Request $request): RedirectResponse
+    {
+        return redirect()->route('directory.index', $request->query());
+    }
+
+    public function store(StoreDocumentRequest $request, DocumentService $documents): RedirectResponse
     {
         $this->authorize('create', Document::class);
 
-        $data = $request->validate([
-            'company_id' => ['nullable', 'integer', 'exists:companies,id'],
-            'institution_id' => ['nullable', 'integer', 'exists:institutions,id'],
-            'name' => ['required', 'string', 'max:255'],
-            'kind' => ['nullable', 'in:'.implode(',', array_keys(Document::KINDS))],
-            'owner_name' => ['nullable', 'string', 'max:255'],
-            'category' => ['nullable', 'string', 'max:100'],
-            'required_for' => ['nullable', 'string', 'max:255'],
-            'issued_at' => ['nullable', 'date'],
-            'expires_at' => ['nullable', 'date', 'after_or_equal:issued_at'],
-            'status' => ['nullable', 'string', 'max:100'],
-            'cotizacion_id' => ['nullable', 'integer', 'exists:quotes,id'],
-            'file' => ['required', 'file', 'max:25600', 'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,webp'],
-        ]);
+        $data = $request->validated();
+        $data['kind'] = $data['kind'] ?? 'empresa';
 
-        $data['company_id'] = $data['company_id'] ?? app(\App\Services\Tenancy\CompanyContext::class)->currentCompanyId();
+        // La entidad a enlazar se resuelve ANTES de crear el documento.
+        $quote = ! empty($data['cotizacion_id']) ? Quote::query()->findOrFail($data['cotizacion_id']) : null;
 
-        $document = $documents->create($data, $request->file('file'), $request->user());
-
-        if (! empty($data['cotizacion_id'])) {
-            $quote = \App\Models\Quote::query()->find($data['cotizacion_id']);
-
-            abort_unless($quote && $quote->company_id === $document->company_id, 422, 'La cotización pertenece a otra empresa.');
-
-            $documents->link($document, $quote, null, 'cotizacion');
+        if ($quote !== null) {
+            $this->authorize('view', $quote);
         }
 
-        app(CalendarSyncService::class)->syncForDocument($document);
+        $document = $documents->create(Arr::except($data, ['cotizacion_id']), $request->file('file'), $request->user(), $quote, ['context' => $quote ? 'cotizacion' : null]);
 
-        return back()->with('success', 'Documento cargado correctamente.');
+        return back()->with('success', "«{$document->name}» se subió correctamente.");
     }
 
-    public function update(Request $request, Document $document): RedirectResponse
+    public function update(UpdateDocumentRequest $request, Document $document): RedirectResponse
     {
         $this->authorize('update', $document);
 
-        $document->update($request->validate([
-            'name' => ['sometimes', 'required', 'string', 'max:255'],
-            'kind' => ['nullable', 'in:'.implode(',', array_keys(Document::KINDS))],
-            'owner_name' => ['nullable', 'string', 'max:255'],
-            'category' => ['nullable', 'string', 'max:100'],
-            'required_for' => ['nullable', 'string', 'max:255'],
-            'issued_at' => ['nullable', 'date'],
-            'expires_at' => ['nullable', 'date', 'after_or_equal:issued_at'],
-            'status' => ['required', 'string', 'max:100'],
-        ]));
+        $data = $request->validated();
+        $before = Arr::only($document->only(array_keys($data)), array_keys($data));
+        $document->fill($data)->save();
 
-        app(CalendarSyncService::class)->syncForDocument($document);
-
-        return back()->with('success', 'Documento actualizado.');
-    }
-
-    /**
-     * Descarga del archivo vigente.
-     */
-    public function download(Document $document)
-    {
-        $this->authorize('download', $document);
-
-        abort_unless($document->path && Storage::disk($document->disk)->exists($document->path), 404);
-
-        return Storage::disk($document->disk)->download($document->path, $document->original_filename ?? $document->name);
-    }
-
-    /**
-     * Vista en linea del documento, para el visor de la modal.
-     */
-    public function preview(Document $document)
-    {
-        $this->authorize('view', $document);
-
-        abort_unless($document->path && Storage::disk($document->disk)->exists($document->path), 404);
-
-        $disk = Storage::disk($document->disk);
-
-        return response($disk->get($document->path), 200, [
-            'Content-Type' => $document->mime_type ?: 'application/octet-stream',
-            'Content-Disposition' => 'inline; filename="'.addslashes($document->original_filename ?? 'documento').'"',
-            'Cache-Control' => 'private, max-age=0, no-store',
+        app(AuditLogger::class)->record('documento.editado', $document, [
+            'antes' => array_map(fn ($value) => $value instanceof Carbon ? $value->toDateString() : $value, $before),
+            'despues' => $data,
         ]);
+
+        return back()->with('success', 'Datos del documento actualizados.');
     }
 
-    /**
-     * Nueva version del documento. El archivo anterior se conserva.
-     */
-    public function replace(Request $request, Document $document, DocumentService $documents): RedirectResponse
+    /** Nueva versión del archivo; la anterior se conserva en el historial. */
+    public function replace(ReplaceDocumentRequest $request, Document $document, DocumentService $documents): RedirectResponse
     {
         $this->authorize('update', $document);
 
-        $request->validate(['file' => 'required|file|max:25600|mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,webp']);
+        $version = $documents->addVersion($document, $request->file('file'), $request->user(), ['note' => 'Reemplazo']);
 
-        $documents->addVersion($document, $request->file('file'), $request->user());
-
-        app(CalendarSyncService::class)->syncForDocument($document);
-
-        return back()->with('success', 'Nueva versión cargada. El archivo anterior se conserva.');
+        return back()->with('success', "Se cargó la versión {$version->version}. La anterior queda en el historial.");
     }
 
-    public function versions(Document $document): JsonResponse
-    {
-        $this->authorize('view', $document);
-
-        return response()->json([
-            'data' => $document->versions()->get()->map(fn (DocumentVersion $version) => [
-                'id' => $version->id,
-                'version' => $version->version,
-                'archivo' => $version->original_filename,
-                'tamano' => $version->size,
-                'hash' => $version->hash,
-                'subido_en' => $version->created_at?->toDateTimeString(),
-                'subido_por' => $version->uploader?->name,
-            ])->all(),
-        ]);
-    }
-
-    public function renew(Request $request, Document $document, DocumentService $documents): RedirectResponse
+    public function renew(RenewDocumentRequest $request, Document $document, DocumentService $documents): RedirectResponse
     {
         $this->authorize('update', $document);
 
-        $data = $request->validate([
-            'issued_at' => ['required', 'date'],
-            'expires_at' => ['nullable', 'date', 'after_or_equal:issued_at'],
-            'file' => ['nullable', 'file', 'max:25600', 'mimes:pdf,doc,docx,xls,xlsx,jpg,jpeg,png,webp'],
-        ]);
-
-        $document->update([
-            'issued_at' => $data['issued_at'],
-            'expires_at' => $data['expires_at'] ?? null,
-            'status' => 'Vigente',
-        ]);
-
-        if ($request->hasFile('file')) {
-            $documents->addVersion($document, $request->file('file'), $request->user());
-        }
-
-        app(CalendarSyncService::class)->syncForDocument($document);
+        $data = $request->validated();
+        $documents->renew($document, $request->user(), $data['issued_at'], $data['expires_at'] ?? null, $request->file('file'));
 
         return back()->with('success', 'Documento renovado.');
     }
@@ -216,98 +158,142 @@ class DocumentController extends Controller
 
         $documents->delete($document);
 
-        return back()->with('success', 'Documento eliminado.');
+        return back()->with('success', "«{$document->name}» se eliminó con todas sus versiones.");
     }
 
-    /**
-     * Emite una autorizacion de firma, vinculada al contenido exacto del
-     * documento. Es el mecanismo verificable que exige el servidor MCP antes
-     * de aplicar la firma.
-     */
-    public function issueAuthorization(Request $request, Document $document): JsonResponse
+    public function versions(Document $document): JsonResponse
     {
-        $this->authorize('sign', $document);
-
-        $version = $document->versions()->orderByDesc('version')->first();
-
-        abort_unless($version instanceof DocumentVersion, 422, 'El documento no tiene ninguna version cargada.');
-
-        $authorization = McpAuthorization::create([
-            'mcp_connection_id' => null,
-            'user_id' => $request->user()->id,
-            'company_id' => $document->company_id,
-            'action' => 'firmar',
-            'resource_type' => Document::class,
-            'resource_id' => $document->id,
-            'payload_hash' => $version->hash,
-            'authorized_at' => now(),
-            'expires_at' => now()->addMinutes(20),
-        ]);
+        $this->authorize('view', $document);
 
         return response()->json([
-            'authorization_id' => $authorization->id,
-            'expira_en' => $authorization->expires_at?->toDateTimeString(),
-            'version' => $version->version,
-            'hash' => $version->hash,
+            'data' => $document->versions()->with(['uploader:id,name', 'signer:id,name'])->get()
+                ->map(fn (DocumentVersion $version) => DocumentPresenter::version($version, $document))
+                ->all(),
         ]);
     }
 
-    /**
-     * Prepara la firma: devuelve los datos necesarios para posicionar la
-     * imagen y, si el documento ya fue autorizado, aplica la firma.
-     */
-    public function sign(Request $request, Document $document, SignatureService $signatures): JsonResponse
+    /** Descarga del archivo vigente. */
+    public function download(Document $document, AuditLogger $audit): SymfonyResponse
     {
-        $this->authorize('sign', $document);
+        $this->authorize('download', $document);
+
+        $response = $this->fileResponse($document->disk, $document->path, $document->original_filename ?? $document->name, $document->mime_type, HeaderUtils::DISPOSITION_ATTACHMENT);
+
+        $audit->record('documento.descargado', $document, ['version' => $document->version]);
+
+        return $response;
+    }
+
+    /** Vista en línea del archivo vigente (visor de las modales). */
+    public function preview(Document $document): SymfonyResponse
+    {
+        $this->authorize('view', $document);
+
+        return $this->fileResponse($document->disk, $document->path, $document->original_filename ?? $document->name, $document->mime_type, HeaderUtils::DISPOSITION_INLINE);
+    }
+
+    public function versionDownload(Document $document, DocumentVersion $version, AuditLogger $audit): SymfonyResponse
+    {
+        $this->authorize('download', $document);
+
+        $response = $this->fileResponse($version->disk, $version->path, $version->original_filename ?? $document->name, $version->mime_type, HeaderUtils::DISPOSITION_ATTACHMENT);
+
+        $audit->record('documento.descargado', $document, ['version' => $version->version]);
+
+        return $response;
+    }
+
+    public function versionPreview(Document $document, DocumentVersion $version): SymfonyResponse
+    {
+        $this->authorize('view', $document);
+
+        return $this->fileResponse($version->disk, $version->path, $version->original_filename ?? $document->name, $version->mime_type, HeaderUtils::DISPOSITION_INLINE);
+    }
+
+    /**
+     * «Descargar para oferta»: ZIP con los documentos VIGENTES elegidos del directorio.
+     * Los vencidos se omiten (la pantalla avisa antes de pedirlo).
+     */
+    public function package(Request $request, DocumentService $documents): SymfonyResponse
+    {
+        $this->authorize('viewAny', Document::class);
 
         $data = $request->validate([
-            'asset_id' => ['required', 'integer', 'exists:signing_assets,id'],
-            'page' => ['nullable', 'integer', 'min:1'],
-            'x' => ['nullable', 'numeric', 'min:0'],
-            'y' => ['nullable', 'numeric', 'min:0'],
-            'width' => ['nullable', 'numeric', 'min:1'],
-            'height' => ['nullable', 'numeric', 'min:1'],
-            'rotation' => ['nullable', 'numeric'],
-            'authorization_id' => ['nullable', 'integer', 'exists:mcp_authorizations,id'],
+            'ids' => ['required', 'array', 'min:1', 'max:100'],
+            'ids.*' => ['integer', new BelongsToActiveCompany(Document::class)],
+        ], [
+            'ids.required' => 'Elige al menos un documento.',
+            'ids.*.integer' => 'Uno de los documentos elegidos no es válido.',
         ]);
 
-        $asset = SigningAsset::query()->findOrFail($data['asset_id']);
+        $selected = Document::query()->directory()->whereIn('id', $data['ids'])->orderBy('category')->orderBy('name')->get();
+        $selected->each(fn (Document $document) => $this->authorize('download', $document));
+        $valid = $selected->reject(fn (Document $document) => $document->isExpired());
 
-        if ((int) $asset->company_id !== (int) $document->company_id) {
-            abort(403, 'El activo de firma pertenece a otra empresa.');
+        if ($valid->isEmpty()) {
+            return back()->with('error', 'Ninguno de los documentos elegidos está vigente. Renuévalos antes de armar la oferta.');
         }
 
-        $version = $document->versions()->orderByDesc('version')->first();
+        $path = $documents->zip($valid, $request->user());
+        $name = 'Documentos para oferta '.now()->format('Y-m-d').'.zip';
 
-        abort_unless($version instanceof DocumentVersion, 422, 'El documento no tiene ninguna version cargada.');
+        return response()->download($path, $name, [
+            'Content-Type' => 'application/zip',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, no-store, max-age=0',
+            'X-Documents-Excluded' => (string) ($selected->count() - $valid->count()),
+        ])->deleteFileAfterSend();
+    }
 
-        $authorization = null;
+    /**
+     * Archivo servido por streaming (sin cargarlo en memoria), con soporte de `Range` en disco local.
+     */
+    private function fileResponse(?string $disk, ?string $path, string $name, ?string $mime, string $disposition): SymfonyResponse
+    {
+        $disk = $disk ?: DocumentService::DISK;
+        $storage = Storage::disk($disk);
 
-        if (! empty($data['authorization_id'])) {
-            $authorization = McpAuthorization::query()->find($data['authorization_id']);
+        abort_unless($path && $storage->exists($path), 404, 'El archivo ya no está disponible en el servidor.');
 
-            abort_unless(
-                $authorization && $authorization->isValid() && $authorization->payload_hash === $version->hash,
-                422,
-                'La autorizacion no es valida para la version actual del documento.',
-            );
+        $name = str_replace(['/', '\\', '"'], '-', $name);
+        $headers = [
+            'Content-Type' => $mime ?: 'application/octet-stream',
+            'X-Content-Type-Options' => 'nosniff',
+            'Cache-Control' => 'private, no-store, max-age=0',
+        ];
+
+        if (config("filesystems.disks.{$disk}.driver") === 'local') {
+            $response = new BinaryFileResponse($storage->path($path), 200, $headers, false);
+            $response->setContentDisposition($disposition, $name, Str::ascii($name));
+
+            return $response;
         }
 
-        $derived = $signatures->apply($document, $version, $asset, [
-            'page' => $data['page'] ?? 1,
-            'x' => $data['x'] ?? 60,
-            'y' => $data['y'] ?? 700,
-            'width' => $data['width'] ?? 140,
-            'height' => $data['height'] ?? 60,
-            'rotation' => $data['rotation'] ?? 0,
-        ], $request->user(), $authorization?->id);
+        return $storage->response($path, $name, $headers, $disposition);
+    }
 
-        $authorization?->forceFill(['consumed_at' => now()])->save();
+    /**
+     * @return array{total: int, valid: int, expiring: int, expired: int, noExpiry: int}
+     */
+    private function stats(): array
+    {
+        $today = Carbon::today()->toDateString();
+        $limit = Carbon::today()->addDays(Document::EXPIRING_DAYS)->toDateString();
 
-        return response()->json([
-            'documento_id' => $document->id,
-            'version' => $derived->version,
-            'url' => route('documents.preview', $document),
-        ]);
+        $row = Document::query()->directory()->toBase()
+            ->selectRaw('count(*) as total')
+            ->selectRaw('sum(case when expires_at < ? then 1 else 0 end) as expired', [$today])
+            ->selectRaw('sum(case when expires_at >= ? and expires_at <= ? then 1 else 0 end) as expiring', [$today, $limit])
+            ->selectRaw('sum(case when expires_at > ? then 1 else 0 end) as valid', [$limit])
+            ->selectRaw('sum(case when expires_at is null then 1 else 0 end) as no_expiry')
+            ->first();
+
+        return [
+            'total' => (int) ($row->total ?? 0),
+            'valid' => (int) ($row->valid ?? 0),
+            'expiring' => (int) ($row->expiring ?? 0),
+            'expired' => (int) ($row->expired ?? 0),
+            'noExpiry' => (int) ($row->no_expiry ?? 0),
+        ];
     }
 }

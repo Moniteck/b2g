@@ -2,83 +2,66 @@
 
 namespace App\Mcp\Tools;
 
+use App\Mcp\Tools\Concerns\DescribesQuoteFields;
 use App\Models\Quote;
+use App\Models\User;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
+use Laravel\Mcp\ResponseFactory;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Attributes\Title;
+use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
 #[Name('list_quotes')]
 #[Title('Listar cotizaciones')]
-#[Description('Lista las cotizaciones de una empresa con su numero, institucion, estado documental, resultado comercial, total y fechas. Filtre por busqueda, estado, resultado o tipo de compra.')]
+#[Description('Cotizaciones de una empresa con número, institución, estado documental (Borrador, Emitida, Presentada, Sustituida, Anulada), resultado comercial (Pendiente, Ganada, Perdida) e importes. Filtros: búsqueda, estado, resultado, licitación u oportunidad.')]
 #[IsReadOnly]
+#[IsIdempotent]
 class ListQuotesTool extends BaseTool
 {
+    use DescribesQuoteFields;
+
     public function schema(JsonSchema $schema): array
     {
         return [
-            'empresa_id' => $schema->integer()->description('Identificador de la empresa. Omitirlo usa la empresa activa de la conexion.'),
-            'search' => $schema->string()->description('Texto libre para buscar por numero, institucion o tipo de compra.'),
-            'estado' => $schema->string()->enum(Quote::STATUSES)->description('Estado documental de la cotizacion.'),
-            'resultado' => $schema->string()->enum(Quote::OUTCOMES)->description('Resultado comercial de la oferta.'),
-            'tipo' => $schema->string()->description('Tipo de compra o proceso.'),
-            'page' => $schema->integer()->description('Pagina solicitada.'),
-            'per_page' => $schema->integer()->description('Cantidad de registros por pagina (maximo 100).'),
+            ...$this->companySchema($schema),
+            'search' => $schema->string()->description('Número, institución o tipo de compra.'),
+            'status' => $schema->string()->enum(Quote::STATUSES)->description('Estado documental.'),
+            'outcome' => $schema->string()->enum(Quote::OUTCOMES)->description('Resultado comercial.'),
+            'tender_id' => $schema->integer()->description('Solo las de esta licitación.'),
+            'opportunity_id' => $schema->integer()->description('Solo las de esta oportunidad.'),
+            ...$this->pageSchema($schema),
         ];
     }
 
-    public function handle(Request $request): Response
+    protected function run(Request $request, User $user, int $companyId): Response|ResponseFactory
     {
-        $companyId = $this->resolveCompanyId($request, $request->get('empresa_id') ? (int) $request->get('empresa_id') : null);
+        $this->authorize('viewAny', Quote::class);
+
+        $data = $this->validate($request->all(), [
+            'search' => ['nullable', 'string', 'max:100'],
+            'status' => ['nullable', 'in:'.implode(',', Quote::STATUSES)],
+            'outcome' => ['nullable', 'in:'.implode(',', Quote::OUTCOMES)],
+            'tender_id' => ['nullable', 'integer'],
+            'opportunity_id' => ['nullable', 'integer'],
+        ]);
+        $search = trim((string) ($data['search'] ?? ''));
 
         $query = Quote::query()
-            ->where('company_id', $companyId)
-            ->with(['institution:id,name', 'company:id,name'])
+            ->with('institution:id,name')
+            ->when($search !== '', fn ($query) => $query->where(fn ($inner) => $inner->where('number', 'like', "%{$search}%")
+                ->orWhere('purchase_type', 'like', "%{$search}%")
+                ->orWhereHas('institution', fn ($institution) => $institution->where('name', 'like', "%{$search}%"))))
+            ->when(! empty($data['status']), fn ($query) => $query->where('status', $data['status']))
+            ->when(! empty($data['outcome']), fn ($query) => $query->where('outcome', $data['outcome']))
+            ->when(! empty($data['tender_id']), fn ($query) => $query->where('tender_id', $data['tender_id']))
+            ->when(! empty($data['opportunity_id']), fn ($query) => $query->where('opportunity_id', $data['opportunity_id']))
             ->orderByDesc('quoted_at')
             ->orderByDesc('id');
 
-        if ($search = trim((string) $request->get('search', ''))) {
-            $query->where(function ($builder) use ($search) {
-                $builder->where('number', 'like', "%{$search}%")
-                    ->orWhere('purchase_type', 'like', "%{$search}%")
-                    ->orWhereHas('institution', fn ($institution) => $institution->where('name', 'like', "%{$search}%"));
-            });
-        }
-
-        if ($status = $request->get('estado')) {
-            $query->where('status', $status);
-        }
-
-        if ($outcome = $request->get('resultado')) {
-            $query->where('outcome', $outcome);
-        }
-
-        if ($type = $request->get('tipo')) {
-            $query->where('purchase_type', $type);
-        }
-
-        $result = $this->paginate($query, $request);
-
-        $result['data'] = collect($result['data'])->map(fn (Quote $quote) => [
-            'id' => $quote->id,
-            'numero' => $quote->number,
-            'empresa_id' => $quote->company_id,
-            'empresa' => $quote->company?->name,
-            'institucion' => $quote->institution?->name,
-            'fecha' => $quote->quoted_at?->toDateString(),
-            'tipo' => $quote->purchase_type,
-            'estado' => $quote->status,
-            'resultado' => $quote->outcome,
-            'total' => (float) $quote->total,
-            'impuesto_contenido' => (float) $quote->tax,
-            'validez_dias' => $quote->validity_days,
-            'adjudicado' => $quote->awarded_at?->toDateString(),
-            'monto_adjudicado' => $quote->awarded_amount !== null ? (float) $quote->awarded_amount : null,
-        ])->all();
-
-        return $this->ok($result);
+        return $this->ok(['company_id' => $companyId, ...$this->paginate($query, $request, fn (Quote $quote) => $this->quoteSummary($quote))]);
     }
 }

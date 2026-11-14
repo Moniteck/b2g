@@ -2,10 +2,16 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ContractFollowUp extends Model
 {
+    use HasFactory;
+
+    /** Tipos de seguimiento. */
+    public const TYPES = ['Seguimiento', 'Llamada', 'Reunión', 'Correo', 'Visita', 'Oficio', 'Otro'];
+
     protected $fillable = ['contract_id', 'user_id', 'type', 'description', 'occurred_at', 'next_action', 'next_action_at'];
 
     protected function casts(): array
@@ -16,7 +22,13 @@ class ContractFollowUp extends Model
         ];
     }
 
-    public function contract() { return $this->belongsTo(Contract::class); }
+    public function contract()
+    {
+        return $this->belongsTo(Contract::class);
+    }
 
-    public function user() { return $this->belongsTo(User::class); }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

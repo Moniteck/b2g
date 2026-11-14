@@ -4,50 +4,68 @@ namespace App\Policies;
 
 use App\Models\Quote;
 use App\Models\User;
-use App\Policies\Concerns\HandlesCompanyScope;
+use App\Support\Permissions;
 
-class QuotePolicy
+/**
+ * Cotizaciones.
+ *
+ *   ver y descargar                     admin, operator, viewer
+ *   crear, editar, adjuntar, firmar,
+ *   participantes, Ganada/Perdida, correo   admin, operator
+ *   eliminar (solo Borrador), revertir  admin
+ */
+class QuotePolicy extends OperationalPolicy
 {
-    use HandlesCompanyScope;
-
-    public function viewAny(User $user): bool
-    {
-        return $user->isRoot() || $user->companies()->exists();
-    }
-
-    public function view(User $user, Quote $quote): bool
-    {
-        return $this->hasCompanyAccess($user, $quote->company_id);
-    }
-
-    public function create(User $user): bool
-    {
-        return $user->isRoot() || $user->companies()->exists();
-    }
-
     /**
-     * Una cotizacion presentada ya no se edita: se sustituye por una revision.
+     * Una cotización presentada ya no se edita: se sustituye por una revisión.
      */
-    public function update(User $user, Quote $quote): bool
+    public function update(User $user, object $model): bool
     {
-        if (! $this->canOperate($user, $quote)) {
-            return false;
-        }
-
-        return $quote->isEditable();
+        return parent::update($user, $model) && $model->isEditable();
     }
 
-    public function delete(User $user, Quote $quote): bool
+    public function delete(User $user, object $model): bool
     {
-        return $this->isCompanyAdmin($user, $quote->company_id)
-            && in_array($quote->outcome, ['Pendiente'], true);
+        return parent::delete($user, $model) && $model->status === 'Borrador' && $model->isPending();
+    }
+
+    /** Cambiar el estado documental (Borrador → Emitida → Presentada, Sustituida, Anulada). */
+    public function changeStatus(User $user, Quote $quote): bool
+    {
+        return $this->allowsOn($user, $quote, Permissions::UPDATE) && $quote->nextStatuses() !== [];
     }
 
     /**
-     * Registrar el resultado comercial de la oferta.
+     * Subir o quitar PDF adjuntos: también en Presentada (la usa `Attachables`).
+     */
+    public function manageAttachments(User $user, Quote $quote): bool
+    {
+        return $this->allowsOn($user, $quote, Permissions::UPDATE) && $quote->acceptsAttachments();
+    }
+
+    /** Participantes: permitido en Presentada y después del resultado (para marcar el ganador). */
+    public function manageParticipants(User $user, Quote $quote): bool
+    {
+        return $this->allowsOn($user, $quote, Permissions::UPDATE) && $quote->status !== 'Anulada';
+    }
+
+    /** Enviar por correo. */
+    public function send(User $user, Quote $quote): bool
+    {
+        return $this->allowsOn($user, $quote, Permissions::UPDATE) && $quote->status !== 'Anulada';
+    }
+
+    /**
+     * Registrar el resultado comercial. El estado (Pendiente, Emitida o Presentada) lo valida
+     * AdjudicationService, para que repetir la acción responda igual en vez de dar 403.
      */
     public function adjudicate(User $user, Quote $quote): bool
     {
-        return $this->canOperate($user, $quote);
+        return $this->allowsOn($user, $quote, Permissions::ADJUDICATE);
+    }
+
+    public function revertOutcome(User $user, Quote $quote): bool
+    {
+        return $this->allowsOn($user, $quote, Permissions::REVERT_OUTCOME);
     }
 }

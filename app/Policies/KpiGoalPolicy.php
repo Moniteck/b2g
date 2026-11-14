@@ -3,12 +3,25 @@
 namespace App\Policies;
 
 use App\Models\User;
+use App\Support\Permissions;
 
-class KpiGoalPolicy
+/**
+ * Las metas las consulta toda la empresa y las fija su administrador.
+ */
+class KpiGoalPolicy extends OperationalPolicy
 {
-    public function viewAny(User $user): bool { return true; }
-    public function view(User $user, object $goal): bool { return true; }
-    public function create(User $user): bool { return $user->isAdmin(); }
-    public function update(User $user, object $goal): bool { return $user->isAdmin(); }
-    public function delete(User $user, object $goal): bool { return $user->isAdmin(); }
+    public function create(User $user): bool
+    {
+        return $this->allowsInActiveCompany($user, Permissions::MANAGE_KPIS);
+    }
+
+    public function update(User $user, object $model): bool
+    {
+        return $this->allowsOn($user, $model, Permissions::MANAGE_KPIS);
+    }
+
+    public function delete(User $user, object $model): bool
+    {
+        return $this->allowsOn($user, $model, Permissions::MANAGE_KPIS);
+    }
 }

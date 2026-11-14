@@ -1,12 +1,14 @@
 <?php
 
+use App\Http\Middleware\ApplyMcpConnection;
+use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\ResolveCompanyContext;
+use App\Services\Tenancy\CompanyContext;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
-use App\Http\Middleware\HandleInertiaRequests;
-use App\Http\Middleware\ResolveCompanyContext;
-use App\Services\Tenancy\CompanyContext;
+use Illuminate\Routing\Middleware\SubstituteBindings;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -17,8 +19,14 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [HandleInertiaRequests::class, ResolveCompanyContext::class]);
         $middleware->api(prepend: [ResolveCompanyContext::class]);
+        // La empresa activa debe fijarse después de autenticar y ANTES de resolver
+        // los modelos de la ruta, para que un id de otra empresa responda 404.
+        $middleware->prependToPriorityList(
+            before: SubstituteBindings::class,
+            prepend: ResolveCompanyContext::class,
+        );
         $middleware->alias([
-            'mcp.scope' => \App\Http\Middleware\ApplyMcpConnection::class,
+            'mcp.scope' => ApplyMcpConnection::class,
         ]);
     })
     ->withSingletons([

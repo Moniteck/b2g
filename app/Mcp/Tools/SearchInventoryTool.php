@@ -2,81 +2,73 @@
 
 namespace App\Mcp\Tools;
 
+use App\Mcp\Support\Present;
 use App\Models\InventoryItem;
+use App\Models\User;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
+use Laravel\Mcp\ResponseFactory;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Attributes\Title;
+use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
 #[Name('search_inventory')]
 #[Title('Buscar en el inventario')]
-#[Description('Busca productos del inventario sincronizado desde Blessing. Devuelve el precio unitario sugerido con impuesto incluido, la tasa de impuesto cuando Blessing la informa, las existencias y la fecha de la ultima sincronizacion.')]
+#[Description('Busca productos del inventario sincronizado de Blessing por SKU, descripción o marca. Por cada producto devuelve existencia y `pricing` para la cantidad pedida, con el MISMO calculador que cotizaciones: unit_price (sin ISV), unit_tax, unit_total, subtotal, tax (ISV), total, tax_rate y si el precio de origen ya incluía el impuesto. Use esos importes tal cual: no vuelva a sumar ISV.')]
 #[IsReadOnly]
+#[IsIdempotent]
 class SearchInventoryTool extends BaseTool
 {
     public function schema(JsonSchema $schema): array
     {
         return [
-            'empresa_id' => $schema->integer()->description('Empresa. Omitirlo usa la empresa activa.'),
-            'search' => $schema->string()->description('Texto para buscar por descripcion, sku o marca.'),
-            'sku' => $schema->string()->description('Busqueda exacta por sku.'),
-            'categoria' => $schema->string()->description('Filtra por categoria.'),
-            'solo_activos' => $schema->boolean()->description('Si es true, solo productos activos.'),
-            'page' => $schema->integer()->description('Pagina solicitada.'),
-            'per_page' => $schema->integer()->description('Registros por pagina (maximo 100).'),
+            ...$this->companySchema($schema),
+            'search' => $schema->string()->description('Texto en SKU, descripción o marca.'),
+            'sku' => $schema->string()->description('SKU exacto.'),
+            'category' => $schema->string()->description('Categoría.'),
+            'quantity' => $schema->number()->description('Cantidad para calcular subtotal, ISV y total (por defecto 1).'),
+            'in_stock' => $schema->boolean()->description('Solo con existencia.'),
+            'include_inactive' => $schema->boolean()->description('Incluir productos que ya no vienen de Blessing.'),
+            ...$this->pageSchema($schema),
         ];
     }
 
-    public function handle(Request $request): Response
+    protected function run(Request $request, User $user, int $companyId): Response|ResponseFactory
     {
-        $companyId = $this->resolveCompanyId($request, $request->get('empresa_id') ? (int) $request->get('empresa_id') : null);
+        $this->authorize('viewAny', InventoryItem::class);
+
+        $data = $this->validate($request->all(), [
+            'search' => ['nullable', 'string', 'max:100'],
+            'sku' => ['nullable', 'string', 'max:100'],
+            'category' => ['nullable', 'string', 'max:100'],
+            'quantity' => ['nullable', 'numeric', 'gt:0', 'max:1000000'],
+            'in_stock' => ['nullable', 'boolean'],
+            'include_inactive' => ['nullable', 'boolean'],
+        ]);
+
+        $quantity = (float) ($data['quantity'] ?? 1);
+        $withCost = $user->can('viewCost', InventoryItem::class);
+        $term = trim((string) ($data['search'] ?? ''));
 
         $query = InventoryItem::query()
-            ->where('company_id', $companyId)
+            ->when(! ($data['include_inactive'] ?? false), fn ($query) => $query->active())
+            ->search($term)
+            ->when(filled($data['sku'] ?? null), fn ($query) => $query->where('sku', $data['sku']))
+            ->when(filled($data['category'] ?? null), fn ($query) => $query->where('category', $data['category']))
+            ->when($data['in_stock'] ?? false, fn ($query) => $query->where(fn ($inner) => $inner->where('stock_available', '>', 0)->orWhere(fn ($x) => $x->whereNull('stock_available')->where('stock', '>', 0))))
+            ->orderByRaw('CASE WHEN sku = ? THEN 0 ELSE 1 END', [$term])
             ->orderBy('sku');
 
-        if ($search = trim((string) $request->get('search', ''))) {
-            $query->where(function ($builder) use ($search) {
-                $builder->where('description', 'like', "%{$search}%")
-                    ->orWhere('sku', 'like', "%{$search}%")
-                    ->orWhere('brand', 'like', "%{$search}%");
-            });
-        }
+        $lastSync = InventoryItem::query()->max('synced_at');
 
-        if ($sku = $request->get('sku')) {
-            $query->where('sku', $sku);
-        }
-
-        if ($category = $request->get('categoria')) {
-            $query->where('category', $category);
-        }
-
-        if ($request->boolean('solo_activos', true)) {
-            $query->where('is_active', true);
-        }
-
-        $result = $this->paginate($query, $request);
-
-        $result['data'] = collect($result['data'])->map(fn (InventoryItem $item) => [
-            'id' => $item->id,
-            'sku' => $item->sku,
-            'descripcion' => $item->description,
-            'categoria' => $item->category,
-            'marca' => $item->brand,
-            'unidad' => $item->unit,
-            'existencia' => (float) ($item->stock_available ?? $item->stock),
-            'precio_sugerido' => $item->salePrice(),
-            'tasa_impuesto' => $item->tax_rate !== null ? (float) $item->tax_rate : null,
-            'impuesto_incluido' => $item->tax_included,
-            'costo' => (float) $item->cost,
-            'sincronizado_en' => $item->synced_at?->toDateTimeString(),
-        ])->all();
-
-        $result['nota'] = 'Los precios sugeridos de Blessing ya incluyen impuesto; no debe adicionarse un ISV adicional al momento de cotizar.';
-
-        return $this->ok($result);
+        return $this->ok([
+            'company_id' => $companyId,
+            'quantity' => $quantity,
+            'last_synced_at' => $lastSync ? (string) $lastSync : null,
+            ...$this->paginate($query, $request, fn (InventoryItem $item) => Present::inventoryItem($item, $quantity, $withCost)),
+        ]);
     }
 }

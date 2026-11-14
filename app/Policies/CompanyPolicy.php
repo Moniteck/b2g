@@ -4,12 +4,10 @@ namespace App\Policies;
 
 use App\Models\Company;
 use App\Models\User;
-use App\Policies\Concerns\HandlesCompanyScope;
+use App\Support\Permissions;
 
 class CompanyPolicy
 {
-    use HandlesCompanyScope;
-
     public function viewAny(User $user): bool
     {
         return true;
@@ -17,7 +15,7 @@ class CompanyPolicy
 
     public function view(User $user, Company $company): bool
     {
-        return $user->isRoot() || $user->canAccessCompany($company->id);
+        return $user->canAccessCompany($company->id);
     }
 
     public function create(User $user): bool
@@ -27,7 +25,7 @@ class CompanyPolicy
 
     public function update(User $user, Company $company): bool
     {
-        return $user->isRoot() || $user->isCompanyAdmin($company->id);
+        return $user->hasPermission(Permissions::MANAGE_SETTINGS, $company->id);
     }
 
     public function delete(User $user, Company $company): bool
@@ -36,10 +34,10 @@ class CompanyPolicy
     }
 
     /**
-     * Asignar usuarios a la empresa.
+     * Asignar usuarios a la empresa y fijar su rol.
      */
     public function manageMembers(User $user, Company $company): bool
     {
-        return $user->isRoot() || $user->isCompanyAdmin($company->id);
+        return $user->hasPermission(Permissions::MANAGE_USERS, $company->id);
     }
 }

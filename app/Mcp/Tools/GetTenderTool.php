@@ -2,66 +2,73 @@
 
 namespace App\Mcp\Tools;
 
+use App\Mcp\Support\Present;
+use App\Models\DocumentExtraction;
+use App\Models\DocumentLink;
+use App\Models\Quote;
 use App\Models\Tender;
+use App\Models\User;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
+use Laravel\Mcp\ResponseFactory;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Attributes\Title;
+use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
+use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
 #[Name('get_tender')]
-#[Title('Consultar licitacion')]
-#[Description('Obtiene el detalle completo de una licitacion: fechas criticas, requisitos, condiciones de entrega y pago, contacto, monto estimado y cotizaciones vinculadas.')]
+#[Title('Detalle de licitación')]
+#[Description('Ficha completa de una licitación: datos de HonduCompras, fechas críticas, contacto, oportunidad del pipeline, cotizaciones, documentos (pliego, captura) y análisis del pliego con su estado.')]
+#[IsReadOnly]
+#[IsIdempotent]
 class GetTenderTool extends BaseTool
 {
+    protected ?array $record = ['tender_id', Tender::class];
+
     public function schema(JsonSchema $schema): array
     {
         return [
-            'tender_id' => $schema->integer()->description('Identificador de la licitacion.')->required(),
+            'tender_id' => $schema->integer()->description('Id de la licitación.')->required(),
+            ...$this->companySchema($schema),
         ];
     }
 
-    public function handle(Request $request): Response
+    protected function run(Request $request, User $user, int $companyId): Response|ResponseFactory
     {
-        $tender = Tender::query()
-            ->with(['institution:id,name', 'quotes:id,number,status,outcome,total,company_id'])
-            ->find((int) $request->get('tender_id'));
+        $tender = $this->find(Tender::query()->with(['institution:id,name', 'owner:id,name']), $request->get('tender_id'), 'la licitación');
+        $this->authorize('view', $tender);
 
-        if ($tender === null) {
-            return $this->fail('La licitacion indicada no existe.');
-        }
-
-        abort_unless($this->user($request)->canAccessCompany($tender->company_id), 403, 'No tiene acceso a esta licitacion.');
+        $opportunity = $tender->opportunities()->oldest('id')->first(['id', 'title', 'stage', 'amount', 'probability']);
+        $extractions = DocumentExtraction::query()->where('tender_id', $tender->id)->latest('id')->limit(10)->get();
+        $documents = DocumentLink::query()
+            ->where('linkable_type', Tender::class)->where('linkable_id', $tender->id)
+            ->whereHas('document')
+            ->with('document')
+            ->latest('id')->limit(30)->get()
+            ->map(fn (DocumentLink $link) => ['context' => $link->context, ...Present::document($link->document)])
+            ->all();
 
         return $this->ok([
-            'licitacion' => [
-                'id' => $tender->id,
-                'referencia' => $tender->reference,
-                'numero_proceso' => $tender->process_name,
-                'titulo' => $tender->title,
-                'institucion' => $tender->institution?->name,
-                'estado' => $tender->status,
-                'resultado' => $tender->result,
-                'tipo' => $tender->purchase_type,
-                'monto_estimado' => (float) $tender->estimated_amount,
-                'fechas' => $tender->deadlines(),
-                'requisitos' => $tender->requirements,
-                'condiciones_entrega' => $tender->delivery_terms,
-                'condiciones_pago' => $tender->payment_terms,
-                'contacto' => [
-                    'nombre' => $tender->contact_name,
-                    'telefono' => $tender->contact_phone,
-                    'correo' => $tender->contact_email,
-                ],
-                'observaciones' => $tender->observations,
-                'cotizaciones' => $tender->quotes->map(fn ($quote) => [
-                    'id' => $quote->id,
-                    'numero' => $quote->number,
-                    'estado' => $quote->status,
-                    'resultado' => $quote->outcome,
-                    'total' => (float) $quote->total,
-                ])->all(),
+            'tender' => Present::tender($tender),
+            'opportunity' => $opportunity ? [
+                'id' => $opportunity->id,
+                'stage' => $opportunity->stage,
+                'stage_label' => $opportunity->stageLabel(),
+                'amount' => (float) $opportunity->amount,
+                'probability' => $opportunity->probability,
+                ...$this->untrusted(['title' => $opportunity->title], 300),
+            ] : null,
+            'quotes' => Quote::query()->where('tender_id', $tender->id)->latest('id')->limit(20)
+                ->get(['id', 'number', 'status', 'outcome', 'total'])
+                ->map(fn (Quote $quote) => ['id' => $quote->id, 'number' => $quote->number, 'status' => $quote->status, 'outcome' => $quote->outcome, 'total' => (float) $quote->total])
+                ->all(),
+            'documents' => $documents,
+            'bid_analyses' => $extractions->where('kind', DocumentExtraction::KIND_BID)->values()->map(fn ($e) => Present::analysis($e))->all(),
+            'can' => [
+                'update' => $user->can('update', $tender),
+                'use_ai' => $user->can('use-ai') && $user->can('update', $tender),
             ],
         ]);
     }

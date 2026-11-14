@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use App\Services\Auth\AccessRequestService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
-use Inertia\Inertia;
 use Inertia\Response;
 
 class AuthController extends Controller
@@ -17,9 +16,14 @@ class AuthController extends Controller
 
     private const DECAY_SECONDS = 60;
 
+    private const ACCESS_MESSAGES = [
+        'pending' => 'Tu solicitud de acceso está en revisión. Te avisaremos por correo cuando un administrador la apruebe.',
+        'rejected' => 'Tu solicitud de acceso no fue aprobada. Si crees que es un error, escribe al administrador de tu empresa.',
+    ];
+
     public function create(): Response
     {
-        return Inertia::render('Auth/Login');
+        return AccessRequestController::screen('login');
     }
 
     public function store(Request $request): RedirectResponse
@@ -37,6 +41,16 @@ class AuthController extends Controller
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             RateLimiter::hit($key, self::DECAY_SECONDS);
+
+            // Quien aún no tiene cuenta pero escribió la contraseña de su solicitud ve en qué va;
+            // sin esa contraseña la respuesta es la genérica y no revela si el correo existe.
+            $status = app(AccessRequestService::class)->loginStatus($credentials['email'], $credentials['password']);
+
+            if ($status !== null) {
+                return back()
+                    ->withErrors(['email' => self::ACCESS_MESSAGES[$status], 'access' => $status])
+                    ->onlyInput('email');
+            }
 
             return back()
                 ->withErrors(['email' => 'Las credenciales no son válidas.'])

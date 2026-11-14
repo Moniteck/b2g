@@ -2,74 +2,81 @@
 
 namespace App\Mcp\Tools;
 
+use App\Mcp\Support\Untrusted;
 use App\Models\Opportunity;
+use App\Models\User;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
+use Laravel\Mcp\ResponseFactory;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Attributes\Title;
+use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
 #[Name('list_opportunities')]
-#[Title('Listar oportunidades del pipeline')]
-#[Description('Lista el tablero comercial con las cinco etapas: Prospecto, Oportunidad, Oferta Presentada, Adjudicado y No Adjudicado. Incluye monto, probabilidad, responsable, fecha de cierre esperada y el resultado cuando ya existe.')]
+#[Title('Tablero comercial (pipeline)')]
+#[Description('Oportunidades del tablero con sus cinco etapas (prospecto, oportunidad, oferta_presentada, adjudicado, no_adjudicado), monto, probabilidad, cierre esperado, responsable y vínculos con licitación y cotización.')]
 #[IsReadOnly]
+#[IsIdempotent]
 class ListOpportunitiesTool extends BaseTool
 {
     public function schema(JsonSchema $schema): array
     {
         return [
-            'empresa_id' => $schema->integer()->description('Empresa. Omitirlo usa la empresa activa.'),
-            'etapa' => $schema->string()->enum(array_keys(Opportunity::STAGES))->description('Filtra por etapa del tablero.'),
-            'search' => $schema->string()->description('Busqueda por titulo o institucion.'),
-            'page' => $schema->integer()->description('Pagina solicitada.'),
-            'per_page' => $schema->integer()->description('Registros por pagina (maximo 100).'),
+            ...$this->companySchema($schema),
+            'stage' => $schema->string()->enum(array_keys(Opportunity::STAGES))->description('Etapa.'),
+            'search' => $schema->string()->description('Título o institución.'),
+            ...$this->pageSchema($schema),
         ];
     }
 
-    public function handle(Request $request): Response
+    protected function run(Request $request, User $user, int $companyId): Response|ResponseFactory
     {
-        $companyId = $this->resolveCompanyId($request, $request->get('empresa_id') ? (int) $request->get('empresa_id') : null);
+        $this->authorize('viewAny', Opportunity::class);
+
+        $data = $this->validate($request->all(), [
+            'stage' => ['nullable', 'in:'.implode(',', array_keys(Opportunity::STAGES))],
+            'search' => ['nullable', 'string', 'max:100'],
+        ]);
+        $search = trim((string) ($data['search'] ?? ''));
 
         $query = Opportunity::query()
-            ->where('company_id', $companyId)
             ->with(['institution:id,name', 'owner:id,name'])
+            ->when(! empty($data['stage']), fn ($query) => $query->where('stage', $data['stage']))
+            ->when($search !== '', fn ($query) => $query->where(fn ($inner) => $inner->where('title', 'like', "%{$search}%")
+                ->orWhereHas('institution', fn ($institution) => $institution->where('name', 'like', "%{$search}%"))))
             ->orderBy('expected_close_date')
             ->orderBy('id');
 
-        if ($stage = $request->get('etapa')) {
-            $query->where('stage', $stage);
-        }
+        return $this->ok([
+            'company_id' => $companyId,
+            'stages' => Opportunity::STAGES,
+            ...$this->paginate($query, $request, fn (Opportunity $opportunity) => self::row($opportunity)),
+        ]);
+    }
 
-        if ($search = trim((string) $request->get('search', ''))) {
-            $query->where(function ($builder) use ($search) {
-                $builder->where('title', 'like', "%{$search}%")
-                    ->orWhereHas('institution', fn ($institution) => $institution->where('name', 'like', "%{$search}%"));
-            });
-        }
-
-        $result = $this->paginate($query, $request);
-
-        $result['data'] = collect($result['data'])->map(fn (Opportunity $opportunity) => [
+    /**
+     * @return array<string, mixed>
+     */
+    public static function row(Opportunity $opportunity): array
+    {
+        return [
             'id' => $opportunity->id,
-            'titulo' => $opportunity->title,
-            'institucion' => $opportunity->institution?->name,
-            'etapa' => $opportunity->stage,
-            'etapa_nombre' => $opportunity->stageLabel(),
-            'monto' => (float) $opportunity->amount,
-            'probabilidad' => $opportunity->probability,
-            'cierre_esperado' => $opportunity->expected_close_date?->toDateString(),
-            'responsable' => $opportunity->owner?->name,
-            'siguiente_accion' => $opportunity->next_action,
-            'cotizacion_id' => $opportunity->quote_id,
-            'licitacion_id' => $opportunity->tender_id,
-            'ganador' => $opportunity->winner_name,
-            'monto_adjudicado' => $opportunity->awarded_amount !== null ? (float) $opportunity->awarded_amount : null,
-        ])->all();
-
-        $result['etapas'] = Opportunity::STAGES;
-
-        return $this->ok($result);
+            'company_id' => $opportunity->company_id,
+            'stage' => $opportunity->stage,
+            'stage_label' => $opportunity->stageLabel(),
+            'institution' => $opportunity->institution?->name,
+            'amount' => (float) $opportunity->amount,
+            'probability' => $opportunity->probability,
+            'expected_close_date' => $opportunity->expected_close_date?->format('Y-m-d'),
+            'owner' => $opportunity->owner?->name,
+            'quote_id' => $opportunity->quote_id,
+            'tender_id' => $opportunity->tender_id,
+            'winner_name' => $opportunity->winner_name,
+            'awarded_amount' => $opportunity->awarded_amount !== null ? (float) $opportunity->awarded_amount : null,
+            ...Untrusted::of(['title' => $opportunity->title, 'next_action' => $opportunity->next_action], 500),
+        ];
     }
 }

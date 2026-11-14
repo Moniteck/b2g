@@ -15,10 +15,30 @@ return [
     |
     */
 
-    'redirect_domains' => array_values(array_filter(array_map(
-        'trim',
-        explode(',', (string) env('MCP_REDIRECT_DOMAINS', 'https://chatgpt.com,https://claude.ai,http://localhost'))
-    ))),
+    // ChatGPT y Claude (web y escritorio) por defecto. `http://localhost` (clientes locales como
+    // Claude Code o el inspector MCP) solo fuera de producción, y en producción nunca «*».
+    'redirect_domains' => (static function (): array {
+        $production = env('APP_ENV') === 'production';
+        $configured = explode(',', (string) env('MCP_REDIRECT_DOMAINS', 'https://chatgpt.com,https://claude.ai,https://claude.com'));
+
+        if (! $production) {
+            $configured[] = 'http://localhost';
+            $configured[] = 'http://127.0.0.1';
+        }
+
+        return array_values(array_unique(array_filter(array_map('trim', $configured), function (string $domain) use ($production): bool {
+            if ($domain === '') {
+                return false;
+            }
+
+            return ! $production || ($domain !== '*' && ! preg_match('#^http://(localhost|127\.0\.0\.1|\[::1\])#i', $domain));
+        })));
+    })(),
+
+    // Orígenes de navegador aceptados por `ValidateOrigin` además de APP_URL y localhost.
+    // ChatGPT y Claude llaman desde su servidor (sin cabecera Origin): no hace falta abrirlo.
+    // Nunca «*».
+    'allowed_origins' => [],
 
     /*
     |--------------------------------------------------------------------------
@@ -75,6 +95,26 @@ return [
     | command and arguments for local servers plus connection options.
     |
     */
+
+    /*
+    |--------------------------------------------------------------------------
+    | CRM B2G: conexiones, tokens y confirmaciones
+    |--------------------------------------------------------------------------
+    |
+    | Vigencia de una conexión aprobada (luego hay que volver a aprobarla), de
+    | los códigos de confirmación de las acciones sensibles, tope de subida
+    | por MCP, registros de clientes por IP y limpieza de clientes huérfanos.
+    |
+    */
+
+    'crm' => [
+        'connection_days' => 90,
+        'confirmation_minutes' => 10,
+        'upload_max_kilobytes' => 10 * 1024,
+        'registrations_per_hour' => 10,
+        'orphan_client_hours' => 24,
+        'last_used_resolution_seconds' => 60,
+    ],
 
     'clients' => [
         'github' => [

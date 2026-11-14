@@ -3,12 +3,13 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToCompany;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Client extends Model
 {
-    use BelongsToCompany, SoftDeletes;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id', 'institution_id', 'source_quote_id', 'origin', 'dedupe_key', 'name',
@@ -24,13 +25,48 @@ class Client extends Model
         ];
     }
 
-    public function institution() { return $this->belongsTo(Institution::class); }
+    public function institution()
+    {
+        return $this->belongsTo(Institution::class);
+    }
 
-    public function invoices() { return $this->hasMany(CollectionInvoice::class); }
+    public function invoices()
+    {
+        return $this->hasMany(CollectionInvoice::class);
+    }
 
-    public function contracts() { return $this->hasMany(Contract::class); }
+    /**
+     * Contratos del cliente (`contracts.client_id`). Los contratos anteriores a esa
+     * columna se enlazan por su cotización de origen: ver `contractsQuery()`.
+     */
+    public function contracts()
+    {
+        return $this->hasMany(Contract::class);
+    }
 
-    public function sourceQuote() { return $this->belongsTo(Quote::class, 'source_quote_id'); }
+    /**
+     * Cotizaciones vinculadas al cliente (las ganadas lo crean o lo reutilizan).
+     */
+    public function quotes()
+    {
+        return $this->hasMany(Quote::class);
+    }
+
+    /**
+     * Contratos del cliente por su columna o por una cotización suya: así cuenta
+     * también los contratos creados sin `client_id`.
+     */
+    public function contractsQuery()
+    {
+        return Contract::query()->where(fn ($query) => $query
+            ->where('client_id', $this->id)
+            ->orWhereIn('quote_id', Quote::query()->withTrashed()->select('id')->where('client_id', $this->id)));
+    }
+
+    public function sourceQuote()
+    {
+        return $this->belongsTo(Quote::class, 'source_quote_id');
+    }
 
     /**
      * Clave de deduplicacion: evita crear dos clientes para la misma institucion

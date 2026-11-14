@@ -8,10 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
 
 /**
- * Limita automaticamente las consultas a las empresas permitidas al actor.
+ * Limita automáticamente las consultas a la EMPRESA ACTIVA del actor.
  *
  * Cuando no hay contexto (consola, colas sin empresa asignada) la consulta no
- * se restringe, porque esas operaciones reciben la empresa de forma explicita.
+ * se restringe, porque esas operaciones reciben la empresa de forma explícita.
+ * Para consultar otra empresa permitida se usa `CompanyContext::runFor()` o
+ * `Model::withoutGlobalScope(CompanyScope::class)` filtrando a mano.
  */
 class CompanyScope implements Scope
 {
@@ -23,9 +25,7 @@ class CompanyScope implements Scope
             return;
         }
 
-        $column = $model->qualifyColumn('company_id');
-        $allowed = $context->allowedCompanyIds();
-
-        $builder->whereIn($column, $allowed === [] ? [0] : $allowed);
+        // Sin empresa activa (usuario sin membresías) no se ve nada.
+        $builder->where($model->qualifyColumn('company_id'), $context->currentCompanyId() ?? 0);
     }
 }

@@ -3,47 +3,46 @@
 namespace App\Mcp\Tools;
 
 use App\Models\Company;
-use Illuminate\Contracts\JsonSchema\JsonSchema;
+use App\Models\McpConnection;
+use App\Models\User;
+use App\Support\Permissions;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
+use Laravel\Mcp\ResponseFactory;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Attributes\Title;
+use Laravel\Mcp\Server\Tools\Annotations\IsIdempotent;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
 #[Name('list_companies')]
-#[Title('Listar empresas del grupo')]
-#[Description('Lista las empresas del grupo a las que tiene acceso la conexion, con su identificador, razon social, RTN y estado. Use esta herramienta antes de cualquier operacion de escritura para conocer el `company_id` correcto.')]
+#[Title('Empresas de la conexión')]
+#[Description('Empresas a las que tiene acceso esta conexión, con el rol del usuario en cada una, la empresa predeterminada y el nivel de la conexión (read o write). Úsela primero: el `id` de cada empresa es el `empresa_id` del resto de herramientas.')]
 #[IsReadOnly]
+#[IsIdempotent]
 class ListCompaniesTool extends BaseTool
 {
-    public function schema(JsonSchema $schema): array
+    protected function run(Request $request, User $user, int $companyId): Response|ResponseFactory
     {
-        return [];
-    }
-
-    public function handle(Request $request): Response
-    {
-        $user = $this->user($request);
-        $context = $this->companyContext();
-
-        $companies = Company::query()
-            ->whereIn('id', $context->allowedCompanyIds())
-            ->orderBy('name')
-            ->get(['id', 'name', 'code', 'tax_id', 'representative', 'contact_email', 'is_active']);
+        $session = $this->session();
 
         return $this->ok([
-            'empresa_actual' => $context->currentCompanyId(),
-            'empresas' => $companies->map(fn (Company $company) => [
-                'id' => $company->id,
-                'nombre' => $company->name,
-                'codigo' => $company->code,
-                'rtn' => $company->tax_id,
-                'representante' => $company->representative,
-                'correo' => $company->contact_email,
-                'activa' => $company->is_active,
-                'rol' => $user->companyRole($company->id),
-            ])->all(),
+            'default_company_id' => $companyId,
+            'connection_level' => $session->connection->level(),
+            'connection_level_label' => McpConnection::LEVELS[$session->connection->level()],
+            'companies' => Company::query()
+                ->whereIn('id', $session->companyIds)
+                ->orderBy('name')
+                ->get(['id', 'name', 'code', 'tax_id', 'is_active'])
+                ->map(fn (Company $company) => [
+                    'id' => $company->id,
+                    'name' => $company->name,
+                    'code' => $company->code,
+                    'tax_id' => $company->tax_id,
+                    'is_active' => (bool) $company->is_active,
+                    'role' => $user->companyRole($company->id),
+                    'role_label' => Permissions::ROLE_LABELS[$user->companyRole($company->id)] ?? null,
+                ])->all(),
         ]);
     }
 }

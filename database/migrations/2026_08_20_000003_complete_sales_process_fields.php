@@ -69,6 +69,9 @@ return new class extends Migration
         Schema::table('opportunities', fn (Blueprint $table) => $table->dropColumn(['opportunity_type', 'next_action']));
         Schema::table('contacts', fn (Blueprint $table) => $table->dropColumn(['department', 'whatsapp']));
         Schema::table('institutions', fn (Blueprint $table) => $table->dropColumn(['fleet_type', 'modality', 'contact_name', 'phone', 'email', 'status', 'management_notes', 'source']));
-        Schema::table('clients', function (Blueprint $table) { $table->dropUnique(['tax_id']); $table->dropColumn('last_purchase_at'); });
+        Schema::table('clients', function (Blueprint $table) {
+            $table->dropUnique(['tax_id']);
+            $table->dropColumn('last_purchase_at');
+        });
     }
 };

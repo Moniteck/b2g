@@ -114,6 +114,15 @@ El usuario delegó el cómo; se sigue el enfoque A.
 - El cliente se registra solo al ganar una oferta.
 - Kanban: Prospecto | Oportunidad | Oferta Presentada | Adjudicado | No Adjudicado.
 
+- **Diseño aprobado el 2026-11-13.** Toda la interfaz pasa al **sistema de diseño CAP**
+  (`resources/design/`, marca Grupo CAP, ya instalado): marco `CapAppLayout`, recetario de
+  `DESIGN_GUIDE.md`, modo claro y oscuro, móvil y escritorio. Sustituye a la regla de paridad
+  visual con Manus. Cada pantalla se valida con Playwright en móvil y escritorio.
+- La API de Blessing queda pendiente; el resto se entrega completo. El inventario se construye
+  contra la interfaz del conector.
+- En `.env` solo van variables estrictamente necesarias.
+- Control de acceso por rol (RBAC) en todas las pantallas y acciones, y tiempos de carga cuidados.
+
 **Mías (propuestas; se pueden cambiar al revisar)**
 
 1. Las listas muestran **la empresa activa**, elegida con un selector en la cabecera, no la mezcla
