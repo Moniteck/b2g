@@ -33,7 +33,7 @@ class ContractDeliveryFactory extends Factory
     public function delivered(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'Entregado',
+            'status' => 'Entregada',
             'delivered_at' => now(),
         ]);
     }

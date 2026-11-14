@@ -271,7 +271,7 @@ class CalendarSyncService
             'company_id' => $contract->company_id,
             'institution_id' => $contract->institution_id,
             'contract_id' => $contract->id,
-            'owner_id' => $followUp->user_id ?? $contract->manager_id,
+            'owner_id' => $contract->manager_id ?? $followUp->user_id, // el aviso va al oficial de seguimiento
             'created_by' => $followUp->user_id,
             'label' => $label,
             'title' => 'Próxima acción: '.($followUp->next_action ?: 'seguimiento')." ({$label})",
