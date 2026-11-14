@@ -2,15 +2,18 @@
 
 namespace Database\Seeders;
 
+use App\Models\Client;
 use App\Models\Company;
 use App\Models\Contact;
 use App\Models\Contract;
+use App\Models\ContractDelivery;
 use App\Models\Institution;
 use App\Models\Opportunity;
 use App\Models\Quote;
 use App\Models\QuoteParticipant;
 use App\Models\Tender;
 use App\Models\User;
+use App\Services\Contracts\ContractStatus;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
@@ -28,6 +31,10 @@ use RuntimeException;
  *   qa.operador@crm-b2g.test   operator de CAP Honduras
  *   qa.lector@crm-b2g.test     viewer   de CAP Honduras
  *   qa.adminb@crm-b2g.test     admin    de Empresa Demo B
+ *
+ * Cada empresa queda con licitaciones, una oportunidad por etapa del pipeline, cotizaciones
+ * (Borrador, Presentada con participantes y Ganada con su cliente) y un contrato: en CAP Honduras
+ * «En ejecución» con una entrega Entregada y otra Pendiente; en Empresa Demo B «Pendiente de contrato».
  *
  * La contraseña es conocida, así que el seeder se niega a correr en producción.
  */
@@ -153,17 +160,50 @@ class QaSeeder extends Seeder
             'ganada' => $this->quote($company, "COT-QA-{$year}-0003", 'Presentada', 'Ganada', $owner, $institutions[0], $contacts[0], $opportunities['adjudicado'], null, 320000),
         ];
 
-        foreach ([['Nuestra oferta', 95000, true], ['Climatización del Norte S. de R. L.', 99500, false], ['Servicios Técnicos Unidos', 104000, false]] as $position => [$name, $amount, $ours]) {
-            QuoteParticipant::updateOrCreate(
-                ['quote_id' => $quotes['presentada']->id, 'name' => $name],
-                ['amount' => $amount, 'currency' => 'HNL', 'includes_tax' => true, 'is_ours' => $ours, 'position' => $position + 1],
-            );
-        }
+        // Participantes del proceso: van por oportunidad (y cotización si la hay); «nuestra oferta» es una sola fila.
+        $this->participants($company, $quotes['presentada'], $opportunities['oferta_presentada'], 95000, [
+            ['Climatización del Norte S. de R. L.', 99500, false],
+            ['Servicios Técnicos Unidos', 104000, false],
+        ]);
+        $this->participants($company, $quotes['ganada'], $opportunities['adjudicado'], 320000, [
+            ['Soluciones Informáticas Catrachas', 338000, false],
+        ], oursWon: true);
+        $this->participants($company, null, $opportunities['no_adjudicado'], 432000, [
+            ['Distribuidora Competidora S. A.', 410000, true],
+        ]);
 
-        Contract::updateOrCreate(
+        // Cliente que deja la adjudicación (como lo crea AdjudicationService).
+        $client = Client::withTrashed()->updateOrCreate(
+            ['company_id' => $company->id, 'dedupe_key' => Client::dedupeKeyFor($company->id, $institutions[0]->id, $institutions[0]->name)],
+            [
+                'institution_id' => $institutions[0]->id,
+                'source_quote_id' => $quotes['ganada']->id,
+                'origin' => 'Adjudicacion',
+                'name' => $institutions[0]->name,
+                'type' => 'Publico',
+                'sector' => $institutions[0]->type,
+                'contact_name' => $contacts[0]->name,
+                'phone' => $contacts[0]->phone,
+                'email' => $contacts[0]->email,
+                'status' => 'Activo',
+                'accumulated_amount' => 320000,
+                'last_purchase_at' => now()->subDays(4)->toDateString(),
+                'notes' => 'Dato de QA.',
+            ],
+        );
+        if ($client->trashed()) {
+            $client->restore();
+        }
+        $quotes['ganada']->forceFill(['client_id' => $client->id, 'winner_name' => $company->name])->save();
+        $opportunities['adjudicado']->forceFill(['winner_name' => $company->name])->save();
+
+        $running = $prefix === 'CAP';
+
+        $contract = Contract::updateOrCreate(
             ['company_id' => $company->id, 'number' => "CTR-{$prefix}-{$year}-001"],
             [
                 'name' => 'Licencias de ofimática',
+                'client_id' => $client->id,
                 'quote_id' => $quotes['ganada']->id,
                 'opportunity_id' => $opportunities['adjudicado']->id,
                 'institution_id' => $institutions[0]->id,
@@ -171,12 +211,57 @@ class QaSeeder extends Seeder
                 'manager_id' => $manager->id,
                 'amount' => 320000,
                 'awarded_amount' => 320000,
-                'status' => 'Pendiente de contrato',
+                'status' => $running ? ContractStatus::IN_PROGRESS : ContractStatus::PENDING,
+                'signed_at' => $running ? now()->subDays(3)->toDateString() : null,
+                'start_trigger' => 'Orden de inicio',
                 'duration_days' => 30,
-                'start_date' => now()->addDays(3)->toDateString(),
-                'end_date' => now()->addDays(33)->toDateString(),
+                'duration_business_days' => false,
+                'start_date' => $running ? now()->subDays(2)->toDateString() : now()->addDays(3)->toDateString(),
+                'end_date' => $running ? now()->addDays(28)->toDateString() : now()->addDays(33)->toDateString(),
+                'billed_amount' => 0,
+                'collected_amount' => 0,
+                'retention_amount' => 0,
             ],
         );
+
+        if ($running) {
+            ContractDelivery::updateOrCreate(
+                ['contract_id' => $contract->id, 'description' => 'Primera entrega: 50 licencias'],
+                ['quantity' => 50, 'unit' => 'Licencia', 'due_date' => now()->subDay()->toDateString(), 'delivered_at' => now()->subDay()->toDateString(), 'status' => ContractDelivery::DELIVERED, 'created_by' => $manager->id],
+            );
+            ContractDelivery::updateOrCreate(
+                ['contract_id' => $contract->id, 'description' => 'Segunda entrega: 50 licencias'],
+                ['quantity' => 50, 'unit' => 'Licencia', 'due_date' => now()->addDays(20)->toDateString(), 'delivered_at' => null, 'status' => ContractDelivery::PENDING, 'created_by' => $manager->id],
+            );
+        }
+    }
+
+    /**
+     * «Nuestra oferta» y los competidores de un proceso, por oportunidad (y cotización si existe).
+     *
+     * @param  array<int, array{0: string, 1: float, 2: bool}>  $rivals  [nombre, monto, ganó]
+     */
+    private function participants(Company $company, ?Quote $quote, Opportunity $opportunity, float $ourAmount, array $rivals, bool $oursWon = false): void
+    {
+        $rows = [[$company->name, $ourAmount, $oursWon, true], ...array_map(fn (array $rival) => [$rival[0], $rival[1], $rival[2], false], $rivals)];
+        usort($rows, fn (array $a, array $b) => $a[1] <=> $b[1]);
+
+        foreach ($rows as $position => [$name, $amount, $winner, $ours]) {
+            QuoteParticipant::updateOrCreate(
+                $ours ? ['opportunity_id' => $opportunity->id, 'is_ours' => true] : ['opportunity_id' => $opportunity->id, 'name' => $name],
+                [
+                    'quote_id' => $quote?->id,
+                    'name' => $name,
+                    'tax_id' => $ours ? $company->tax_id : null,
+                    'amount' => $amount,
+                    'currency' => 'HNL',
+                    'includes_tax' => true,
+                    'is_ours' => $ours,
+                    'is_winner' => $winner,
+                    'position' => $position + 1,
+                ],
+            );
+        }
     }
 
     private function quote(Company $company, string $number, string $status, string $outcome, User $author, Institution $institution, Contact $contact, Opportunity $opportunity, ?Tender $tender, float $total): Quote
@@ -201,22 +286,36 @@ class QaSeeder extends Seeder
                 'awarded_at' => $outcome === 'Ganada' ? now()->subDays(4)->toDateString() : null,
                 'subtotal' => $subtotal,
                 'tax' => round($total - $subtotal, 2),
+                'discount' => 0,
+                'tax_included' => false,
                 'total' => $total,
                 'notes' => 'Dato de QA.',
             ],
         );
 
-        if ($quote->items()->count() === 0) {
-            $quote->items()->create([
+        if ($quote->trashed()) {
+            $quote->restore();
+        }
+
+        // Una línea a precio sin ISV (15 %), con las columnas de la regla única de precios.
+        $quote->items()->updateOrCreate(
+            ['position' => 1],
+            [
                 'description' => $opportunity->title,
                 'quantity' => 1,
                 'unit' => 'Global',
                 'unit_cost' => round($subtotal * 0.8, 2),
-                'margin' => 20,
+                'margin' => 25,
+                'tax_rate' => 15,
+                'tax_included' => false,
+                'pricing_source' => 'calculadora',
                 'unit_price' => $subtotal,
-                'total' => $subtotal,
-            ]);
-        }
+                'discount_percent' => 0,
+                'subtotal' => $subtotal,
+                'tax' => round($total - $subtotal, 2),
+                'total' => $total,
+            ],
+        );
 
         if ($opportunity->quote_id !== $quote->id) {
             $opportunity->forceFill(['quote_id' => $quote->id])->save();
