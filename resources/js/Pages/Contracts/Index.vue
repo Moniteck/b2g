@@ -92,9 +92,9 @@ function actionsOf(row) {
             </template>
         </PageHeader>
 
-        <div class="cap-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <StatCard variant="featured" label="Monto adjudicado vigente" :value="money(stats.open_amount)" :hint="`${number(stats.open_count)} ${stats.open_count === 1 ? 'contrato vivo' : 'contratos vivos'}`" />
-            <StatCard label="En ejecución" :count="stats.in_progress" hint="Incluye entregas parciales" />
+        <div class="cap-stagger grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+            <StatCard class="col-span-2 xl:col-span-1" variant="featured" label="Monto adjudicado vigente" :value="money(stats.open_amount)" :hint="`${number(stats.open_count)} ${stats.open_count === 1 ? 'contrato vivo' : 'contratos vivos'}`" />
+            <StatCard label="En ejecución" :count="stats.in_progress" hint="Con parciales" />
             <StatCard :variant="stats.expiring ? 'alert' : 'normal'" label="Por vencer en 30 días" :count="stats.expiring" :hint="stats.expiring ? 'Revisa sus entregas' : 'Ninguno vence pronto'" />
             <StatCard label="Entregas pendientes" :count="stats.pending_deliveries" hint="De contratos vivos" />
         </div>

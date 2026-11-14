@@ -135,7 +135,7 @@ async function moreActions(page, item) {
 
 /** Recorrido real completo como administrador. */
 async function realFlow(page, label) {
-    await go(page, '/post-adjudicacion', 'h1');
+    await go(page, '/post-adjudicacion', 'main table:visible, main ul[aria-label="Contratos"]:visible');
     await page.getByRole('button', { name: 'Nuevo contrato' }).first().click();
     await waitModal(page, 'Identificación');
     const dialog = modal(page);
@@ -249,7 +249,7 @@ async function realFlow(page, label) {
     await shot(page, `${label}-calendario`);
 
     // Cerrar.
-    await go(page, `/post-adjudicacion/${id}`, 'main h2');
+    await go(page, `/post-adjudicacion/${id}`, 'main h2:visible');
     await page.getByRole('button', { name: 'Cerrar contrato' }).first().click();
     await waitModal(page, 'Al cerrar');
     await modal(page).getByText('Confirmo que el contrato está cumplido').click();
@@ -263,7 +263,7 @@ async function realFlow(page, label) {
 }
 
 async function screens(page, label, id) {
-    await go(page, '/post-adjudicacion', 'h1');
+    await go(page, '/post-adjudicacion', 'main table:visible, main ul[aria-label="Contratos"]:visible');
     await shot(page, `${label}-lista`);
     await page.getByRole('button', { name: 'Filtros' }).click();
     await page.waitForTimeout(300);
@@ -278,7 +278,7 @@ async function screens(page, label, id) {
     await shot(page, `${label}-crear`);
     await closeModal(page);
 
-    await go(page, `/post-adjudicacion/${id}`, 'main h2');
+    await go(page, `/post-adjudicacion/${id}`, 'main h2:visible');
     await shot(page, `${label}-resumen`);
     for (const name of ['Documentos', 'Entregas', 'Seguimientos', 'Historial']) {
         await tab(page, name);
@@ -319,7 +319,7 @@ async function screens(page, label, id) {
 
 /** Contrato de muestra vivo (de la empresa del admin) para las capturas de cada variante. */
 async function sampleContract(page) {
-    await go(page, '/post-adjudicacion?group=activos', 'h1');
+    await go(page, '/post-adjudicacion?group=activos', 'main table:visible, main ul[aria-label="Contratos"]:visible');
     const link = page.locator('main tbody tr:visible, main ul[aria-label="Contratos"] > li:visible').first();
     await link.click();
     await page.waitForURL(/\/post-adjudicacion\/\d+/, { timeout: 15000 });
@@ -361,11 +361,11 @@ async function main() {
         const seen = watchConsole(page, `lector-${viewport}`);
         await step('lector acceso', () => login(page, 'qa.lector@crm-b2g.test'));
         await step(`lector ${viewport}`, async () => {
-            await go(page, '/post-adjudicacion', 'h1');
+            await go(page, '/post-adjudicacion', 'main table:visible, main ul[aria-label="Contratos"]:visible');
             if (await page.getByRole('button', { name: 'Nuevo contrato' }).count()) problems.push('[lector] ve «Nuevo contrato»');
             await shot(page, `lector-${viewport}-lista`);
             const id = flowId ?? (await sampleContract(page));
-            await go(page, `/post-adjudicacion/${id}`, 'main h2');
+            await go(page, `/post-adjudicacion/${id}`, 'main h2:visible');
             for (const name of ['Editar', 'Completar datos', 'Cerrar contrato']) {
                 if (await page.getByRole('button', { name, exact: true }).count()) problems.push(`[lector] ve «${name}»`);
             }
@@ -380,7 +380,7 @@ async function main() {
             await page.getByRole('button', { name: 'Feriados' }).count();
         });
         await step(`lector ${viewport} feriados`, async () => {
-            await go(page, '/post-adjudicacion', 'h1');
+            await go(page, '/post-adjudicacion', 'main table:visible, main ul[aria-label="Contratos"]:visible');
             await page.getByRole('button', { name: 'Feriados' }).click();
             await waitModal(page, 'Feriados');
             await page.waitForTimeout(1000);
