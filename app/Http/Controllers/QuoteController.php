@@ -50,7 +50,7 @@ class QuoteController extends Controller
             ])
             ->with([
                 'institution:id,name,acronym',
-                'contact:id,name',
+                'contact:id,name,email',
                 'tender:id,reference',
                 'opportunity:id,title,stage',
                 'client:id,name',
@@ -235,6 +235,7 @@ class QuoteController extends Controller
             'purchase_type' => $quote->purchase_type,
             'institution' => $quote->institution ? ['id' => $quote->institution->id, 'name' => $quote->institution->name, 'acronym' => $quote->institution->acronym] : null,
             'contact' => $quote->contact?->name,
+            'contact_email' => $quote->contact?->email,
             'tender' => $quote->tender ? ['id' => $quote->tender->id, 'reference' => $quote->tender->reference] : null,
             'opportunity' => $quote->opportunity ? ['id' => $quote->opportunity->id, 'title' => $quote->opportunity->title] : null,
             'client' => $quote->client ? ['id' => $quote->client->id, 'name' => $quote->client->name, 'url' => "/clientes/{$quote->client->id}"] : null,
