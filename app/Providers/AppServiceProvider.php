@@ -122,7 +122,7 @@ class AppServiceProvider extends ServiceProvider
             return view('mcp.authorize', $parameters);
         });
 
-        Passport::tokensExpireIn(now()->addDays(15));
+        Passport::tokensExpireIn(now()->addDay()); // MCP: 1 día de acceso y 30 de refresco (Fase 12).
         Passport::refreshTokensExpireIn(now()->addDays(30));
         Passport::personalAccessTokensExpireIn(now()->addMonths(6));
 

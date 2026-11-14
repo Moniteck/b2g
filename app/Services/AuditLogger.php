@@ -56,7 +56,11 @@ class AuditLogger
         $log->action = $action;
         $log->resource_type = $resource !== null ? class_basename($resource) : null;
         $log->resource_id = $resource?->getKey();
-        $log->request_id = $this->requestId ?? $request->header('X-Request-Id') ?? (string) Str::uuid();
+        // Dentro de una petición MCP toda acción (también la de los servicios) queda con canal `mcp` y su conexión.
+        if (($connection = $request->attributes->get('mcp_connection')) instanceof \App\Models\McpConnection) {
+            [$log->channel, $log->mcp_connection_id] = ['mcp', $connection->getKey()];
+        }
+        $log->request_id = $this->requestId ?? $request->attributes->get('mcp_request_id') ?? $request->header('X-Request-Id') ?? (string) Str::uuid();
         $log->changes = $changes === [] ? null : $this->sanitize($changes);
         $log->ip = $request->ip();
         $log->user_agent = substr((string) $request->userAgent(), 0, 255);
