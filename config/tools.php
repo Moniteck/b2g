@@ -24,9 +24,9 @@ return [
     ],
 
     'poppler' => [
-        // Carpeta que contiene pdftotext, pdftoppm y pdftocairo. Vacío = PATH.
+        // Carpeta con pdftotext, pdftoppm, pdftocairo, pdfunite y pdfinfo. Vacío = PATH.
         'path' => env('POPPLER_PATH', ''),
-        'binaries' => ['pdftotext', 'pdftoppm', 'pdftocairo'],
+        'binaries' => ['pdftotext', 'pdftoppm', 'pdftocairo', 'pdfunite', 'pdfinfo'],
     ],
 
     // Segundos máximos de espera al invocar un binario.
@@ -39,7 +39,7 @@ return [
 
     // Mínimos de PHP para que las subidas anteriores funcionen.
     'php' => [
-        'memory_limit_mb' => 256,
+        'memory_limit_mb' => 512,
         // Margen del cuerpo de la petición sobre el archivo más grande.
         'post_margin_mb' => 8,
     ],
