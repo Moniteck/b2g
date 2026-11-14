@@ -1,8 +1,10 @@
 /*
- * Pantalla de acceso animada (excepción acotada de la guía CAP: movimiento vistoso solo aquí).
- * Colores, radios, fuentes y vidrio salen de las variables --cap-* y las clases cap-* del marco;
- * todo lo que se mueve es transform/opacity. Con `prefers-reduced-motion`, `tokens.css` anula las
- * animaciones CSS y los cambios de cara pasan a un fundido (Web Animations API, ver AuthCard.vue).
+ * Pantalla de acceso animada. Por pedido del usuario tiene libertad de diseño respecto de la guía CAP
+ * (solo esta pantalla, la intro y la salida): conserva la paleta (variables --cap-*), las
+ * tipografías y el modo reducido. Todo lo que se mueve es transform/opacity; el lienzo de partículas
+ * usa un solo requestAnimationFrame y todo se pausa con la pestaña oculta (`.auth--paused`).
+ * Con `prefers-reduced-motion`, `tokens.css` anula las animaciones CSS, no hay intro ni partículas y
+ * los cambios de cara pasan a un fundido (Web Animations API, ver AuthCard.vue).
  * No es `scoped`: la cortina de salida clona el SVG de Lici fuera de Vue.
  */
 
@@ -1148,12 +1150,6 @@
   opacity: 0;
 }
 
-.auth-curtain__hello .lici {
-  margin-bottom: 10px;
-  padding: 14px 14px 8px;
-  border-radius: 50%;
-  background: var(--cap-glass-light-bg);
-}
 
 .auth-curtain__title {
   font: 600 clamp(28px, 4vw, 40px) / 1.15 var(--cap-font-display);
@@ -1290,4 +1286,763 @@
 @keyframes lici-wave {
   from { transform: rotate(-128deg); }
   to { transform: rotate(-166deg); }
+}
+
+/* ======================================================================================
+ * Segunda pasada: intro, fondo vivo, tarjeta 3D, campos flotantes, botones y más Lici.
+ * ====================================================================================== */
+
+/* ---- Pausas: la intro retiene la entrada; la pestaña oculta detiene todo ------------------ */
+
+.auth--waiting :where(.auth__canvas, .auth-brand, .auth__stage),
+.auth--waiting :where(.auth__canvas, .auth-brand, .auth__stage) *,
+.auth--paused,
+.auth--paused * {
+  animation-play-state: paused !important;
+}
+
+/* ---- Fondo vivo ----------------------------------------------------------------------------- */
+
+.auth__aurora {
+  position: absolute;
+  inset: -30%;
+  background: conic-gradient(from 0deg at 60% 45%, var(--cap-blob-login-red), transparent 22%, var(--cap-blob-login-taupe) 38%, transparent 55%, var(--cap-blob-login-wine) 72%, transparent 88%, var(--cap-blob-login-red));
+  opacity: 0.55;
+  animation: auth-spin 60s linear infinite;
+}
+
+.auth__particles {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---- Tarjeta con profundidad e inclinación 3D ----------------------------------------------- */
+
+.auth__tilt {
+  position: relative;
+  border-radius: var(--cap-radius-sheet);
+  transform-origin: 50% 40%;
+  will-change: transform;
+}
+
+.auth__tilt .auth-card {
+  box-shadow: var(--cap-shadow-glass-light), var(--cap-shadow-floating);
+}
+
+.auth__glare {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: var(--cap-radius-sheet);
+  background: radial-gradient(circle at var(--glare-x, 50%) var(--glare-y, 0%), var(--cap-glass-light-highlight), transparent 45%);
+  opacity: 0;
+  pointer-events: none;
+  mix-blend-mode: soft-light;
+  transition: opacity 400ms var(--cap-ease-standard);
+}
+
+.auth__stage:hover .auth__glare {
+  opacity: 0.55;
+}
+
+.auth--mobile .auth__glare {
+  display: none;
+}
+
+.auth__perch {
+  transition: translate 600ms var(--cap-ease-enter);
+}
+
+/* ---- Campos con etiqueta flotante ----------------------------------------------------------- */
+
+.auth-field {
+  position: relative;
+  isolation: isolate;
+  min-width: 0;
+  margin-bottom: 14px;
+}
+
+.auth-grid .auth-field {
+  margin: 0;
+}
+
+.auth-field__control {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  height: 56px;
+  border: 1px solid var(--cap-input-line);
+  border-radius: 16px;
+  background: var(--cap-card);
+  transition:
+    border-color var(--cap-duration-base) var(--cap-ease-standard),
+    transform var(--cap-duration-base) var(--cap-ease-standard);
+}
+
+.auth-field__control::before {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  border-radius: 20px;
+  background: var(--cap-red-tint);
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.96);
+  transition:
+    opacity var(--cap-duration-base) var(--cap-ease-standard),
+    transform 320ms cubic-bezier(0.3, 1.4, 0.5, 1);
+  z-index: -1;
+}
+
+.auth-field__control:focus-within {
+  border-color: var(--cap-brand);
+  transform: translateY(-1px);
+}
+
+.dark .auth-field__control:focus-within {
+  border-color: var(--cap-red-soft);
+}
+
+.auth-field__control:focus-within::before {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.auth-field__input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 20px 14px 4px;
+  border: 0;
+  border-radius: 16px;
+  outline: none;
+  background: transparent;
+  color: var(--cap-text);
+  font: 400 15px var(--cap-font-text);
+}
+
+.auth-field__input::placeholder {
+  color: var(--cap-text-soft);
+  opacity: 0;
+  transition: opacity var(--cap-duration-base) var(--cap-ease-standard);
+}
+
+.auth-field__input:focus::placeholder {
+  opacity: 0.8;
+}
+
+.auth-field__select {
+  padding-right: 40px;
+  appearance: none;
+  cursor: pointer;
+}
+
+.auth-field__select option {
+  background: var(--cap-card);
+  color: var(--cap-text);
+}
+
+.auth-field__label {
+  position: absolute;
+  top: 50%;
+  left: 15px;
+  max-width: calc(100% - 60px);
+  overflow: hidden;
+  color: var(--cap-text-soft);
+  font: 500 15px var(--cap-font-text);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  transform: translateY(-50%);
+  transform-origin: 0 50%;
+  transition:
+    transform 260ms cubic-bezier(0.3, 1.3, 0.5, 1),
+    color var(--cap-duration-base) var(--cap-ease-standard);
+}
+
+.auth-field__input:focus ~ .auth-field__label,
+.auth-field__input:not(:placeholder-shown) ~ .auth-field__label,
+.auth-field--floated .auth-field__label {
+  transform: translateY(-112%) scale(0.78);
+}
+
+.auth-field__control:focus-within .auth-field__label {
+  color: var(--cap-brand);
+}
+
+.dark .auth-field__control:focus-within .auth-field__label {
+  color: var(--cap-red-soft);
+}
+
+.auth-field__line {
+  position: absolute;
+  right: 14px;
+  bottom: -1px;
+  left: 14px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--cap-gradient-primary);
+  pointer-events: none;
+  transform: scaleX(0);
+  transition: transform 380ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.auth-field__control:focus-within .auth-field__line {
+  transform: scaleX(1);
+}
+
+.auth-field--error .auth-field__control {
+  border-color: var(--cap-status-error);
+}
+
+.auth-field--error .auth-field__label {
+  color: var(--cap-status-error);
+}
+
+.auth-field--error .auth-field__line {
+  background: var(--cap-status-error);
+}
+
+.auth-field__icon-button {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 44px;
+  margin-right: 4px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--cap-text-soft);
+  font-size: 20px;
+  cursor: pointer;
+  transition:
+    color var(--cap-duration-fast) var(--cap-ease-standard),
+    transform var(--cap-duration-fast) var(--cap-ease-standard);
+}
+
+.auth-field__icon-button:hover {
+  color: var(--cap-text);
+  transform: scale(1.12);
+}
+
+.auth-field__icon-button:focus-visible {
+  outline: 2px solid var(--cap-text);
+  outline-offset: -4px;
+}
+
+.auth-field__chevron {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  color: var(--cap-text-soft);
+  font-size: 20px;
+  pointer-events: none;
+  transform: translateY(-50%);
+  transition: transform var(--cap-duration-base) var(--cap-ease-standard);
+}
+
+.auth-field__control:focus-within .auth-field__chevron {
+  transform: translateY(-50%) rotate(180deg);
+}
+
+.auth-field-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.auth-icon-enter-active,
+.auth-icon-leave-active {
+  transition:
+    opacity 140ms var(--cap-ease-standard),
+    transform 200ms cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+.auth-icon-enter-from {
+  opacity: 0;
+  transform: scale(0.4) rotate(-60deg);
+}
+
+.auth-icon-leave-to {
+  opacity: 0;
+  transform: scale(0.4) rotate(60deg);
+}
+
+/* ---- Botones con brillo, onda y carga --------------------------------------------------------- */
+
+.auth-button {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition: transform var(--cap-duration-fast) var(--cap-ease-standard);
+}
+
+.auth-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.auth-button:active:not(:disabled) {
+  transform: translateY(0) scale(0.97);
+}
+
+.auth-button[aria-busy="true"]::before {
+  content: none;
+}
+
+.auth-button__shine {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -40%;
+  z-index: -1;
+  width: 35%;
+  background: linear-gradient(100deg, transparent, var(--cap-glass-light-highlight), transparent);
+  opacity: 0.35;
+  pointer-events: none;
+  transform: translateX(-120%) skewX(-18deg);
+}
+
+.auth-button:hover:not(:disabled) .auth-button__shine {
+  animation: auth-shine 900ms var(--cap-ease-standard);
+}
+
+.auth-button--primary .auth-button__shine {
+  animation: auth-shine 1100ms var(--cap-ease-standard) 2.4s;
+}
+
+.auth-button__ripple {
+  position: absolute;
+  z-index: -1;
+  border-radius: 50%;
+  background: var(--cap-on-accent);
+  pointer-events: none;
+}
+
+.auth-button--secondary .auth-button__ripple {
+  background: var(--cap-brand);
+}
+
+.auth-button__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition:
+    opacity var(--cap-duration-fast) var(--cap-ease-standard),
+    transform var(--cap-duration-base) var(--cap-ease-standard);
+}
+
+.auth-button__arrow {
+  transition: transform var(--cap-duration-base) cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+.auth-button:hover:not(:disabled) .auth-button__arrow {
+  transform: translateX(4px);
+}
+
+.auth-button.is-loading {
+  opacity: 1;
+}
+
+.auth-button.is-loading .auth-button__label {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.auth-button__loading {
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  animation: auth-rise 260ms var(--cap-ease-enter) both;
+}
+
+.auth-button__dots {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.auth-button__dots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentcolor;
+  animation: auth-dot 900ms ease-in-out infinite;
+}
+
+.auth-button__dots i:nth-child(2) {
+  animation-delay: 120ms;
+}
+
+.auth-button__dots i:nth-child(3) {
+  animation-delay: 240ms;
+}
+
+.auth-button__progress {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: var(--cap-on-accent);
+  opacity: 0.6;
+  transform-origin: 0 50%;
+  animation: auth-progress 1.6s cubic-bezier(0.2, 0.7, 0.2, 1) infinite;
+}
+
+.auth-link {
+  position: relative;
+}
+
+.auth-link::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -2px;
+  left: 0;
+  height: 1.5px;
+  background: currentcolor;
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+  transition: transform 260ms var(--cap-ease-standard);
+}
+
+.auth-link:hover {
+  text-decoration: none;
+}
+
+.auth-link:hover::after {
+  transform: scaleX(1);
+}
+
+/* ---- Lici: estados nuevos y transiciones ------------------------------------------------------ */
+
+.lici__tilt {
+  transform-origin: 80px 140px;
+  transition: transform 420ms cubic-bezier(0.3, 1.3, 0.5, 1);
+}
+
+.lici__tuft {
+  transition: transform 320ms cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+.lici__tuft--left {
+  transform-origin: 46px 50px;
+}
+
+.lici__tuft--right {
+  transform-origin: 114px 50px;
+}
+
+.lici__pupil-size {
+  transition: transform 220ms cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+.lici__lid {
+  transition: transform 260ms var(--cap-ease-standard);
+}
+
+.lici__brow-up,
+.lici__mouth,
+.lici__zzz,
+.lici__sparkles {
+  opacity: 0;
+  transition: opacity var(--cap-duration-base) var(--cap-ease-standard);
+}
+
+.lici__brow-up {
+  fill: none;
+  stroke: var(--cap-red-800);
+  stroke-linecap: round;
+  stroke-width: 3.2;
+}
+
+.lici__mouth {
+  fill: var(--cap-wine);
+}
+
+.lici__zzz text {
+  fill: var(--cap-taupe);
+  font: 700 13px var(--cap-font-display);
+}
+
+.lici__sparkles path {
+  fill: var(--cap-red-400);
+}
+
+/* Sorprendido: pupilas grandes, plumas de punta, boca en «o». */
+.lici--surprised .lici__pupil-size {
+  transform: scale(1.35);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.lici--surprised .lici__brow-up,
+.lici--surprised .lici__mouth {
+  opacity: 1;
+}
+
+.lici--surprised .lici__tuft--left {
+  transform: rotate(-12deg);
+}
+
+.lici--surprised .lici__tuft--right {
+  transform: rotate(12deg);
+}
+
+.lici--surprised .lici__wing--left {
+  transform: rotate(38deg);
+}
+
+.lici--surprised .lici__wing--right {
+  transform: rotate(-38deg);
+}
+
+.lici--surprised .lici__hop {
+  animation: lici-startle 420ms cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+/* Contento: ojos felices, mejillas, chispas y un saltito. */
+.lici--happy .lici__cheek,
+.lici--happy .lici__sparkles {
+  opacity: 0.8;
+}
+
+.lici--happy .lici__sparkles path {
+  animation: lici-twinkle 900ms ease-in-out infinite alternate;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.lici--happy .lici__hop {
+  animation: lici-jump 560ms cubic-bezier(0.3, 0, 0.4, 1) 1;
+}
+
+.lici--happy .lici__wing--left {
+  transform: rotate(60deg);
+}
+
+.lici--happy .lici__wing--right {
+  transform: rotate(-60deg);
+}
+
+/* Dormido: párpados a media asta, cabeza ladeada, «z z Z» que suben. */
+.lici--sleepy .lici__lid {
+  animation: none;
+  transform: scaleY(0.62);
+}
+
+.lici--sleepy .lici__zzz {
+  opacity: 1;
+}
+
+.lici--sleepy .lici__zzz text {
+  animation: lici-zzz 2.4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.lici--sleepy .lici__zzz text:nth-child(2) {
+  animation-delay: 0.4s;
+}
+
+.lici--sleepy .lici__zzz text:nth-child(3) {
+  animation-delay: 0.8s;
+}
+
+.lici--sleepy .lici__body {
+  animation-duration: 5s;
+}
+
+.lici--sleepy .lici__wing--left {
+  transform: rotate(-8deg);
+}
+
+.lici--sleepy .lici__wing--right {
+  transform: rotate(8deg);
+}
+
+/* Mirando: las plumas acompañan la mirada. */
+.lici--watch .lici__tuft--left {
+  transform: rotate(-4deg);
+}
+
+.lici--watch .lici__tuft--right {
+  transform: rotate(4deg);
+}
+
+/* ---- Intro ---------------------------------------------------------------------------------- */
+
+.auth-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: var(--cap-chrome);
+  color: var(--cap-on-chrome);
+  cursor: pointer;
+}
+
+.auth-intro__wave {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 180vmax;
+  height: 180vmax;
+  margin: -90vmax 0 0 -90vmax;
+  border-radius: 50%;
+  transform: scale(0);
+}
+
+.auth-intro__wave--1 {
+  background: radial-gradient(closest-side, var(--cap-blob-panel-wine), transparent);
+}
+
+.auth-intro__wave--2 {
+  width: 120vmax;
+  height: 120vmax;
+  margin: -60vmax 0 0 -60vmax;
+  background: radial-gradient(closest-side, var(--cap-blob-panel-red), transparent);
+}
+
+.auth-intro__wave--3 {
+  width: 70vmax;
+  height: 70vmax;
+  margin: -35vmax 0 0 -35vmax;
+  background: radial-gradient(closest-side, var(--cap-blob-panel-taupe), transparent 75%);
+}
+
+.auth-intro__stage {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.auth-intro__logo {
+  overflow: visible;
+}
+
+.auth-intro__ring {
+  fill: none;
+  stroke: var(--cap-red-400);
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  stroke-linecap: round;
+  stroke-width: 3;
+}
+
+.auth-intro__disk {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.auth-intro__disk circle {
+  fill: var(--cap-red-600);
+}
+
+.auth-intro__disk text {
+  fill: var(--cap-on-accent);
+  font: 600 44px var(--cap-font-display);
+}
+
+.auth-intro__name {
+  display: flex;
+  font: 600 clamp(34px, 6vw, 56px) / 1 var(--cap-font-display);
+  letter-spacing: -0.02em;
+}
+
+.auth-intro__letter {
+  display: inline-block;
+}
+
+.auth-intro__tagline {
+  color: var(--cap-on-chrome-soft);
+  font-size: 15px;
+}
+
+.auth-intro__lici {
+  margin-top: 8px;
+}
+
+.auth-intro__skip {
+  position: absolute;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  left: 0;
+  right: 0;
+  color: var(--cap-on-chrome-soft);
+  font-size: 12.5px;
+  text-align: center;
+  opacity: 0.7;
+  animation: auth-rise 500ms var(--cap-ease-enter) 900ms both;
+}
+
+/* ---- Cortina de salida (onda, avatar y letras) ------------------------------------------------- */
+
+.auth-curtain__ring {
+  position: absolute;
+  border: 3px solid var(--cap-red-400);
+  border-radius: 50%;
+  opacity: 0;
+}
+
+.auth-curtain__avatar {
+  display: grid;
+  place-items: center;
+  width: 150px;
+  height: 150px;
+  margin-bottom: 10px;
+  border-radius: 50%;
+  background: var(--cap-glass-light-bg);
+  box-shadow: var(--cap-shadow-modal);
+}
+
+.auth-curtain__letter {
+  display: inline-block;
+}
+
+/* ---- Animaciones nuevas ---------------------------------------------------------------------- */
+
+@keyframes auth-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes auth-shine {
+  from { transform: translateX(-120%) skewX(-18deg); }
+  to { transform: translateX(420%) skewX(-18deg); }
+}
+
+@keyframes auth-dot {
+  0%, 100% { transform: translateY(0); opacity: 0.5; }
+  50% { transform: translateY(-5px); opacity: 1; }
+}
+
+@keyframes auth-progress {
+  from { transform: scaleX(0); opacity: 0.7; }
+  80% { transform: scaleX(1); opacity: 0.5; }
+  to { transform: scaleX(1); opacity: 0; }
+}
+
+@keyframes lici-startle {
+  0% { transform: translateY(0) scale(1); }
+  40% { transform: translateY(-10px) scale(1.04, 0.97); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes lici-twinkle {
+  from { transform: scale(0.6) rotate(0deg); opacity: 0.4; }
+  to { transform: scale(1.15) rotate(30deg); opacity: 1; }
+}
+
+@keyframes lici-zzz {
+  0% { transform: translate(0, 6px) scale(0.6); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: translate(6px, -10px) scale(1.1); opacity: 0; }
 }

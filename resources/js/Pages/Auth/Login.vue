@@ -1,20 +1,24 @@
 <script setup>
 // Pantalla de acceso animada: «Ingresar» y «Crear cuenta» (solicitud de acceso) en una tarjeta que
-// se voltea en escritorio y se desliza con el dedo en celular, con Lici (el búho) que sigue lo que
-// escribes, se tapa los ojos con la contraseña, se preocupa con un error, celebra la solicitud y
-// saluda al entrar. Excepción acotada a la guía (movimiento vistoso solo aquí); con
-// `prefers-reduced-motion` todo pasa a fundidos cortos, sin giros, saltos ni partículas.
+// se voltea en escritorio (y se inclina en 3D con el puntero) y se desliza con el dedo en celular.
+// Intro de marca al abrir, fondo vivo con partículas y parallax, campos con etiqueta flotante,
+// botones con onda y brillo, y Lici (el búho) que sigue lo que escribes, se tapa los ojos con la
+// contraseña, se alegra, se sorprende, se preocupa, se duerme si nadie hace nada, celebra la
+// solicitud y saluda al entrar. Con `prefers-reduced-motion` no hay intro, partículas, giros ni
+// saltos: solo fundidos cortos. Las animaciones se pausan con la pestaña oculta.
 //
-// Rutas: /login (cara «Ingresar») y /solicitar-acceso (cara «Crear cuenta"); la URL sigue a la cara.
+// Rutas: /login (cara «Ingresar») y /solicitar-acceso (cara «Crear cuenta»); la URL sigue a la cara.
 import { interceptors } from '@inertiajs/core';
 import { Head, router } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { company } from '../../../design/company.js';
 import { toggleTheme } from '../../../design/shell/js/theme.js';
 import { SYSTEM_NAME } from '../../config/navigation.js';
+import AuthBackdrop from '../../Modules/Auth/AuthBackdrop.vue';
 import { playLoginExit } from '../../Modules/Auth/exitCurtain.js';
+import IntroSplash from '../../Modules/Auth/IntroSplash.vue';
 import Mascot from '../../Modules/Auth/Mascot.vue';
-import { confetti, useMedia } from '../../Modules/Auth/motion.js';
+import { confetti, prefersReducedMotion, useMedia } from '../../Modules/Auth/motion.js';
 import '../../Modules/Auth/auth.css';
 import AuthCard from './Partials/AuthCard.vue';
 import BrandPanel from './Partials/BrandPanel.vue';
@@ -33,15 +37,23 @@ const URLS = { login: '/login', register: '/solicitar-acceso' };
 const PAGES = import.meta.glob('../**/*.vue');
 const TITLES = { login: 'Ingresar', register: 'Solicitar acceso' };
 const TAGLINE = 'Licitaciones, cotizaciones y contratos con el Estado, de la oportunidad al cobro.';
+const INTRO_KEY = 'crm.acceso.intro';
+const SLEEP_AFTER = 15000;
 
 const mobile = useMedia('(max-width: 1023.98px)');
 const face = ref(props.mode === 'register' ? 'register' : 'login');
 const announcement = ref('');
 const prefill = ref('');
 const dark = ref(false);
+const hiddenTab = ref(false);
 
-// Escena: elementos para la salida animada y la mirada de Lici.
+// Intro: completa la primera vez de la sesión, breve después; nunca con movimiento reducido.
+const intro = ref(null); // null | 'full' | 'brief'
+const waiting = ref(false);
+
+// Escena: elementos para la salida animada, la inclinación y la mirada de Lici.
 const scene = ref(null);
+const tiltEl = ref(null);
 const cardRef = ref(null);
 const mascotRef = ref(null);
 
@@ -49,15 +61,18 @@ const mascotRef = ref(null);
 const focus = ref(null); // 'field' | 'secret' | null
 const revealed = ref(false);
 const busy = ref(false);
-const mood = ref(null); // 'worried' | 'celebrate' | 'wave' | 'thinking'
+const mood = ref(null); // estado pasajero: worried, celebrate, wave, thinking, happy, surprised
+const sleepy = ref(false);
 const look = ref({ x: 0, y: 0 });
 let moodTimer = null;
+let sleepTimer = null;
 
 const mascotState = computed(() => {
     if (mood.value) return mood.value;
     if (busy.value) return 'thinking';
     if (focus.value === 'secret') return revealed.value ? 'peek' : 'shy';
     if (focus.value === 'field') return 'watch';
+    if (sleepy.value) return 'sleepy';
     return 'idle';
 });
 
@@ -65,6 +80,16 @@ function setMood(value, duration) {
     window.clearTimeout(moodTimer);
     mood.value = value;
     if (duration) moodTimer = window.setTimeout(() => (mood.value = null), duration);
+}
+
+// Si nadie toca nada un rato, Lici se duerme; cualquier gesto la despierta (sorprendida).
+function wake() {
+    if (sleepy.value) {
+        sleepy.value = false;
+        if (!mood.value) setMood('surprised', 700);
+    }
+    window.clearTimeout(sleepTimer);
+    sleepTimer = window.setTimeout(() => (sleepy.value = true), SLEEP_AFTER);
 }
 
 function mascotCenter() {
@@ -90,6 +115,7 @@ function onFocusIn(event) {
     if (!(input instanceof HTMLInputElement || input instanceof HTMLSelectElement) || input.type === 'checkbox') return;
     focus.value = input.dataset.secret !== undefined ? 'secret' : 'field';
     lookAtField(input);
+    wake();
 }
 function onFocusOut() {
     window.requestAnimationFrame(() => {
@@ -99,26 +125,55 @@ function onFocusOut() {
 }
 function onInput(event) {
     if (event.target instanceof HTMLInputElement && event.target.type !== 'checkbox') lookAtField(event.target);
+    wake();
 }
 
-// Escritorio: sin campo enfocado, la mirada y los manchones siguen al puntero (parallax suave).
+// Escritorio: la mirada, los manchones y la tarjeta (inclinación 3D con brillo) siguen al puntero.
+// Un solo requestAnimationFrame con suavizado; nada se recalcula si el puntero no se mueve.
 let frame = 0;
 let pointer = null;
+const tilt = { x: 0, y: 0, tx: 0, ty: 0, gx: 50, gy: 30 };
 function onPointerMove(event) {
+    wake();
     if (mobile.value || event.pointerType !== 'mouse') return;
     pointer = { x: event.clientX, y: event.clientY };
-    if (frame) return;
-    frame = window.requestAnimationFrame(() => {
-        frame = 0;
-        if (!pointer || !scene.value) return;
-        if (!focus.value) lookAt(pointer.x, pointer.y);
+    if (!focus.value) lookAt(pointer.x, pointer.y);
+    const rect = tiltEl.value?.getBoundingClientRect();
+    if (rect) {
+        const inside = Math.abs(pointer.x - (rect.left + rect.width / 2)) < rect.width * 0.75 && Math.abs(pointer.y - (rect.top + rect.height / 2)) < rect.height * 0.75;
+        tilt.tx = inside ? ((pointer.y - (rect.top + rect.height / 2)) / rect.height) * -7 : 0;
+        tilt.ty = inside ? ((pointer.x - (rect.left + rect.width / 2)) / rect.width) * 9 : 0;
+        tilt.gx = ((pointer.x - rect.left) / rect.width) * 100;
+        tilt.gy = ((pointer.y - rect.top) / rect.height) * 100;
+    }
+    if (!frame) frame = window.requestAnimationFrame(animatePointer);
+}
+
+function animatePointer() {
+    frame = 0;
+    if (!scene.value || prefersReducedMotion()) return;
+    tilt.x += (tilt.tx - tilt.x) * 0.14;
+    tilt.y += (tilt.ty - tilt.y) * 0.14;
+    if (tiltEl.value) {
+        tiltEl.value.style.transform = `perspective(1400px) rotateX(${tilt.x.toFixed(2)}deg) rotateY(${tilt.y.toFixed(2)}deg)`;
+        tiltEl.value.style.setProperty('--glare-x', `${tilt.gx.toFixed(1)}%`);
+        tiltEl.value.style.setProperty('--glare-y', `${tilt.gy.toFixed(1)}%`);
+    }
+    if (pointer) {
         const dx = pointer.x / window.innerWidth - 0.5;
         const dy = pointer.y / window.innerHeight - 0.5;
         scene.value.querySelectorAll('[data-depth]').forEach((element) => {
             const depth = Number(element.dataset.depth) || 1;
             element.style.translate = `${(dx * 22 * depth).toFixed(1)}px ${(dy * 16 * depth).toFixed(1)}px`;
         });
-    });
+    }
+    if (Math.abs(tilt.tx - tilt.x) > 0.02 || Math.abs(tilt.ty - tilt.y) > 0.02) frame = window.requestAnimationFrame(animatePointer);
+}
+
+function onLeave() {
+    tilt.tx = 0;
+    tilt.ty = 0;
+    if (!frame) frame = window.requestAnimationFrame(animatePointer);
 }
 
 // ---- Caras -------------------------------------------------------------------------------------
@@ -126,7 +181,7 @@ function changeFace(next) {
     if (next === face.value) return;
     face.value = next;
     focus.value = null;
-    setMood(null);
+    setMood('surprised', 650);
     // Solo cambia la URL (sin pedir nada al servidor) para poder enlazar cada cara.
     router.replace({ url: URLS[next], preserveState: true, preserveScroll: true, props: (current) => ({ ...current, mode: next }) });
 }
@@ -147,7 +202,11 @@ function onFailed(kind) {
 
 function onSent() {
     setMood('celebrate', 2800);
-    nextTick(() => confetti(mascotRef.value?.root));
+    nextTick(() => confetti(mascotRef.value?.root, { count: 72 }));
+}
+
+function onCheer() {
+    if (!mood.value) setMood('happy', 900);
 }
 
 function onDrag(progress) {
@@ -158,9 +217,22 @@ function themeToggle() {
     dark.value = toggleTheme() === 'dark';
 }
 
+function onVisibility() {
+    hiddenTab.value = document.hidden;
+}
+
+function onRevealIntro() {
+    waiting.value = false;
+}
+
+function onIntroDone() {
+    intro.value = null;
+    setMood('wave', 1200);
+}
+
 // ---- Salida animada al entrar ------------------------------------------------------------------
-// Antes de que Inertia cambie a la página de destino, la tarjeta se recoge, Lici saluda y la
-// cortina cubre la pantalla; el cambio ocurre como mucho ~0,9 s después de la respuesta.
+// Antes de que Inertia cambie a la página de destino, los campos salen, la tarjeta se recoge, Lici
+// saluda y la cortina cubre la pantalla; el cambio ocurre como mucho ~1 s después de la respuesta.
 let removeInterceptor = null;
 function isLoginSuccess(visit, response) {
     const url = typeof visit.url === 'string' ? new URL(visit.url, window.location.origin) : visit.url;
@@ -169,12 +241,26 @@ function isLoginSuccess(visit, response) {
 
 onMounted(() => {
     dark.value = document.documentElement.classList.contains('dark');
+    if (!prefersReducedMotion()) {
+        let seen = false;
+        try {
+            seen = sessionStorage.getItem(INTRO_KEY) === '1';
+            sessionStorage.setItem(INTRO_KEY, '1');
+        } catch {
+            seen = false;
+        }
+        intro.value = seen ? 'brief' : 'full';
+        waiting.value = true;
+    }
+    wake();
     window.addEventListener('pointermove', onPointerMove, { passive: true });
+    window.addEventListener('keydown', wake);
+    document.addEventListener('visibilitychange', onVisibility);
     removeInterceptor = interceptors.onVisitResponse(async (visit, response) => {
         if (!isLoginSuccess(visit, response)) return response;
         const name = String(response.data.props?.auth?.user?.name ?? '').trim().split(/\s+/)[0] ?? '';
         setMood('wave');
-        const exit = playLoginExit({ card: cardRef.value?.root, mascot: mascotRef.value?.root, name });
+        const exit = playLoginExit({ card: tiltEl.value, mascot: mascotRef.value?.root, name });
         const warm = Promise.resolve(PAGES[`../${response.data.component}.vue`]?.()).catch(() => null);
         await Promise.all([exit.ready, Promise.race([warm, new Promise((resolve) => window.setTimeout(resolve, 1200))])]);
         const off = router.on('navigate', () => {
@@ -188,51 +274,61 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     window.removeEventListener('pointermove', onPointerMove);
+    window.removeEventListener('keydown', wake);
+    document.removeEventListener('visibilitychange', onVisibility);
     window.cancelAnimationFrame(frame);
     window.clearTimeout(moodTimer);
+    window.clearTimeout(sleepTimer);
     removeInterceptor?.();
 });
 </script>
 
 <template>
     <Head :title="TITLES[face]" />
-    <main ref="scene" class="auth" :class="{ 'auth--mobile': mobile }" @focusin="onFocusIn" @focusout="onFocusOut" @input="onInput">
-        <div class="auth__canvas" aria-hidden="true">
-            <span class="auth__blob auth__blob--red" data-depth="0.6" />
-            <span class="auth__blob auth__blob--wine" data-depth="1" />
-            <span class="auth__blob auth__blob--taupe" data-depth="1.4" />
-        </div>
+    <main
+        ref="scene"
+        class="auth"
+        :class="{ 'auth--mobile': mobile, 'auth--waiting': waiting, 'auth--paused': hiddenTab }"
+        @focusin="onFocusIn"
+        @focusout="onFocusOut"
+        @input="onInput"
+    >
+        <AuthBackdrop :density="mobile ? 0.6 : 1" />
 
         <BrandPanel :system-name="SYSTEM_NAME" :mark="company.mark" :tagline="TAGLINE" :owner="company.loginOwner" :compact="mobile" />
 
-        <section class="auth__stage">
+        <section class="auth__stage" @pointerleave="onLeave">
             <button class="auth__theme" type="button" :aria-label="dark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'" @click="themeToggle">
-                <i class="mdi" :class="dark ? 'mdi-white-balance-sunny' : 'mdi-weather-night'" aria-hidden="true" />
+                <Transition name="auth-icon" mode="out-in"><i :key="String(dark)" class="mdi" :class="dark ? 'mdi-white-balance-sunny' : 'mdi-weather-night'" aria-hidden="true" /></Transition>
             </button>
 
             <div class="auth__column">
-                <div class="auth__perch">
+                <div class="auth__perch" data-depth="-0.4">
                     <Mascot ref="mascotRef" :state="mascotState" :look="look" :size="mobile ? 108 : 144" />
                 </div>
 
                 <div class="auth__card-entry">
-                    <AuthCard ref="cardRef" :face="face" :mobile="mobile" @update:face="changeFace" @settled="onSettled" @drag="onDrag">
-                        <template #login>
-                            <LoginForm
-                                :system-name="SYSTEM_NAME"
-                                :subtitle="company.loginSubtitle"
-                                :help-email="helpEmail"
-                                :prefill-email="prefill"
-                                @switch="changeFace('register')"
-                                @busy="busy = $event"
-                                @failed="onFailed"
-                                @reveal="revealed = $event"
-                            />
-                        </template>
-                        <template #register>
-                            <RequestForm :companies="companies" @switch="toLogin" @busy="busy = $event" @failed="onFailed" @sent="onSent" @reveal="revealed = $event" />
-                        </template>
-                    </AuthCard>
+                    <div ref="tiltEl" class="auth__tilt">
+                        <AuthCard ref="cardRef" :face="face" :mobile="mobile" @update:face="changeFace" @settled="onSettled" @drag="onDrag">
+                            <template #login>
+                                <LoginForm
+                                    :system-name="SYSTEM_NAME"
+                                    :subtitle="company.loginSubtitle"
+                                    :help-email="helpEmail"
+                                    :prefill-email="prefill"
+                                    @switch="changeFace('register')"
+                                    @busy="busy = $event"
+                                    @failed="onFailed"
+                                    @reveal="revealed = $event"
+                                    @valid="onCheer"
+                                />
+                            </template>
+                            <template #register>
+                                <RequestForm :companies="companies" @switch="toLogin" @busy="busy = $event" @failed="onFailed" @sent="onSent" @reveal="revealed = $event" @cheer="onCheer" />
+                            </template>
+                        </AuthCard>
+                        <span class="auth__glare" aria-hidden="true" />
+                    </div>
                 </div>
 
                 <p v-if="mobile" class="auth__hint" aria-hidden="true"><i class="mdi mdi-gesture-swipe-horizontal" /> Desliza la tarjeta para cambiar</p>
@@ -240,5 +336,7 @@ onBeforeUnmount(() => {
         </section>
 
         <p class="auth-sr-only" aria-live="polite">{{ announcement }}</p>
+
+        <IntroSplash v-if="intro" :system-name="SYSTEM_NAME" :mark="company.mark" tagline="Del aviso de licitación al cobro." :brief="intro === 'brief'" @reveal="onRevealIntro" @done="onIntroDone" />
     </main>
 </template>

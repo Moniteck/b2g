@@ -6,6 +6,8 @@ import { useForm } from '@inertiajs/vue3';
 import { computed, nextTick, ref, watch } from 'vue';
 import CapAlert from '../../../../design/vue/CapAlert.vue';
 import { shakeErrors } from '../../../Modules/Auth/motion.js';
+import AuthButton from './AuthButton.vue';
+import AuthField from './AuthField.vue';
 
 const props = defineProps({
     systemName: { type: String, required: true },
@@ -13,7 +15,7 @@ const props = defineProps({
     helpEmail: { type: String, default: '' },
     prefillEmail: { type: String, default: '' },
 });
-const emit = defineEmits(['switch', 'busy', 'failed', 'reveal']);
+const emit = defineEmits(['switch', 'busy', 'failed', 'reveal', 'valid']);
 
 const form = useForm({ email: props.prefillEmail, password: '', remember: false });
 const revealed = ref(false);
@@ -23,6 +25,10 @@ const formEl = ref(null);
 watch(() => props.prefillEmail, (value) => value && (form.email = value));
 watch(() => form.processing, (value) => emit('busy', value));
 watch(revealed, (value) => emit('reveal', value));
+watch(
+    () => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email),
+    (valid, before) => valid && !before && emit('valid'),
+);
 
 const access = computed(() => form.errors.access ?? null);
 const credentialError = computed(() => !access.value && (form.errors.email || form.errors.password));
@@ -64,60 +70,54 @@ function forgot() {
             <div v-if="alert" id="login-alert" :key="alert.title" class="auth-form__alert"><CapAlert v-bind="alert" /></div>
         </Transition>
 
-        <div class="cap-field" :class="{ 'cap-field--error': credentialError }">
-            <label class="cap-field__label" for="login-email">Correo</label>
-            <div class="cap-field__control">
-                <input
-                    id="login-email"
-                    v-model="form.email"
-                    class="cap-field__input"
-                    type="email"
-                    name="email"
-                    autocomplete="username"
-                    placeholder="nombre@empresa.com"
-                    required
-                    :aria-invalid="credentialError ? 'true' : undefined"
-                    :aria-describedby="alert ? 'login-alert' : undefined"
-                />
-            </div>
-        </div>
+        <AuthField id="login-email" label="Correo" :invalid="!!credentialError">
+            <input
+                id="login-email"
+                v-model="form.email"
+                class="auth-field__input"
+                type="email"
+                name="email"
+                autocomplete="username"
+                placeholder="nombre@empresa.com"
+                required
+                :aria-invalid="credentialError ? 'true' : undefined"
+                :aria-describedby="alert ? 'login-alert' : undefined"
+            />
+        </AuthField>
 
-        <div class="cap-field" :class="{ 'cap-field--error': credentialError }">
-            <label class="cap-field__label" for="login-password">Contraseña</label>
-            <div class="cap-field__control">
-                <input
-                    id="login-password"
-                    v-model="form.password"
-                    class="cap-field__input"
-                    :type="revealed ? 'text' : 'password'"
-                    name="password"
-                    autocomplete="current-password"
-                    placeholder="••••••••"
-                    required
-                    data-secret
-                    :aria-invalid="credentialError ? 'true' : undefined"
-                />
+        <AuthField id="login-password" label="Contraseña" :invalid="!!credentialError">
+            <input
+                id="login-password"
+                v-model="form.password"
+                class="auth-field__input"
+                :type="revealed ? 'text' : 'password'"
+                name="password"
+                autocomplete="current-password"
+                placeholder=" "
+                required
+                data-secret
+                :aria-invalid="credentialError ? 'true' : undefined"
+            />
+            <template #trailing>
                 <button
-                    class="cap-field__reveal"
+                    class="auth-field__icon-button"
                     type="button"
                     aria-controls="login-password"
                     :aria-pressed="String(revealed)"
                     :aria-label="revealed ? 'Ocultar contraseña' : 'Mostrar contraseña'"
                     @click="revealed = !revealed"
                 >
-                    <i class="mdi" :class="revealed ? 'mdi-eye-off-outline' : 'mdi-eye-outline'" aria-hidden="true" />
+                    <Transition name="auth-icon" mode="out-in"><i :key="String(revealed)" class="mdi" :class="revealed ? 'mdi-eye-off-outline' : 'mdi-eye-outline'" aria-hidden="true" /></Transition>
                 </button>
-            </div>
-        </div>
+            </template>
+        </AuthField>
 
         <div class="auth-form__options">
             <label class="cap-check"><input v-model="form.remember" class="cap-check__box" type="checkbox" name="remember" />Mantener la sesión</label>
             <button class="auth-link" type="button" @click="forgot">¿Olvidaste tu contraseña?</button>
         </div>
 
-        <button class="cap-button cap-button--primary auth-submit" type="submit" :disabled="form.processing" :aria-busy="String(form.processing)">
-            {{ form.processing ? 'Ingresando…' : 'Ingresar' }}
-        </button>
+        <AuthButton class="auth-submit" type="submit" :loading="form.processing" loading-label="Ingresando…">Ingresar <i class="mdi mdi-arrow-right auth-button__arrow" aria-hidden="true" /></AuthButton>
 
         <p class="auth-form__switch">
             ¿Aún no tienes cuenta?

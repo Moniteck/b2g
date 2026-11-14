@@ -37,14 +37,14 @@ export function shake(element) {
 
 /** Sacude cada campo marcado con error dentro de `container`. */
 export function shakeErrors(container) {
-    container?.querySelectorAll('.cap-field--error .cap-field__control').forEach((element) => shake(element));
+    container?.querySelectorAll('.auth-field--error .auth-field__control, .cap-field--error .cap-field__control').forEach((element) => shake(element));
 }
 
 /**
  * Confeti con los colores de la marca desde el centro de `origin`. Se retira solo al terminar.
  * No se lanza con movimiento reducido.
  */
-export function confetti(origin, { count = 56 } = {}) {
+export function confetti(origin, { count = 56, layer: host = document.body } = {}) {
     if (!origin || prefersReducedMotion() || !document.body.animate) return;
 
     const colors = ['--cap-red-600', '--cap-red-400', '--cap-red-200', '--cap-wine', '--cap-taupe', '--cap-red-100'].map((name) => cssVar(name)).filter(Boolean);
@@ -52,7 +52,7 @@ export function confetti(origin, { count = 56 } = {}) {
     const layer = document.createElement('div');
     layer.className = 'auth-confetti';
     layer.setAttribute('aria-hidden', 'true');
-    document.body.appendChild(layer);
+    host.appendChild(layer);
 
     const x = rect.left + rect.width / 2;
     const y = rect.top + rect.height * 0.45;

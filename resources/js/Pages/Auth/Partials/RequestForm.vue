@@ -5,13 +5,15 @@
 import { useForm } from '@inertiajs/vue3';
 import { computed, nextTick, ref, watch } from 'vue';
 import { shakeErrors } from '../../../Modules/Auth/motion.js';
+import AuthButton from './AuthButton.vue';
+import AuthField from './AuthField.vue';
 
 const OTHER = '__otra';
 
 const props = defineProps({
     companies: { type: Array, default: () => [] },
 });
-const emit = defineEmits(['switch', 'busy', 'failed', 'sent', 'reveal']);
+const emit = defineEmits(['switch', 'busy', 'failed', 'sent', 'reveal', 'cheer']);
 
 const form = useForm({
     name: '',
@@ -57,7 +59,11 @@ const confirmState = computed(() => {
 });
 
 const errorOf = (field) => form.errors[field];
-const describedBy = (field, extra = '') => [form.errors[field] ? `request-${field}-error` : '', extra].filter(Boolean).join(' ') || undefined;
+const describedBy = (field, extra = '', target = field.replace('_', '-')) => [form.errors[field] ? `request-${target}-error` : '', extra].filter(Boolean).join(' ') || undefined;
+
+// Lici se alegra cuando la contraseña llega a «Excelente» o la confirmación coincide.
+watch(() => strength.value.score === 4, (now, before) => now && !before && emit('cheer'));
+watch(confirmState, (now, before) => now === 'match' && before !== 'match' && emit('cheer'));
 
 function submit() {
     form
@@ -80,7 +86,7 @@ function submit() {
                 emit('failed', 'error');
                 await nextTick();
                 shakeErrors(formEl.value);
-                formEl.value?.querySelector('.cap-field--error input, .cap-field--error select')?.focus({ preventScroll: false });
+                formEl.value?.querySelector('.auth-field--error input, .auth-field--error select')?.focus({ preventScroll: false });
             },
         });
 }
@@ -112,7 +118,7 @@ function another() {
                         <span>Entras con tu correo y la contraseña que acabas de elegir.</span>
                     </li>
                 </ol>
-                <button class="cap-button cap-button--primary auth-submit" type="button" @click="emit('switch', sent.email)">Volver a ingresar</button>
+                <AuthButton class="auth-submit" @click="emit('switch', sent.email)">Volver a ingresar <i class="mdi mdi-arrow-right auth-button__arrow" aria-hidden="true" /></AuthButton>
                 <p class="auth-form__switch"><button class="auth-link" type="button" @click="another">Enviar otra solicitud</button></p>
             </div>
 
@@ -130,110 +136,85 @@ function another() {
                 </div>
 
                 <div class="auth-grid auth-stagger">
-                    <div class="cap-field" :class="{ 'cap-field--error': errorOf('name') }">
-                        <label class="cap-field__label" for="request-name">Nombre completo</label>
-                        <div class="cap-field__control">
-                            <input id="request-name" v-model="form.name" class="cap-field__input" type="text" name="name" autocomplete="name" maxlength="120" required :aria-invalid="errorOf('name') ? 'true' : undefined" :aria-describedby="describedBy('name')" />
-                        </div>
-                        <Transition name="auth-pop"><p v-if="errorOf('name')" id="request-name-error" class="auth-field-error">{{ errorOf('name') }}</p></Transition>
-                    </div>
+                    <AuthField id="request-name" label="Nombre completo" :error="errorOf('name')">
+                        <input id="request-name" v-model="form.name" class="auth-field__input" type="text" name="name" autocomplete="name" maxlength="120" placeholder="Nombre y apellido" required :aria-invalid="errorOf('name') ? 'true' : undefined" :aria-describedby="describedBy('name')" />
+                    </AuthField>
 
-                    <div class="cap-field" :class="{ 'cap-field--error': errorOf('position') }">
-                        <label class="cap-field__label" for="request-position">Cargo</label>
-                        <div class="cap-field__control">
-                            <input id="request-position" v-model="form.position" class="cap-field__input" type="text" name="position" autocomplete="organization-title" maxlength="120" placeholder="Analista de licitaciones" required :aria-invalid="errorOf('position') ? 'true' : undefined" :aria-describedby="describedBy('position')" />
-                        </div>
-                        <Transition name="auth-pop"><p v-if="errorOf('position')" id="request-position-error" class="auth-field-error">{{ errorOf('position') }}</p></Transition>
-                    </div>
+                    <AuthField id="request-position" label="Cargo" :error="errorOf('position')">
+                        <input id="request-position" v-model="form.position" class="auth-field__input" type="text" name="position" autocomplete="organization-title" maxlength="120" placeholder="Analista de licitaciones" required :aria-invalid="errorOf('position') ? 'true' : undefined" :aria-describedby="describedBy('position')" />
+                    </AuthField>
 
-                    <div class="cap-field" :class="{ 'cap-field--error': errorOf('email') }">
-                        <label class="cap-field__label" for="request-email">Correo</label>
-                        <div class="cap-field__control">
-                            <input id="request-email" v-model="form.email" class="cap-field__input" type="email" name="email" autocomplete="email" maxlength="160" placeholder="nombre@empresa.com" required :aria-invalid="errorOf('email') ? 'true' : undefined" :aria-describedby="describedBy('email')" />
-                        </div>
-                        <Transition name="auth-pop"><p v-if="errorOf('email')" id="request-email-error" class="auth-field-error">{{ errorOf('email') }}</p></Transition>
-                    </div>
+                    <AuthField id="request-email" label="Correo" :error="errorOf('email')">
+                        <input id="request-email" v-model="form.email" class="auth-field__input" type="email" name="email" autocomplete="email" maxlength="160" placeholder="nombre@empresa.com" required :aria-invalid="errorOf('email') ? 'true' : undefined" :aria-describedby="describedBy('email')" />
+                    </AuthField>
 
-                    <div class="cap-field" :class="{ 'cap-field--error': errorOf('phone') }">
-                        <label class="cap-field__label" for="request-phone">Teléfono <span class="auth-optional">(opcional)</span></label>
-                        <div class="cap-field__control">
-                            <input id="request-phone" v-model="form.phone" class="cap-field__input" type="tel" name="phone" autocomplete="tel" maxlength="40" placeholder="+504 9999-9999" :aria-invalid="errorOf('phone') ? 'true' : undefined" :aria-describedby="describedBy('phone')" />
-                        </div>
-                        <Transition name="auth-pop"><p v-if="errorOf('phone')" id="request-phone-error" class="auth-field-error">{{ errorOf('phone') }}</p></Transition>
-                    </div>
+                    <AuthField id="request-phone" label="Teléfono" optional :error="errorOf('phone')">
+                        <input id="request-phone" v-model="form.phone" class="auth-field__input" type="tel" name="phone" autocomplete="tel" maxlength="40" placeholder="+504 9999-9999" :aria-invalid="errorOf('phone') ? 'true' : undefined" :aria-describedby="describedBy('phone')" />
+                    </AuthField>
 
-                    <div class="cap-field auth-grid__full" :class="{ 'cap-field--error': errorOf('company') || (errorOf('company_name') && !otherCompany) }">
-                        <label class="cap-field__label" for="request-company">Empresa a la que perteneces</label>
-                        <div class="cap-field__control auth-select">
-                            <select id="request-company" v-model="form.company" class="cap-field__input" name="company" :aria-describedby="describedBy(otherCompany ? 'company' : 'company_name')">
-                                <option value="" disabled>Elige tu empresa</option>
-                                <option v-for="item in companies" :key="item.value" :value="item.value">{{ item.label }}</option>
-                                <option :value="OTHER">Otra o no estoy seguro</option>
-                            </select>
-                            <i class="mdi mdi-chevron-down auth-select__chevron" aria-hidden="true" />
-                        </div>
-                        <Transition name="auth-pop"><p v-if="!otherCompany && errorOf('company_name')" id="request-company_name-error" class="auth-field-error">{{ errorOf('company_name') }}</p></Transition>
-                    </div>
+                    <AuthField id="request-company" class="auth-grid__full" label="Empresa a la que perteneces" floated :error="otherCompany ? '' : errorOf('company_name')">
+                        <select id="request-company" v-model="form.company" class="auth-field__input auth-field__select" name="company" :aria-describedby="otherCompany ? undefined : describedBy('company_name', '', 'company')">
+                            <option value="" disabled>Elige tu empresa</option>
+                            <option v-for="item in companies" :key="item.value" :value="item.value">{{ item.label }}</option>
+                            <option :value="OTHER">Otra o no estoy seguro</option>
+                        </select>
+                        <template #trailing><i class="mdi mdi-chevron-down auth-field__chevron" aria-hidden="true" /></template>
+                    </AuthField>
 
                     <Transition name="auth-pop">
-                        <div v-if="otherCompany" class="cap-field auth-grid__full" :class="{ 'cap-field--error': errorOf('company_name') }">
-                            <label class="cap-field__label" for="request-company-name">Nombre de tu empresa</label>
-                            <div class="cap-field__control">
-                                <input id="request-company-name" v-model="form.company_name" class="cap-field__input" type="text" name="company_name" autocomplete="organization" maxlength="160" :aria-invalid="errorOf('company_name') ? 'true' : undefined" :aria-describedby="describedBy('company_name')" />
-                            </div>
-                            <Transition name="auth-pop"><p v-if="errorOf('company_name')" id="request-company_name-error" class="auth-field-error">{{ errorOf('company_name') }}</p></Transition>
-                        </div>
+                        <AuthField v-if="otherCompany" id="request-company-name" class="auth-grid__full" label="Nombre de tu empresa" :error="errorOf('company_name')">
+                            <input id="request-company-name" v-model="form.company_name" class="auth-field__input" type="text" name="company_name" autocomplete="organization" maxlength="160" placeholder="Como aparece en tus documentos" :aria-invalid="errorOf('company_name') ? 'true' : undefined" :aria-describedby="describedBy('company_name')" />
+                        </AuthField>
                     </Transition>
 
-                    <div class="cap-field" :class="{ 'cap-field--error': errorOf('password') }">
-                        <label class="cap-field__label" for="request-password">Contraseña</label>
-                        <div class="cap-field__control">
-                            <input
-                                id="request-password"
-                                v-model="form.password"
-                                class="cap-field__input"
-                                :type="revealed ? 'text' : 'password'"
-                                name="password"
-                                autocomplete="new-password"
-                                required
-                                data-secret
-                                :aria-invalid="errorOf('password') ? 'true' : undefined"
-                                :aria-describedby="describedBy('password', 'request-strength')"
-                            />
+                    <AuthField id="request-password" label="Contraseña" :error="errorOf('password')">
+                        <input
+                            id="request-password"
+                            v-model="form.password"
+                            class="auth-field__input"
+                            :type="revealed ? 'text' : 'password'"
+                            name="password"
+                            autocomplete="new-password"
+                            placeholder=" "
+                            required
+                            data-secret
+                            :aria-invalid="errorOf('password') ? 'true' : undefined"
+                            :aria-describedby="describedBy('password', 'request-strength')"
+                        />
+                        <template #trailing>
                             <button
-                                class="cap-field__reveal"
+                                class="auth-field__icon-button"
                                 type="button"
                                 aria-controls="request-password request-password-confirmation"
                                 :aria-pressed="String(revealed)"
                                 :aria-label="revealed ? 'Ocultar contraseña' : 'Mostrar contraseña'"
                                 @click="revealed = !revealed"
                             >
-                                <i class="mdi" :class="revealed ? 'mdi-eye-off-outline' : 'mdi-eye-outline'" aria-hidden="true" />
+                                <Transition name="auth-icon" mode="out-in"><i :key="String(revealed)" class="mdi" :class="revealed ? 'mdi-eye-off-outline' : 'mdi-eye-outline'" aria-hidden="true" /></Transition>
                             </button>
-                        </div>
-                        <Transition name="auth-pop"><p v-if="errorOf('password')" id="request-password-error" class="auth-field-error">{{ errorOf('password') }}</p></Transition>
-                    </div>
+                        </template>
+                    </AuthField>
 
-                    <div class="cap-field" :class="{ 'cap-field--error': confirmState === 'mismatch' }">
-                        <label class="cap-field__label" for="request-password-confirmation">Confirma la contraseña</label>
-                        <div class="cap-field__control">
-                            <input
-                                id="request-password-confirmation"
-                                v-model="form.password_confirmation"
-                                class="cap-field__input"
-                                :type="revealed ? 'text' : 'password'"
-                                name="password_confirmation"
-                                autocomplete="new-password"
-                                required
-                                data-secret
-                                aria-describedby="request-confirm-state"
-                            />
+                    <AuthField id="request-password-confirmation" label="Confirma la contraseña" :invalid="confirmState === 'mismatch'">
+                        <input
+                            id="request-password-confirmation"
+                            v-model="form.password_confirmation"
+                            class="auth-field__input"
+                            :type="revealed ? 'text' : 'password'"
+                            name="password_confirmation"
+                            autocomplete="new-password"
+                            placeholder=" "
+                            required
+                            data-secret
+                            aria-describedby="request-confirm-state"
+                        />
+                        <template #trailing>
                             <span class="auth-confirm" :class="confirmState && `auth-confirm--${confirmState}`" aria-hidden="true">
-                                <i v-if="confirmState" class="mdi" :class="confirmState === 'match' ? 'mdi-check-circle' : 'mdi-close-circle-outline'" />
+                                <i v-if="confirmState" :key="confirmState" class="mdi" :class="confirmState === 'match' ? 'mdi-check-circle' : 'mdi-close-circle-outline'" />
                             </span>
-                        </div>
-                        <p id="request-confirm-state" class="auth-sr-only" aria-live="polite">{{ confirmState === 'match' ? 'Las contraseñas coinciden.' : confirmState === 'mismatch' ? 'Las contraseñas no coinciden.' : '' }}</p>
-                    </div>
+                        </template>
+                    </AuthField>
+                    <p id="request-confirm-state" class="auth-sr-only" aria-live="polite">{{ confirmState === 'match' ? 'Las contraseñas coinciden.' : confirmState === 'mismatch' ? 'Las contraseñas no coinciden.' : '' }}</p>
 
                     <div id="request-strength" class="auth-strength auth-grid__full" :class="`auth-strength--${strength.tone}`">
                         <div class="auth-strength__bar" role="meter" aria-label="Fortaleza de la contraseña" aria-valuemin="0" aria-valuemax="4" :aria-valuenow="strength.score" :aria-valuetext="strength.label">
@@ -248,9 +229,7 @@ function another() {
                     </div>
                 </div>
 
-                <button class="cap-button cap-button--primary auth-submit" type="submit" :disabled="form.processing" :aria-busy="String(form.processing)">
-                    {{ form.processing ? 'Enviando…' : 'Enviar solicitud' }}
-                </button>
+                <AuthButton class="auth-submit" type="submit" :loading="form.processing" loading-label="Enviando…">Enviar solicitud <i class="mdi mdi-send-outline auth-button__arrow" aria-hidden="true" /></AuthButton>
             </form>
         </Transition>
     </div>

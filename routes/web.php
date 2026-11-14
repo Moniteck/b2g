@@ -25,7 +25,7 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'store'])->middleware('throttle:20,1')->name('login.store');
     // «Crear cuenta»: solicitud de acceso pendiente de aprobación (límite por IP aquí y por correo en el controlador).
     Route::get('/solicitar-acceso', [AccessRequestController::class, 'create'])->name('access-request.create');
-    Route::post('/solicitar-acceso', [AccessRequestController::class, 'store'])->middleware('throttle:10,10')->name('access-request.store');
+    Route::post('/solicitar-acceso', [AccessRequestController::class, 'store'])->middleware('throttle:10,10,solicitud-acceso')->name('access-request.store');
 });
 
 Route::post('/logout', [AuthController::class, 'destroy'])->middleware('auth')->name('logout');

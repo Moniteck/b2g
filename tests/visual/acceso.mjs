@@ -62,6 +62,7 @@ async function open(page, path) {
             await page.goto(`${BASE_URL}${path}`, { waitUntil: 'domcontentloaded' });
             await page.waitForSelector('.auth .auth-card', { timeout: 15000 });
             await page.evaluate(() => document.fonts.ready);
+            await page.waitForSelector('.auth-intro', { state: 'detached', timeout: 8000 });
             return;
         } catch (error) {
             if (attempt === 3) throw error;
@@ -117,20 +118,44 @@ const browser = await chromium.launch();
 {
     const { context, page } = await openContext(browser, 'escritorio', 'claro');
 
-    await step('carga escalonada', async () => {
+    await step('intro completa y carga escalonada', async () => {
         await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded' });
-        await page.waitForSelector('.auth .auth-card');
-        await wait(180);
-        await shot(page, '01-carga-180ms');
+        await page.waitForSelector('.auth-intro');
+        await wait(250);
+        await shot(page, '00a-intro-ondas');
+        await wait(550);
+        await shot(page, '00b-intro-logo');
+        await wait(550);
+        await shot(page, '00c-intro-nombre');
+        await wait(450);
+        await shot(page, '00d-intro-lici');
+        await page.waitForSelector('.auth-intro', { state: 'detached', timeout: 6000 });
+        await shot(page, '01-revela-acceso');
         await wait(420);
-        await shot(page, '02-carga-600ms');
+        await shot(page, '02-entrada-escalonada');
         await wait(1400);
         await shot(page, '03-carga-final');
         await mascotShot(page, '0-reposo');
         await overflow(page, 'escritorio login');
     });
 
-    await step('Lici sigue al puntero', async () => {
+    await step('intro breve en la misma sesión y se salta con una tecla', async () => {
+        await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded' });
+        await page.waitForSelector('.auth-intro');
+        await wait(150);
+        await shot(page, '03b-intro-breve');
+        await page.keyboard.press('Shift');
+        await page.waitForSelector('.auth-intro', { state: 'detached', timeout: 3000 });
+        await wait(1500);
+    });
+
+    await step('tarjeta 3D y Lici siguen al puntero', async () => {
+        const box = await page.locator('.auth__tilt').boundingBox();
+        await page.mouse.move(box.x + box.width * 0.9, box.y + box.height * 0.15, { steps: 8 });
+        await wait(700);
+        await shot(page, '04a-inclinacion-3d');
+        const tilted = await page.$eval('.auth__tilt', (element) => element.style.transform);
+        if (!tilted.includes('rotate')) throw new Error('La tarjeta no se inclinó');
         await page.mouse.move(200, 120, { steps: 6 });
         await wait(300);
         await shot(page, '04-mira-izquierda');
@@ -175,13 +200,13 @@ const browser = await chromium.launch();
         await wait(400);
         await shot(page, '12-tapa-ojos');
         await mascotShot(page, '2-tapa-ojos');
-        await page.click('#request-password ~ .cap-field__reveal');
+        await page.click('#request-password ~ .auth-field__icon-button');
         await page.focus('#request-password');
         await expectMascot(page, 'peek');
         await wait(400);
         await shot(page, '13-espia');
         await mascotShot(page, '3-espia');
-        await page.click('#request-password ~ .cap-field__reveal');
+        await page.click('#request-password ~ .auth-field__icon-button');
         await page.fill('#request-password-confirmation', 'abd');
     });
 
@@ -201,10 +226,23 @@ const browser = await chromium.launch();
         await page.fill('#request-position', 'Analista de licitaciones');
         await page.fill('#request-password', APPLICANT.password);
         await page.fill('#request-password-confirmation', APPLICANT.password);
+        await expectMascot(page, 'happy');
         await wait(250);
         await shot(page, '16-fortaleza-excelente');
+        await mascotShot(page, '6-contento');
+        await page.locator('#request-position').scrollIntoViewIfNeeded();
+        await page.focus('#request-position');
+        await wait(350);
+        await page.locator('#request-position').locator('xpath=ancestor::div[contains(@class,"auth-field")][1]').screenshot({ path: `${OUTPUT}/16b-campo-flotante-foco.png` });
+        await page.route('**/solicitar-acceso', async (route) => {
+            await wait(700);
+            await route.continue();
+        });
         await page.click('.auth-form--request button[type="submit"]');
+        await wait(250);
+        await page.locator('.auth-form--request .auth-submit').screenshot({ path: `${OUTPUT}/16c-boton-cargando.png` });
         await page.waitForSelector('.auth-sent');
+        await page.unroute('**/solicitar-acceso');
         await wait(250);
         await shot(page, '17-celebra-confeti');
         await wait(500);
@@ -240,11 +278,11 @@ const browser = await chromium.launch();
         await page.fill('#login-password', ADMIN.password);
         await page.click('.auth-card button[type="submit"]');
         await page.waitForSelector('.auth-curtain', { timeout: 10000 });
-        await wait(120);
+        await wait(60);
         await shot(page, '22-salida-recoge');
-        await wait(260);
-        await shot(page, '23-salida-cortina');
-        await wait(330);
+        await wait(150);
+        await shot(page, '23-salida-onda');
+        await wait(350);
         await shot(page, '24-salida-hola');
         await page.waitForURL((url) => !url.pathname.startsWith('/login'), { timeout: 10000 });
         await shot(page, '25-dashboard-bajo-cortina');
@@ -305,7 +343,11 @@ for (const theme of ['claro', 'oscuro']) {
     const { context, page } = await openContext(browser, 'movil', theme);
     const cdp = await context.newCDPSession(page);
     await step(`celular ${theme}: swipe`, async () => {
-        await open(page, '/login');
+        await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded' });
+        await page.waitForSelector('.auth-intro');
+        await wait(1500);
+        await shot(page, `39-movil-${theme}-intro`);
+        await page.waitForSelector('.auth-intro', { state: 'detached', timeout: 6000 });
         await wait(2000);
         await shot(page, `40-movil-${theme}-login`);
         await overflow(page, `movil ${theme} login`);
@@ -339,9 +381,20 @@ for (const theme of ['claro', 'oscuro']) {
 {
     const { context, page } = await openContext(browser, 'escritorio', 'oscuro');
     await step('escritorio oscuro', async () => {
-        await open(page, '/login');
+        await page.goto(`${BASE_URL}/login`, { waitUntil: 'domcontentloaded' });
+        await page.waitForSelector('.auth-intro');
+        await wait(1300);
+        await shot(page, '49-intro-oscuro');
+        await page.waitForSelector('.auth-intro', { state: 'detached', timeout: 6000 });
         await wait(2000);
         await shot(page, '50-escritorio-oscuro-login');
+        await page.mouse.move(5, 5);
+        await wait(16500);
+        await expectMascot(page, 'sleepy');
+        await mascotShot(page, '7-dormido');
+        await page.mouse.move(600, 400, { steps: 4 });
+        await wait(120);
+        await mascotShot(page, '8-sorprendido');
         await open(page, '/solicitar-acceso');
         await wait(2000);
         await shot(page, '51-escritorio-oscuro-crear-cuenta');
@@ -361,8 +414,8 @@ for (const viewport of ['escritorio', 'movil']) {
         await page.waitForURL('**/solicitar-acceso');
         await wait(500);
         await shot(page, `62-reducido-${viewport}-crear-cuenta`);
-        const confetti = await page.evaluate(() => document.querySelectorAll('.auth-confetti').length);
-        if (confetti) throw new Error('Hay confeti con movimiento reducido');
+        const confetti = await page.evaluate(() => document.querySelectorAll('.auth-confetti, .auth-intro').length);
+        if (confetti) throw new Error('Hay confeti o intro con movimiento reducido');
         if (viewport === 'escritorio') {
             await page.click('text=Ya tengo cuenta');
             await page.waitForURL('**/login');
