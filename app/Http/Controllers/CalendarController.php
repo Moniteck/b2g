@@ -296,7 +296,7 @@ class CalendarController extends Controller
 
         return collect(Event::TYPES)->map(function (string $label, string $type) use ($companyId) {
             $rule = $this->reminders->rulesFor($companyId, $type);
-            $stored = ReminderRule::query()->withoutGlobalScopes()->where('company_id', $companyId)->where('event_type', $type)->first(['is_active']);
+            $stored = $companyId === null ? null : $this->reminders->storedRules($companyId)->get($type);
 
             return [
                 'event_type' => $type,
