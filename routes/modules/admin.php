@@ -39,7 +39,7 @@ Route::get('/configuracion', [SettingsController::class, 'show'])->name('setting
 Route::put('/configuracion', [SettingsController::class, 'update'])->name('settings.update');
 Route::post('/configuracion/logo', [SettingsController::class, 'uploadLogo'])->name('settings.logo');
 Route::delete('/configuracion/logo', [SettingsController::class, 'deleteLogo'])->name('settings.logo.destroy');
-Route::get('/configuracion/preview.pdf', [SettingsController::class, 'preview'])->name('settings.preview');
+Route::get('/configuracion/preview.pdf', [SettingsController::class, 'preview'])->middleware(['throttle:exports', 'audit.export'])->name('settings.preview');
 Route::post('/configuracion/reset', [SettingsController::class, 'reset'])->name('settings.reset');
 
 Route::get('/configuracion/usuarios', [AdminUserController::class, 'index'])->name('admin.users');

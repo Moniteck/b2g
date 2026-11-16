@@ -2,6 +2,8 @@
 
 namespace App\Services;
 
+use App\Services\Ai\AiTokenBudget;
+use App\Services\Tenancy\CompanyContext;
 use Composer\CaBundle\CaBundle;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
@@ -28,6 +30,22 @@ class OpenAIService
 
     /** Consumo de la última llamada (`prompt_tokens`, `completion_tokens`, `total_tokens`). */
     private array $lastUsage = [];
+
+    /** Empresa a la que se carga el consumo; sin fijar, la empresa activa de la petición. */
+    private ?int $companyId = null;
+
+    /** Fija la empresa que paga el consumo (trabajos en cola, donde no hay empresa activa). */
+    public function forCompany(?int $companyId): static
+    {
+        $this->companyId = $companyId;
+
+        return $this;
+    }
+
+    public function billedCompanyId(): ?int
+    {
+        return $this->companyId ?? app(CompanyContext::class)->currentCompanyId();
+    }
 
     public function isConfigured(): bool
     {
@@ -76,6 +94,8 @@ class OpenAIService
         }
 
         $this->lastUsage = [];
+        $budget = app(AiTokenBudget::class);
+        $budget->ensureAvailable($this->billedCompanyId());
 
         try {
             $response = $this->client($timeout)->post(self::ENDPOINT, [
@@ -92,6 +112,7 @@ class OpenAIService
 
         $usage = $response->json('usage');
         $this->lastUsage = is_array($usage) ? array_filter($usage, 'is_int') : [];
+        $budget->record($this->billedCompanyId(), (int) ($this->lastUsage['total_tokens'] ?? 0));
 
         if ($response->failed()) {
             Log::warning('OpenAI: respuesta con error.', ['status' => $response->status(), 'error' => $response->json('error.message')]);

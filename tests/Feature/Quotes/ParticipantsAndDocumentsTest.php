@@ -140,7 +140,11 @@ class ParticipantsAndDocumentsTest extends QuotesTestCase
             $this->as($this->operator)->post("/cotizaciones/{$quote->id}/email", ['recipients' => ['compras@salud.hn']]);
         }
 
-        $this->as($this->operator)->post("/cotizaciones/{$quote->id}/email", ['recipients' => ['compras@salud.hn']])->assertStatus(429);
+        // Límite superado: vuelve a la pantalla con el aviso en español (toast), no una página 429.
+        $this->as($this->operator)->post("/cotizaciones/{$quote->id}/email", ['recipients' => ['compras@salud.hn']])
+            ->assertRedirect()->assertSessionHas('error', fn (string $message) => str_contains($message, 'Espera'));
+        $this->as($this->operator)->postJson("/cotizaciones/{$quote->id}/email", ['recipients' => ['compras@salud.hn']])
+            ->assertStatus(429)->assertJsonPath('message', fn (string $message) => str_contains($message, 'Demasiadas solicitudes'));
     }
 
     public function test_viewer_reads_participants_but_cannot_change_them(): void

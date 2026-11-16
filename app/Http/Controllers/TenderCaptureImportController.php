@@ -9,6 +9,7 @@ use App\Models\Tender;
 use App\Services\Documents\UploadInspector;
 use App\Services\Tenancy\CompanyContext;
 use App\Services\Tenders\CaptureImportService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -18,7 +19,7 @@ use Inertia\Response;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
- * Importar la captura de la ficha de HonduCompras: subir → OCR → revisar → confirmar.
+ * Importar la captura de la ficha de HonduCompras: subir → OCR en cola → revisar → confirmar.
  * Nada se guarda en la base de datos hasta que la persona confirma la revisión.
  */
 class TenderCaptureImportController extends Controller
@@ -39,6 +40,16 @@ class TenderCaptureImportController extends Controller
         $token = $this->imports->read($file, $request->user(), $this->companyId());
 
         return redirect()->route('tenders.import.review', $token);
+    }
+
+    /** Estado de la lectura en cola, para que la pantalla de revisión sepa cuándo recargar. */
+    public function status(Request $request, string $token): JsonResponse
+    {
+        $this->authorize('create', Tender::class);
+
+        $state = $this->imports->state($token, $request->user(), $this->companyId());
+
+        return response()->json(['pending' => CaptureImportService::isPending($state), 'status' => $state['status'] ?? CaptureImportService::READY]);
     }
 
     public function review(Request $request, string $token): Response|RedirectResponse

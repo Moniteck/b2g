@@ -11,9 +11,9 @@ use Illuminate\Support\Facades\Route;
 /* Reportes e indicadores */
 
 Route::get('/reportes', [ReportController::class, 'index'])->name('reports.index');
-Route::get('/reportes/pdf', [ReportController::class, 'pdf'])->name('reports.pdf');
-Route::get('/reportes/xlsx', [ReportController::class, 'xlsx'])->name('reports.xlsx');
-Route::get('/reportes/csv', [ReportController::class, 'csv'])->name('reports.csv');
+Route::get('/reportes/pdf', [ReportController::class, 'pdf'])->middleware(['throttle:exports', 'audit.export'])->name('reports.pdf');
+Route::get('/reportes/xlsx', [ReportController::class, 'xlsx'])->middleware(['throttle:exports', 'audit.export'])->name('reports.xlsx');
+Route::get('/reportes/csv', [ReportController::class, 'csv'])->middleware(['throttle:exports', 'audit.export'])->name('reports.csv');
 
 /* KPI y metas */
 
@@ -26,13 +26,13 @@ Route::delete('/kpis/{kpiGoal}', [KpiGoalController::class, 'destroy'])->name('k
 
 Route::get('/cobros', [CollectionController::class, 'index'])->name('collections.index');
 Route::post('/cobros', [CollectionController::class, 'store'])->name('collections.store');
-Route::get('/cobros/export/pdf', [CollectionController::class, 'pdf'])->name('collections.pdf');
-Route::get('/cobros/export/xlsx', [CollectionController::class, 'xlsx'])->name('collections.xlsx');
+Route::get('/cobros/export/pdf', [CollectionController::class, 'pdf'])->middleware(['throttle:exports', 'audit.export'])->name('collections.pdf');
+Route::get('/cobros/export/xlsx', [CollectionController::class, 'xlsx'])->middleware(['throttle:exports', 'audit.export'])->name('collections.xlsx');
 Route::put('/cobros/{collectionInvoice}', [CollectionController::class, 'update'])->name('collections.update');
 Route::patch('/cobros/{collectionInvoice}/pagar', [CollectionController::class, 'pay'])->name('collections.pay');
 Route::patch('/cobros/{collectionInvoice}/nota', [CollectionController::class, 'note'])->name('collections.note');
 Route::get('/cobros/{collectionInvoice}/whatsapp', [CollectionController::class, 'whatsapp'])->name('collections.whatsapp');
-Route::get('/cobros/{collectionInvoice}/nota.pdf', [CollectionController::class, 'notePdf'])->name('collections.note.pdf');
+Route::get('/cobros/{collectionInvoice}/nota.pdf', [CollectionController::class, 'notePdf'])->middleware(['throttle:exports', 'audit.export'])->name('collections.note.pdf');
 Route::delete('/cobros/{collectionInvoice}', [CollectionController::class, 'destroy'])->name('collections.destroy');
 
 /* Presupuesto revolvente y flujo de caja */
@@ -41,8 +41,8 @@ Route::get('/presupuesto-revolvente', [BudgetController::class, 'index'])->name(
 Route::post('/presupuesto-revolvente', [BudgetController::class, 'store'])->name('budget.store');
 Route::post('/presupuesto-revolvente/inicializar', [BudgetController::class, 'initialize'])->name('budget.initialize');
 Route::post('/presupuesto-revolvente/sincronizar', [BudgetController::class, 'sync'])->name('budget.sync');
-Route::get('/presupuesto-revolvente/export/pdf', [BudgetController::class, 'pdf'])->name('budget.pdf');
-Route::get('/presupuesto-revolvente/export/xlsx', [BudgetController::class, 'xlsx'])->name('budget.xlsx');
+Route::get('/presupuesto-revolvente/export/pdf', [BudgetController::class, 'pdf'])->middleware(['throttle:exports', 'audit.export'])->name('budget.pdf');
+Route::get('/presupuesto-revolvente/export/xlsx', [BudgetController::class, 'xlsx'])->middleware(['throttle:exports', 'audit.export'])->name('budget.xlsx');
 Route::delete('/presupuesto-revolvente/{budgetMovement}', [BudgetController::class, 'destroy'])->name('budget.destroy');
 
 Route::get('/flujo-caja', [CashFlowController::class, 'index'])->name('cash-flow.index');

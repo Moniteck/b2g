@@ -16,4 +16,4 @@ Route::get('/inventario/{inventoryItem}', [InventoryController::class, 'show'])-
 
 Route::get('/calculadora-oferta', [OfferCalculatorController::class, 'index'])->name('offer-calculator.index');
 Route::post('/calculadora-oferta/calcular', [OfferCalculatorController::class, 'calculate'])->name('offer-calculator.calculate');
-Route::post('/calculadora-oferta/pdf', [OfferCalculatorController::class, 'pdf'])->name('offer-calculator.pdf');
+Route::post('/calculadora-oferta/pdf', [OfferCalculatorController::class, 'pdf'])->middleware(['throttle:exports', 'audit.export'])->name('offer-calculator.pdf');
