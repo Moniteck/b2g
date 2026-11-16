@@ -160,6 +160,120 @@ Si alguno de los dos se detiene, el diagnóstico lo muestra: «Tareas programada
 cuando el scheduler lleva más de 5 minutos sin correr, y «Cola de trabajos» avisa de trabajos
 fallidos o acumulados.
 
+## Producción segura
+
+Lo que el código ya hace (cabeceras con CSP y nonce, límites de IA/OCR/exportes, sesiones que se
+cierran al cambiar la contraseña, `trustHosts` con el host de `APP_URL`, auditoría del acceso…)
+depende de que el servidor esté configurado así. Nada de esto se aplica solo.
+
+### `.env` de producción
+
+```dotenv
+APP_ENV=production
+APP_DEBUG=false                 # nunca true: expone variables y trazas
+APP_URL=https://crm.ejemplo.hn  # es el único host que se atiende (trustHosts)
+APP_KEY=base64:...              # única por instalación; respáldela (ver abajo)
+
+SESSION_DRIVER=database         # permite cerrar las sesiones de un usuario al restablecer su contraseña
+SESSION_ENCRYPT=true
+SESSION_SECURE_COOKIE=true      # cookie solo por HTTPS
+SESSION_HTTP_ONLY=true
+SESSION_SAME_SITE=lax
+SESSION_LIFETIME=120
+
+LOG_LEVEL=warning
+OPENAI_DAILY_TOKEN_BUDGET=2000000   # tokens de IA por empresa y día (0 = sin tope)
+OPENAI_PER_MINUTE=5                 # consultas a la IA por minuto y usuario
+OPENAI_PER_COMPANY_DAY=100          # consultas a la IA por empresa y día
+```
+
+`Password::defaults()` exige en producción que una contraseña nueva no aparezca en filtraciones
+conocidas (consulta k-anónima a Have I Been Pwned): el servidor necesita salida HTTPS a
+`api.pwnedpasswords.com`.
+
+### PHP
+
+- `expose_php = Off` (quita `X-Powered-By`; la aplicación también la retira de sus respuestas).
+- `display_errors = Off`, `log_errors = On`.
+- `upload_max_filesize = 40M`, `post_max_size = 45M` (los pliegos llegan hasta 40 MB).
+- Extensiones: `sodium`, `gd` o `imagick`, `zip`, `intl`, `pdo_mysql`.
+
+### Servidor web
+
+- Raíz del sitio en `public/` (nunca la carpeta del proyecto: `.env`, `storage/` y `vendor/`
+  quedarían descargables).
+- Solo HTTPS (TLS 1.2+), con redirección de HTTP a HTTPS; HSTS lo envía la aplicación.
+- `client_max_body_size 45M;` (Nginx) o `LimitRequestBody 47185920` (Apache).
+- No servir `public/hot` (solo existe en desarrollo; si quedara, el navegador cargaría scripts
+  desde el servidor de Vite):
+
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name crm.ejemplo.hn;
+    root /var/www/crm-b2g/public;
+    client_max_body_size 45M;
+
+    location = /hot { return 404; }
+    location ~ /\.(?!well-known) { deny all; }
+    location / { try_files $uri $uri/ /index.php?$query_string; }
+    location ~ \.php$ {
+        fastcgi_pass unix:/run/php/php8.5-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+    location /build/ { expires 1y; add_header Cache-Control "public, immutable"; }
+}
+```
+
+- Detrás de un balanceador o proxy inverso, declare sus IP en `bootstrap/app.php` con
+  `$middleware->trustProxies(at: ['10.0.0.0/8'])` (y nunca `*`): sin eso, `request()->ip()`
+  (límites de intentos, auditoría) y `isSecure()` (HSTS, cookies seguras) ven al proxy.
+
+### Permisos de carpetas
+
+```bash
+chown -R deploy:www-data /var/www/crm-b2g
+find /var/www/crm-b2g -type f -exec chmod 640 {} \;
+find /var/www/crm-b2g -type d -exec chmod 750 {} \;
+chmod -R ug+rwX storage bootstrap/cache       # lo único donde escribe el servidor web
+chmod 600 .env storage/oauth-*.key            # llaves de Passport solo para el dueño
+```
+
+### Workers
+
+El worker de la cola y el scheduler (ver «Cola y scheduler») corren con Supervisor como
+`www-data`, nunca como root. La lectura de capturas (OCR) y el análisis de pliegos ocurren ahí:
+sin worker, las capturas se quedan en «Leyendo la captura…».
+
+### Respaldos (cifrados)
+
+Respalde a diario y guarde las copias cifradas (p. ej. `age` o `gpg`) fuera del servidor:
+
+- Base de datos MySQL: `mysqldump --single-transaction crm_b2g | gzip | age -r <llave> > crm_b2g-$(date +%F).sql.gz.age`.
+- `storage/app/private` (documentos, firmas y sellos, capturas).
+- Llaves de Passport `storage/oauth-private.key` y `storage/oauth-public.key` (sin ellas los
+  clientes MCP deben volver a conectarse).
+- `APP_KEY` (sin ella no se descifran los tokens de Blessing ni las sesiones cifradas). Guárdela
+  en un gestor de secretos, separada de los respaldos de la base.
+
+Pruebe la restauración al menos cada trimestre.
+
+### Integración continua
+
+En cada cambio, el pipeline debe fallar si algo de esto falla:
+
+```bash
+composer install --no-interaction
+composer audit                      # dependencias PHP sin avisos de seguridad
+npm ci && npm audit --omit=dev      # dependencias de la interfaz
+composer test                       # incluye la suite Security (tests/Security)
+```
+
+La suite `Security` (`phpunit.xml`) contiene las pruebas de concepto de la auditoría: cada una
+falla si la vulnerabilidad vuelve a aparecer. Para la CSP en el navegador:
+`node tests/visual/seguridad-csp.mjs` (sin violaciones ni errores de consola).
+
 ## Conectar ChatGPT y Claude (MCP)
 
 El CRM expone un servidor MCP remoto en:
