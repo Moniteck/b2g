@@ -24,7 +24,7 @@ código, tablas y columnas en inglés, como el resto del proyecto. Sin emojis en
 - Archivos compartidos que puedes tocar SOLO con una edición mínima de una línea (nunca reescribirlos):
   `app/Providers/AppServiceProvider.php` (añadir tu policy a `$policies` o registrar un observador) y
   `resources/js/config/statuses.js` (añadir estados).
-- `resources/css/legacy.css`: borra las reglas de las pantallas que reconstruyas.
+
 - No edites `resources/design/**`, `resources/js/Layouts/**`, `resources/js/Components/**` ni `resources/js/config/navigation.js`.
   Si te falta algo ahí, resuélvelo en tu módulo y anótalo en tu informe.
 - Si necesitas un cambio en el módulo de otro agente, no lo hagas: anótalo en tu informe con archivo y motivo.
@@ -87,3 +87,9 @@ código, tablas y columnas en inglés, como el resto del proyecto. Sin emojis en
 3. Lo que necesitas de otros módulos o del coordinador (archivo y motivo).
 4. Pendientes, riesgos y decisiones tuyas que el usuario debería revisar.
 5. Variables de `.env` nuevas, si las hay.
+
+## Íconos (subconjunto MDI)
+
+Los íconos `mdi-*` son un subconjunto generado (`resources/css/mdi.css` y `resources/fonts/mdi/mdi-subset.woff`).
+Si usas un ícono nuevo, ejecuta `node scripts/mdi-subset.mjs` (1 s) y confirma los dos archivos generados junto con tu cambio.
+`tests/Feature/Shell/IconSubsetTest.php` falla con la lista de los que faltan.
