@@ -1,7 +1,10 @@
+@import './fonts.css';
 @import '../design/tokens.css';
 @import '../design/shell.css';
 @import './motion.css';
-@import '@mdi/font/css/materialdesignicons.min.css';
+@import './shell.css';
+/* Íconos: subconjunto generado por scripts/mdi-subset.mjs (no la hoja completa de @mdi/font). */
+@import './mdi.css';
 @import 'tailwindcss';
 @config '../../tailwind.config.js';
 

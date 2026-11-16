@@ -7,7 +7,7 @@
 
 <aside class="cap-shell-sidebar cap-glass" data-cap-sidebar data-collapsed="false">
     {{-- Única excepción a «Blade sin <script>»: shell-auto.js llega tarde y el riel parpadearía. Misma clave y defectos que collapse.js. --}}
-    <script>
+    <script nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}">
         (() => {
             const sidebar = document.querySelector('[data-cap-sidebar]');
             let stored = null;

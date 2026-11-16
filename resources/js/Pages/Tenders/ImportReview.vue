@@ -1,8 +1,10 @@
 <script setup>
 // Revisión de una captura de HonduCompras: la imagen a un lado (con zoom) y los campos leídos al
 // otro, cada uno marcado como leído, dudoso o no encontrado. Nada se guarda hasta «Confirmar».
-import { Link, useForm } from '@inertiajs/vue3';
-import { computed, nextTick, ref } from 'vue';
+// La lectura (OCR) corre en cola: mientras `review.pending`, la pantalla consulta el estado y
+// recarga la revisión cuando el borrador está listo.
+import { Link, router, useForm } from '@inertiajs/vue3';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import CapAlert from '../../../design/vue/CapAlert.vue';
 import AppButton from '../../Components/AppButton.vue';
 import Checkbox from '../../Components/Checkbox.vue';
@@ -16,6 +18,7 @@ import TextArea from '../../Components/TextArea.vue';
 import TextInput from '../../Components/TextInput.vue';
 import AppLayout from '../../Layouts/AppLayout.vue';
 import { focusFirstError } from '../../lib/errors.js';
+import { getJson } from '../../lib/http.js';
 import { card, tableLink } from '../../lib/ui.js';
 import { READ_STATUS } from '../../Modules/Tenders/tenders.js';
 
@@ -25,6 +28,29 @@ const props = defineProps({
     modalities: { type: Array, default: () => [] },
     can: { type: Object, default: () => ({}) },
 });
+
+const POLL_MS = 1500;
+let pollTimer = null;
+
+async function pollReading() {
+    pollTimer = null;
+    try {
+        const fresh = await getJson(props.review.statusUrl);
+        if (!fresh.pending) {
+            // Sin conservar el estado: el formulario se arma de nuevo con los datos leídos.
+            router.visit(window.location.href, { preserveState: false, replace: true });
+            return;
+        }
+    } catch {
+        // Un fallo de red puntual no detiene el sondeo.
+    }
+    pollTimer = setTimeout(pollReading, POLL_MS);
+}
+
+onMounted(() => {
+    if (props.review.pending) pollTimer = setTimeout(pollReading, POLL_MS);
+});
+onBeforeUnmount(() => clearTimeout(pollTimer));
 
 const fields = computed(() => props.review.fields ?? {});
 const value = (key) => fields.value[key]?.value ?? null;
@@ -154,6 +180,12 @@ const groups = [
 
 <template>
     <AppLayout title="Revisar captura" back-href="/licitaciones" :breadcrumbs="[{ label: 'Licitaciones', href: '/licitaciones' }, { label: 'Revisar captura' }]">
+        <section v-if="review.pending" :class="card" class="flex flex-col items-center gap-3 px-6 py-12 text-center" role="status" aria-live="polite" data-import-pending>
+            <span class="mdi mdi-text-recognition text-4xl text-cap-brand motion-safe:animate-pulse" aria-hidden="true" />
+            <h2 class="font-display text-lg font-semibold text-gray-900 dark:text-gray-100">Leyendo la captura…</h2>
+            <p class="max-w-md text-sm text-cap-text-soft">El reconocimiento de texto tarda unos segundos. Esta pantalla se actualiza sola cuando el borrador esté listo; puedes dejarla abierta.</p>
+        </section>
+        <template v-else>
         <CapAlert v-if="review.error" status="warning" title="No se pudo leer la captura automáticamente" :detail="review.error" />
         <CapAlert v-else status="info" title="Revisa los datos antes de guardar" :detail="`${counts.read} leídos, ${counts.doubtful} dudosos y ${counts.missing} no encontrados. Corrige lo necesario: nada se guarda hasta que confirmes.`" />
 
@@ -245,5 +277,6 @@ const groups = [
                 </div>
             </form>
         </div>
+        </template>
     </AppLayout>
 </template>

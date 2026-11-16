@@ -25,7 +25,7 @@ export * from './animate.js';
 export { celebrate } from './confetti.js';
 export { useCountUp, tween } from './useCountUp.js';
 export { useMagnetic, bindMagnetic } from './useMagnetic.js';
-export { useShellMotion, ringBell, markSuccess } from './navigation.js';
+export { useShellMotion, ringBell, markSuccess, isPageVisit, captureIndicators, slideIndicators } from './navigation.js';
 export { vCount, vDraw, vGrow, vMagnetic, vReveal, vSettle, vShake, vStagger };
 
 export default {

@@ -81,7 +81,7 @@ class AnalyzeBidDocument implements ShouldQueue
                 ])->save();
             }
 
-            $analysis = $analyzer->analyze($pages);
+            $analysis = $analyzer->analyze($pages, $extraction->company_id);
             $verified = $verifier->verify($analysis, $pages);
 
             $fields = array_filter($verified['fields']);

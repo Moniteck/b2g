@@ -3,6 +3,7 @@
 namespace App\Services\Notifications;
 
 use App\Jobs\SendReminderEmail;
+use App\Jobs\SendReminderPush;
 use App\Models\ReminderDelivery;
 use Illuminate\Support\Facades\Log;
 
@@ -13,6 +14,7 @@ use Illuminate\Support\Facades\Log;
  * procesos corren a la vez, solo uno gana la fila, así que nunca sale dos veces.
  *  - Campana: queda «Enviado» en el acto y aparece en la cabecera del usuario.
  *  - Correo: se encola `SendReminderEmail` (reintentos con espera; al agotarse, «Fallido»).
+ *  - Push: se encola `SendReminderPush` (a todos los dispositivos suscritos del destinatario).
  */
 class ReminderDispatcher
 {
@@ -22,7 +24,7 @@ class ReminderDispatcher
     public function __construct(protected NotificationFeed $feed) {}
 
     /**
-     * @return array{campana: int, correo: int, cancelados: int}
+     * @return array{campana: int, correo: int, cancelados: int, push?: int}  («push» solo si salió alguno)
      */
     public function dispatchDue(int $limit = 500): array
     {
@@ -71,6 +73,13 @@ class ReminderDispatcher
             }
 
             try {
+                if ($delivery->channel === 'push') {
+                    SendReminderPush::dispatch($delivery->id);
+                    $result['push'] = ($result['push'] ?? 0) + 1;
+
+                    continue;
+                }
+
                 SendReminderEmail::dispatch($delivery->id);
                 $result['correo']++;
             } catch (\Throwable $exception) {
@@ -83,13 +92,13 @@ class ReminderDispatcher
     }
 
     /**
-     * Correos encolados cuyo trabajo se perdió (worker caído): vuelven a «Programado».
+     * Correos y push encolados cuyo trabajo se perdió (worker caído): vuelven a «Programado».
      */
     protected function recoverStale(): void
     {
         ReminderDelivery::query()->withoutGlobalScopes()
             ->where('status', 'Encolado')
-            ->where('channel', 'correo')
+            ->whereIn('channel', ['correo', 'push'])
             ->where('updated_at', '<', now()->subMinutes(self::STALE_MINUTES))
             ->update(['status' => 'Programado', 'updated_at' => now()]);
     }

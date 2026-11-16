@@ -27,8 +27,8 @@ class ReportsAndKpisTest extends TestCase
         $csv->assertOk();
         $content = $csv->streamedContent();
 
-        $this->assertStringContainsString('"Cotizaciones ganadas",cotizaciones,1,150', $content);
-        $this->assertStringContainsString('"Cobros recibidos",cobros,1,300', $content);
+        $this->assertStringContainsString('"Cotizaciones ganadas",Cotizaciones,1,150', $content);
+        $this->assertStringContainsString('"Cobros recibidos",Cobros,1,300', $content);
     }
 
     public function test_only_company_administrators_can_mutate_kpi_goals(): void

@@ -4,6 +4,7 @@ namespace App\Services\Admin;
 
 use App\Models\Company;
 use App\Models\User;
+use App\Services\Auth\SessionTerminator;
 use App\Services\AuditLogger;
 use App\Support\Permissions;
 use Illuminate\Support\Facades\DB;
@@ -19,7 +20,7 @@ use Illuminate\Validation\ValidationException;
  */
 class MembershipService
 {
-    public function __construct(private AuditLogger $audit) {}
+    public function __construct(private AuditLogger $audit, private SessionTerminator $sessions) {}
 
     /**
      * Crea el usuario (con contraseña temporal) o reutiliza el existente con ese
@@ -114,7 +115,11 @@ class MembershipService
         $password = self::temporaryPassword();
         $user->forceFill(['password' => $password, 'remember_token' => Str::random(60)])->save();
 
-        $this->audit->record('usuario.contrasena_restablecida', $user, [], companyId: $companyId);
+        // Quien tuviera la cuenta abierta (o sus tokens de clientes MCP) queda fuera.
+        $closed = $this->sessions->endWebSessions($user);
+        $revoked = $this->sessions->revokeApiTokens($user);
+
+        $this->audit->record('usuario.contrasena_restablecida', $user, ['sesiones_cerradas' => $closed, 'tokens_revocados' => $revoked], companyId: $companyId);
 
         return $password;
     }

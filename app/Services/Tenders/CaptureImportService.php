@@ -2,6 +2,7 @@
 
 namespace App\Services\Tenders;
 
+use App\Jobs\ReadTenderCapture;
 use App\Models\DocumentExtraction;
 use App\Models\Institution;
 use App\Models\Opportunity;
@@ -23,8 +24,10 @@ use Throwable;
 /**
  * Importación de la captura de la ficha de HonduCompras.
  *
- * 1. read():    guarda la imagen en un área temporal privada, la lee con OCR y la analiza.
- *               No crea nada en la base de datos: devuelve un token de revisión.
+ * 1. read():    revisa las dimensiones de la imagen, la guarda en un área temporal privada y
+ *               encola su lectura (ReadTenderCapture → process(): OCR y análisis). No crea nada en
+ *               la base de datos: devuelve un token de revisión cuyo estado se consulta hasta que
+ *               el borrador está listo (la pantalla de revisión sondea `tenders.import.status`).
  * 2. review():  datos para la pantalla de revisión (campos, instituciones parecidas, duplicado).
  * 3. confirm(): con los datos corregidos por la persona, crea o actualiza la licitación,
  *               crea la oportunidad si se pidió y guarda la captura como documento de la licitación.
@@ -39,6 +42,18 @@ class CaptureImportService
 
     private const TTL_HOURS = 24;
 
+    /** Megapíxeles y lado máximos de una captura (hallazgo A1: bombas de píxeles antes del OCR). */
+    public const MAX_PIXELS = 25_000_000;
+
+    public const MAX_SIDE = 10_000;
+
+    /** Estados de la lectura en cola. */
+    public const QUEUED = 'queued';
+
+    public const PROCESSING = 'processing';
+
+    public const READY = 'ready';
+
     public function __construct(
         protected OcrReader $ocr,
         protected HonduComprasCaptureParser $parser,
@@ -47,8 +62,30 @@ class CaptureImportService
         protected AuditLogger $audit,
     ) {}
 
+    /**
+     * Rechaza, antes de guardarla y de llegar a Tesseract, una imagen con dimensiones desmesuradas
+     * (un PNG de pocos KB puede declarar 30 000 × 30 000 px y expandirse a cientos de MB).
+     *
+     * @throws ValidationException
+     */
+    public function ensureReasonableDimensions(UploadedFile $image, string $field = 'file'): void
+    {
+        $size = @getimagesize($image->getRealPath());
+
+        if ($size === false || ($size[0] ?? 0) < 1 || ($size[1] ?? 0) < 1) {
+            throw ValidationException::withMessages([$field => 'No se pudo leer la imagen. Sube una captura PNG, JPG o WEBP válida.']);
+        }
+
+        [$width, $height] = $size;
+
+        if ($width > self::MAX_SIDE || $height > self::MAX_SIDE || $width * $height > self::MAX_PIXELS) {
+            throw ValidationException::withMessages([$field => "La imagen mide {$width} × {$height} px y el máximo es 10 000 px por lado y 25 megapíxeles. Recorta la captura a la ficha del expediente."]);
+        }
+    }
+
     public function read(UploadedFile $image, User $user, int $companyId): string
     {
+        $this->ensureReasonableDimensions($image);
         $this->purgeExpired();
 
         $token = (string) Str::uuid();
@@ -63,14 +100,36 @@ class CaptureImportService
             'original_name' => $image->getClientOriginalName() ?: "captura.{$extension}",
             'mime' => $image->getMimeType(),
             'created_at' => now()->toIso8601String(),
+            'status' => self::QUEUED,
             'text' => null,
             'parsed' => null,
             'error' => null,
             'confirmed_tender_id' => null,
         ];
 
+        $this->save($token, $state);
+        ReadTenderCapture::dispatch($token);
+
+        return $token;
+    }
+
+    /**
+     * Lectura en cola (ReadTenderCapture): OCR y análisis de la ficha. Idempotente: una captura ya
+     * leída no se vuelve a leer.
+     */
+    public function process(string $token): void
+    {
+        $state = $this->rawState($token);
+
+        if ($state === null || ! self::isPending($state)) {
+            return;
+        }
+
+        $state['status'] = self::PROCESSING;
+        $this->save($token, $state);
+
         try {
-            $state['text'] = $this->ocr->read(Storage::disk(self::DISK)->path($path));
+            $state['text'] = $this->ocr->read(Storage::disk(self::DISK)->path($state['image']));
             $state['parsed'] = $this->parser->parse($state['text']);
 
             if (! $state['parsed']['useful']) {
@@ -80,15 +139,48 @@ class CaptureImportService
             $state['error'] = $exception->getMessage().' Completa el formulario a mano.';
         }
 
+        $state['status'] = self::READY;
         $this->save($token, $state);
 
         $this->audit->record('licitacion.captura_leida', null, [
-            'token' => $token,
+            'captura' => $token,
             'campos_leidos' => $state['parsed'] ? count(array_filter($state['parsed']['fields'], fn ($f) => $f['status'] !== HonduComprasCaptureParser::MISSING)) : 0,
             'error' => $state['error'],
-        ], $user, $companyId);
+        ], User::query()->find($state['user_id']), (int) $state['company_id']);
+    }
 
-        return $token;
+    /** El trabajo murió (tiempo agotado, reinicio): la revisión se abre para completar a mano. */
+    public function markFailed(string $token, string $message): void
+    {
+        $state = $this->rawState($token);
+
+        if ($state === null || ! self::isPending($state)) {
+            return;
+        }
+
+        $state['status'] = self::READY;
+        $state['error'] = $message;
+        $this->save($token, $state);
+    }
+
+    /** ¿La lectura sigue en cola o en proceso? Las capturas anteriores a la cola ya están listas. */
+    public static function isPending(array $state): bool
+    {
+        return in_array($state['status'] ?? self::READY, [self::QUEUED, self::PROCESSING], true);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function rawState(string $token): ?array
+    {
+        if (! Str::isUuid($token) || ! Storage::disk(self::DISK)->exists($this->statePath($token))) {
+            return null;
+        }
+
+        $state = json_decode((string) Storage::disk(self::DISK)->get($this->statePath($token)), true);
+
+        return is_array($state) ? $state : null;
     }
 
     /**
@@ -124,6 +216,8 @@ class CaptureImportService
 
         return [
             'token' => $token,
+            'pending' => self::isPending($state),
+            'statusUrl' => route('tenders.import.status', $token),
             'imageUrl' => route('tenders.import.image', $token),
             'imageName' => $state['original_name'],
             'error' => $state['error'],
@@ -169,6 +263,9 @@ class CaptureImportService
         try {
             // Doble clic o reenvío: la importación ya se confirmó.
             $state = $this->state($token, $user, $companyId);
+            if (self::isPending($state)) {
+                throw ValidationException::withMessages(['token' => 'La captura todavía se está leyendo. Espera unos segundos.']);
+            }
             if ($state['confirmed_tender_id'] && ($done = Tender::query()->find($state['confirmed_tender_id']))) {
                 return ['tender' => $done, 'created' => false, 'warning' => null];
             }

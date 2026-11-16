@@ -7,10 +7,12 @@
 // Estados: idle (respira y parpadea), watch (sigue con la mirada `look` e inclina la cabeza),
 // shy (se tapa los ojos), peek (espía con un ojo), worried (se preocupa y sacude), thinking (espera),
 // happy (se alegra), surprised (se sorprende), sleepy (se duerme si nadie hace nada), celebrate
-// (salta y celebra) y wave (saluda). Las alas, los ojos y la cabeza pasan de un estado a otro con
-// transiciones. Los estilos viven en auth.css (no son `scoped`) para que la cortina de salida y la
-// intro puedan clonar el SVG fuera de Vue.
+// (salta y celebra) y wave (saluda). Estados de asistente (Agente Legal): reading (lee un libro de
+// leyes), writing (escribe con pluma) y searching (busca con una lupa). Las alas, los ojos y la cabeza pasan de un estado a otro con
+// transiciones. Los estilos viven en mascot.css (no son `scoped`, para que la cortina de salida y la
+// intro puedan clonar el SVG fuera de Vue); auth.css repite los de acceso con los mismos valores.
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import './mascot.css';
 import { prefersReducedMotion } from './motion.js';
 
 const props = defineProps({
@@ -30,6 +32,7 @@ const lookY = computed(() => (FOLLOWS.includes(props.state) ? clamp(props.look.y
 const pupils = computed(() => {
     if (props.state === 'thinking') return 'translate(-3px, -4px)';
     if (props.state === 'sleepy') return 'translate(0px, 3px)';
+    if (['reading', 'writing'].includes(props.state)) return 'translate(0px, 4px)';
     return `translate(${(lookX.value * 4.5).toFixed(2)}px, ${(lookY.value * 3.5).toFixed(2)}px)`;
 });
 const face = computed(() => `translate(${(lookX.value * 2).toFixed(2)}px, ${(lookY.value * 1.5).toFixed(2)}px)`);
@@ -142,6 +145,27 @@ onBeforeUnmount(() => window.clearTimeout(blinkTimer));
                 <g class="lici__wing lici__wing--right">
                     <path class="lici__wing-shape" d="M132 82 C131 58 112 42 88 41 C77 41 68 45 62 52 L69 57 L61 63 L69 68 L63 75 L72 78 L69 85 L80 86 C92 95 110 101 126 102 C134 101 136 92 132 82 Z" />
                     <path class="lici__wing-feather" d="M114 58 C102 52 88 52 74 56 M118 72 C104 66 88 66 72 69 M118 86 C104 80 90 80 78 81" />
+                </g>
+                <!-- Utilería de los estados de asistente; oculta en el resto. -->
+                <g class="lici__prop lici__book" aria-hidden="true">
+                    <path class="lici__book-cover" d="M47 109 L80 115 L113 109 L113 138 L80 143 L47 138 Z" />
+                    <path class="lici__book-page" d="M80 116 Q65 108 51 111 L51 135 Q66 133 80 139 Z" />
+                    <path class="lici__book-page" d="M80 116 Q95 108 109 111 L109 135 Q94 133 80 139 Z" />
+                    <path class="lici__book-lines" d="M56 117 L74 120 M56 123 L74 126 M56 129 L70 131 M86 120 L104 117 M86 126 L104 123 M86 131 L100 129" />
+                    <path class="lici__book-mark" d="M98 110 L98 121 L101 118 L104 121 L104 110 Z" />
+                </g>
+                <g class="lici__prop lici__write" aria-hidden="true">
+                    <path class="lici__paper" d="M50 114 L106 110 L109 140 L53 143 Z" />
+                    <path class="lici__paper-lines" d="M57 121 L99 118 M58 128 L100 125 M59 135 L86 133" />
+                    <g class="lici__quill">
+                        <path class="lici__quill-vane" d="M113 131 C118 116 128 104 140 98 C136 110 128 122 116 133 Z" />
+                        <path class="lici__quill-shaft" d="M108 137 L138 101" />
+                    </g>
+                </g>
+                <g class="lici__prop lici__magnifier" aria-hidden="true">
+                    <path class="lici__lens-handle" d="M111 84 L128 104" />
+                    <circle class="lici__lens-ring" cx="100" cy="72" r="16" />
+                    <path class="lici__lens-shine" d="M91 66 q4 -6 11 -6" />
                 </g>
             </g>
         </g>

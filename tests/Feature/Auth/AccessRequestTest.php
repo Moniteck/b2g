@@ -4,6 +4,7 @@ namespace Tests\Feature\Auth;
 
 use App\Mail\AccessApprovedMail;
 use App\Mail\AccessRequestedMail;
+use App\Mail\AccessRequestVerifyMail;
 use App\Models\AccessRequest;
 use App\Models\AuditLog;
 use App\Models\Company;
@@ -14,6 +15,7 @@ use App\Services\Notifications\NotificationFeed;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
 
 class AccessRequestTest extends TestCase
@@ -27,6 +29,15 @@ class AccessRequestTest extends TestCase
         parent::setUp();
         Mail::fake();
         RateLimiter::clear('access-request:ana@empresa.test');
+    }
+
+    /** Abre el enlace firmado que recibió el solicitante (confirma su correo). */
+    private function confirmEmail(string $email = 'ana@empresa.test'): AccessRequest
+    {
+        $request = AccessRequest::query()->where('email', $email)->latest('id')->firstOrFail();
+        $this->get(app(AccessRequestService::class)->verificationUrl($request))->assertOk();
+
+        return $request->fresh();
     }
 
     /** @return array<string, mixed> */
@@ -72,6 +83,12 @@ class AccessRequestTest extends TestCase
         $this->assertDatabaseMissing('users', ['email' => 'ana@empresa.test']);
         $this->assertTrue(AuditLog::query()->where('action', 'acceso.solicitado')->exists());
 
+        $this->from('/login')->post('/login', ['email' => 'ana@empresa.test', 'password' => self::PASSWORD])
+            ->assertSessionHasErrors(['email', 'access']);
+        $this->assertSame('unverified', session('errors')->first('access'));
+        $this->assertGuest();
+
+        $this->confirmEmail();
         $this->from('/login')->post('/login', ['email' => 'ana@empresa.test', 'password' => self::PASSWORD])
             ->assertSessionHasErrors(['email', 'access']);
         $this->assertSame('pending', session('errors')->first('access'));
@@ -138,7 +155,9 @@ class AccessRequestTest extends TestCase
             $this->post('/solicitar-acceso', $this->payload(['email' => "otro{$attempt}@empresa.test"]));
         }
 
-        $this->post('/solicitar-acceso', $this->payload(['email' => 'ultimo@empresa.test']))->assertStatus(429);
+        // Límite por IP: aviso en español en la misma pantalla (no una página de error).
+        $this->post('/solicitar-acceso', $this->payload(['email' => 'ultimo@empresa.test']))
+            ->assertRedirect()->assertSessionHasErrors('throttle');
     }
 
     public function test_company_admins_get_a_bell_notice_and_an_email(): void
@@ -149,7 +168,12 @@ class AccessRequestTest extends TestCase
 
         $this->post('/solicitar-acceso', $this->payload(['company' => AccessRequestService::companyToken($company->id), 'company_name' => null]));
 
-        $request = AccessRequest::query()->sole();
+        // Hasta confirmar el correo nadie se entera de la solicitud.
+        $this->assertSame(0, ReminderDelivery::query()->withoutGlobalScopes()->count());
+        Mail::assertNotQueued(AccessRequestedMail::class);
+        Mail::assertQueued(AccessRequestVerifyMail::class, fn ($mail) => $mail->hasTo('ana@empresa.test'));
+
+        $request = $this->confirmEmail();
         $this->assertSame($company->id, $request->company_id);
 
         $feed = app(NotificationFeed::class)->forUser($admin->id, $company->id);
@@ -169,6 +193,7 @@ class AccessRequestTest extends TestCase
         $root = User::factory()->create(['is_root' => true]);
 
         $this->post('/solicitar-acceso', $this->payload());
+        $this->confirmEmail();
 
         $delivery = ReminderDelivery::query()->withoutGlobalScopes()->where('user_id', $root->id)->sole();
         $this->assertSame($root->defaultCompanyId(), $delivery->company_id);
@@ -179,11 +204,17 @@ class AccessRequestTest extends TestCase
     {
         [$admin, $company] = $this->memberOf(role: 'admin');
         $this->post('/solicitar-acceso', $this->payload(['company' => AccessRequestService::companyToken($company->id)]));
-        $request = AccessRequest::query()->sole();
+
+        // Sin confirmar, el revisor no la ve.
+        $this->actingInCompany($admin, $company)->get('/configuracion/usuarios')
+            ->assertInertia(fn ($page) => $page->loadDeferredProps(fn ($reload) => $reload->has('accessRequests', 0)));
+        auth()->logout();
+
+        $request = $this->confirmEmail();
 
         $this->actingInCompany($admin, $company)->get('/configuracion/usuarios')
             ->assertInertia(fn ($page) => $page->component('Admin/Users')
-                ->loadDeferredProps(fn ($reload) => $reload->has('accessRequests', 1)->where('accessRequests.0.email', 'ana@empresa.test')));
+                ->loadDeferredProps(fn ($reload) => $reload->has('accessRequests', 1)->where('accessRequests.0.email', 'ana@empresa.test')->where('accessRequests.0.email_verified', true)));
 
         // Pendiente: no es miembro de la empresa.
         $this->assertSame(1, $company->users()->count());
@@ -239,6 +270,8 @@ class AccessRequestTest extends TestCase
         $this->post('/solicitar-acceso', $this->payload(['company' => AccessRequestService::companyToken($companyA->id)]));
         RateLimiter::clear('access-request:sin@empresa.test');
         $this->post('/solicitar-acceso', $this->payload(['email' => 'sin@empresa.test']));
+        $this->confirmEmail();
+        $this->confirmEmail('sin@empresa.test');
         $forA = AccessRequest::query()->where('email', 'ana@empresa.test')->sole();
         $orphan = AccessRequest::query()->where('email', 'sin@empresa.test')->sole();
 
@@ -277,5 +310,51 @@ class AccessRequestTest extends TestCase
             ->post("/configuracion/usuarios/solicitudes/{$request->id}/aprobar", ['company_id' => $company->id, 'role' => 'admin'])
             ->assertForbidden();
         $this->assertSame(AccessRequest::PENDING, $request->fresh()->status);
+    }
+
+    public function test_the_confirmation_link_is_signed_and_expires(): void
+    {
+        $this->post('/solicitar-acceso', $this->payload());
+        $request = AccessRequest::query()->sole();
+
+        // Sin firma o con la huella de otro correo no confirma nada.
+        $this->get("/solicitar-acceso/confirmar/{$request->id}/{$request->emailHash()}")->assertOk()
+            ->assertInertia(fn ($page) => $page->component('Auth/Login')->where('mode', 'confirmed')->where('confirmation.result', 'expired'));
+        $forged = URL::temporarySignedRoute('access-request.verify', now()->addHour(), ['accessRequest' => $request->id, 'hash' => str_repeat('a', 64)]);
+        $this->get($forged)->assertInertia(fn ($page) => $page->where('confirmation.result', 'invalid'));
+        $this->assertNull($request->fresh()->email_verified_at);
+
+        // Vencido a las 24 horas.
+        $url = app(AccessRequestService::class)->verificationUrl($request);
+        $this->travel(25)->hours();
+        $this->get($url)->assertInertia(fn ($page) => $page->where('confirmation.result', 'expired'));
+        $this->travelBack();
+
+        $this->get(app(AccessRequestService::class)->verificationUrl($request))
+            ->assertInertia(fn ($page) => $page->where('confirmation.result', 'verified')->where('confirmation.name', 'Ana'));
+        $this->assertNotNull($request->fresh()->email_verified_at);
+        $this->assertTrue(AuditLog::query()->where('action', 'acceso.correo_verificado')->exists());
+
+        // Idempotente.
+        $this->get(app(AccessRequestService::class)->verificationUrl($request))
+            ->assertInertia(fn ($page) => $page->where('confirmation.result', 'already'));
+    }
+
+    public function test_an_unconfirmed_request_does_not_block_the_real_owner(): void
+    {
+        // Alguien pide acceso con el correo de Ana y nunca lo confirma.
+        $this->post('/solicitar-acceso', $this->payload(['name' => 'Impostor', 'password' => 'ClaveImpostor123', 'password_confirmation' => 'ClaveImpostor123']));
+        RateLimiter::clear('access-request:ana@empresa.test');
+
+        // Ana envía la suya: reemplaza a la no confirmada.
+        $this->post('/solicitar-acceso', $this->payload())->assertSessionHasNoErrors();
+        $request = AccessRequest::query()->sole();
+        $this->assertSame('Ana Pérez', $request->name);
+
+        $this->confirmEmail();
+        // Ya confirmada, otra solicitud con el mismo correo no la reemplaza.
+        RateLimiter::clear('access-request:ana@empresa.test');
+        $this->post('/solicitar-acceso', $this->payload(['name' => 'Otro intento']))->assertSessionHasNoErrors();
+        $this->assertSame('Ana Pérez', AccessRequest::query()->sole()->name);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Support\SafeCell;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Collection;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -30,7 +31,7 @@ class ProcessExportService
         $sheet = $book->getActiveSheet();
         $sheet->fromArray(['Proceso', 'Objeto', 'Institución', 'Tipo', 'Monto estimado', 'Publicación', 'Cierre', 'Estado', 'Resultado'], null, 'A1');
         foreach ($records as $index => $record) {
-            $sheet->fromArray([$record->reference, $record->title, $record->institution?->name, $record->purchase_type, $record->estimated_amount, $record->published_at?->toDateString(), $record->closing_date?->toDateString(), $record->status, $record->result], null, 'A'.($index + 2));
+            SafeCell::row($sheet, [$record->reference, $record->title, $record->institution?->name, $record->purchase_type, $record->estimated_amount, $record->published_at?->toDateString(), $record->closing_date?->toDateString(), $record->status, $record->result], 'A'.($index + 2));
         }
         $sheet->getStyle('A1:I1')->getFont()->setBold(true);
         foreach (range('A', 'I') as $column) {

@@ -10,7 +10,7 @@
 // Accesible: role="dialog", foco atrapado, foco inicial en `[data-autofocus]` o en el primer campo,
 // Esc cierra y el foco vuelve a quien la abrió. Apilable: una modal puede abrir otra encima.
 // Movimiento (m-modal en resources/css/motion.css): en escritorio entra con escala y el fondo se
-// desenfoca; en móvil sube desde abajo y se cierra arrastrando la cabecera hacia abajo (si no es persistent).
+// desenfoca apenas (en móvil, fondo sólido: es caro de pintar); cierra en ≤ 160 ms; en móvil sube desde abajo y se cierra arrastrando la cabecera hacia abajo (si no es persistent).
 import { computed, nextTick, onBeforeUnmount, reactive, ref, useId, watch } from 'vue';
 import { trapFocus } from '../../design/shell/js/focus-trap.js';
 import { useLayer } from '../composables/useLayers.js';
@@ -45,6 +45,8 @@ const rendered = ref(props.open);
 const layer = useLayer();
 let releaseFocus = null;
 let pressedOnBackdrop = false;
+// Quien abrió la modal (B-21): se guarda al abrir, antes de mover el foco, y lo recupera al cerrar.
+let opener = null;
 
 const sizeClass = computed(() => SIZES[props.size] ?? SIZES.md);
 
@@ -71,7 +73,10 @@ function initialFocus() {
     return field ?? panel.value;
 }
 
+let engaged = false;
+
 async function engage() {
+    engaged = true;
     layer.push();
     document.addEventListener('keydown', onKeydown);
     await nextTick();
@@ -79,11 +84,34 @@ async function engage() {
 }
 
 function release() {
+    if (!engaged) return;
+    engaged = false;
     document.removeEventListener('keydown', onKeydown);
     releaseFocus?.();
     releaseFocus = null;
     layer.pop();
+    restoreOpener();
 }
+
+function restoreOpener() {
+    const target = opener;
+    opener = null;
+    if (!target?.isConnected || typeof target.focus !== 'function') return;
+    // Si el foco ya lo tomó otra modal abierta encima o debajo, no se le quita.
+    const active = document.activeElement;
+    if (active && active !== document.body && active.closest('[role="dialog"]') && !panel.value?.contains(active)) return;
+    target.focus({ preventScroll: true });
+}
+
+watch(
+    () => props.open,
+    (open) => {
+        if (!open) return;
+        const active = document.activeElement;
+        opener = active && active !== document.body ? active : null;
+    },
+    { flush: 'sync', immediate: true },
+);
 
 watch(
     () => props.open,
@@ -141,9 +169,9 @@ function dragEnd() {
 <template>
     <!-- El Teleport se monta al abrir: así la modal más reciente queda encima de las anteriores. -->
     <Teleport v-if="rendered" to="body">
-        <Transition name="m-modal" appear :duration="{ enter: 380, leave: 200 }" @after-enter="emit('opened')" @after-leave="afterLeave">
+        <Transition name="m-modal" appear :duration="{ enter: 320, leave: 160 }" @after-enter="emit('opened')" @after-leave="afterLeave">
             <div v-if="open" class="fixed inset-0 z-cap-modal flex items-stretch justify-center md:items-center md:p-6" data-floating-root>
-                <div class="m-modal-backdrop absolute inset-0 bg-cap-chrome/35 backdrop-blur-sm" @pointerdown="pressedOnBackdrop = true" @click="onBackdropClick" />
+                <div class="m-modal-backdrop absolute inset-0 bg-cap-chrome/35 md:backdrop-blur-xs" @pointerdown="pressedOnBackdrop = true" @click="onBackdropClick" />
                 <component
                     :is="as"
                     ref="panel"

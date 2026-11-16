@@ -2,6 +2,8 @@
 // Cara «Ingresar»: correo, contraseña (con mostrar/ocultar), mantener la sesión y acceso a la
 // solicitud. Usa la ruta y la validación de siempre (`POST /login`, con su límite de intentos).
 // La salida animada al entrar la maneja la página (interceptor de la respuesta de Inertia).
+// «¿Olvidaste tu contraseña?» cambia la tarjeta a pedir el enlace de recuperación por correo
+// (`POST /olvide-contrasena`); la respuesta es la misma exista o no la cuenta.
 import { useForm } from '@inertiajs/vue3';
 import { computed, nextTick, ref, watch } from 'vue';
 import CapAlert from '../../../../design/vue/CapAlert.vue';
@@ -14,16 +16,20 @@ const props = defineProps({
     subtitle: { type: String, default: '' },
     helpEmail: { type: String, default: '' },
     prefillEmail: { type: String, default: '' },
+    status: { type: String, default: '' },
 });
 const emit = defineEmits(['switch', 'busy', 'failed', 'reveal', 'valid']);
 
 const form = useForm({ email: props.prefillEmail, password: '', remember: false });
+const view = ref('login'); // 'login' | 'forgot'
+const forgotForm = useForm({ email: '' });
 const revealed = ref(false);
 const notice = ref(null);
 const formEl = ref(null);
 
 watch(() => props.prefillEmail, (value) => value && (form.email = value));
-watch(() => form.processing, (value) => emit('busy', value));
+watch(() => form.processing || forgotForm.processing, (value) => emit('busy', value));
+watch(() => props.status, (value) => value && (notice.value = { status: 'success', icon: 'email-fast-outline', title: 'Revisa tu correo', detail: value }), { immediate: true });
 watch(revealed, (value) => emit('reveal', value));
 watch(
     () => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email),
@@ -35,6 +41,7 @@ const credentialError = computed(() => !access.value && (form.errors.email || fo
 const alert = computed(() => {
     if (access.value === 'pending') return { status: 'warning', icon: 'account-clock-outline', title: 'Tu solicitud está en revisión', detail: form.errors.email };
     if (access.value === 'rejected') return { status: 'error', title: 'Tu solicitud no fue aprobada', detail: form.errors.email };
+    if (access.value === 'unverified') return { status: 'warning', icon: 'email-alert-outline', title: 'Confirma tu correo', detail: form.errors.email };
     if (credentialError.value) return { status: 'error', title: 'No pudimos ingresar', detail: credentialError.value };
     return notice.value;
 });
@@ -55,12 +62,59 @@ function submit() {
 
 function forgot() {
     form.clearErrors();
-    notice.value = { status: 'info', title: 'Pide una contraseña nueva a tu administrador', detail: 'El administrador de tu empresa puede restablecerla desde Usuarios.' };
+    notice.value = null;
+    forgotForm.email = form.email;
+    forgotForm.clearErrors();
+    view.value = 'forgot';
+    nextTick(() => formEl.value?.querySelector('#forgot-email')?.focus());
+}
+
+function backToLogin() {
+    view.value = 'login';
+    nextTick(() => formEl.value?.querySelector('[data-face-title]')?.focus());
+}
+
+function sendLink() {
+    forgotForm.post('/olvide-contrasena', {
+        preserveScroll: true,
+        preserveState: true,
+        onSuccess: () => {
+            form.email = forgotForm.email;
+            view.value = 'login';
+            emit('valid');
+        },
+        onError: async () => {
+            emit('failed', 'error');
+            await nextTick();
+            shakeErrors(formEl.value);
+        },
+    });
 }
 </script>
 
 <template>
-    <form ref="formEl" class="auth-form auth-stagger" novalidate @submit.prevent="submit">
+    <form v-if="view === 'forgot'" ref="formEl" class="auth-form auth-stagger" novalidate @submit.prevent="sendLink">
+        <header class="auth-form__header">
+            <h1 class="auth-form__title" tabindex="-1" data-face-title>Recupera tu contraseña</h1>
+            <p class="auth-form__subtitle">Escribe el correo de tu cuenta y te enviaremos un enlace para crear una contraseña nueva. Vence en 60 minutos.</p>
+        </header>
+
+        <Transition name="auth-pop">
+            <div v-if="forgotForm.errors.email || forgotForm.errors.throttle" id="forgot-alert" class="auth-form__alert"><CapAlert status="error" title="No pudimos enviar el enlace" :detail="forgotForm.errors.email || forgotForm.errors.throttle" /></div>
+        </Transition>
+
+        <AuthField id="forgot-email" label="Correo" :invalid="!!forgotForm.errors.email">
+            <input id="forgot-email" v-model="forgotForm.email" class="auth-field__input" type="email" name="email" autocomplete="username" placeholder="nombre@empresa.com" required :aria-invalid="forgotForm.errors.email ? 'true' : undefined" />
+        </AuthField>
+
+        <AuthButton class="auth-submit" type="submit" :loading="forgotForm.processing" loading-label="Enviando…">Enviar enlace <i class="mdi mdi-email-fast-outline auth-button__arrow" aria-hidden="true" /></AuthButton>
+
+        <p class="auth-form__switch">
+            <button class="auth-link" type="button" @click="backToLogin"><i class="mdi mdi-arrow-left" aria-hidden="true" /> Volver a ingresar</button>
+        </p>
+    </form>
+
+    <form v-else ref="formEl" class="auth-form auth-stagger" novalidate @submit.prevent="submit">
         <header class="auth-form__header">
             <h1 class="auth-form__title" tabindex="-1" data-face-title>Ingresa a {{ systemName }}</h1>
             <p class="auth-form__subtitle">{{ subtitle }}</p>

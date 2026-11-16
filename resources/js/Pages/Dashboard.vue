@@ -1,180 +1,179 @@
 <script setup>
-// Tablero de inicio: cifras del negocio, plazos de la semana, alertas y accesos.
-// Props: dashboard (cifras agregadas), alerts ([{ type, message, severity }]),
-//        deadlines ([{ id, title, detail?, due_at, href?, kind? }], opcional: plazos de los próximos 7 días).
-import { Link } from '@inertiajs/vue3';
-import { computed } from 'vue';
-import CapAlert from '../../design/vue/CapAlert.vue';
+// Dashboard: la pantalla de entrada. Saludo y período, «Requiere atención hoy», 4 KPI con variación y
+// minigráfica, plazos de 14 días, mis tareas, pipeline por etapa, adjudicado frente a cobrado, lo que
+// vence y la actividad del equipo. Las cifras salen de `BusinessMetrics` (las mismas de Reportes y KPI).
+//
+// Props: period { preset, label, from, to, previous, months }, periods ([{ value, label }]),
+//        kpis ([{ key, label, value, format, previous, hint, spark, href, featured?, alert? }]),
+//        attention ([{ id, tone, icon, title, detail, due_at, action }]),
+//        charts (diferida: { stages, monthly, open_tenders }),
+//        agenda (diferida: { timeline, expiring, activity, tasks, onboarding }),
+//        can { create, reports }, maxImageMb.
+// Móvil: KPI en 2×2 y, tras plazos, tareas y pipeline, el resto se abre con «Ver más del tablero».
+import { Deferred, router, usePage } from '@inertiajs/vue3';
+import { computed, onBeforeUnmount, ref } from 'vue';
+import CapSegmented from '../../design/vue/CapSegmented.vue';
+import AppButton from '../Components/AppButton.vue';
 import EmptyState from '../Components/EmptyState.vue';
-import PageHeader from '../Components/PageHeader.vue';
-import StatCard from '../Components/StatCard.vue';
-import StatusBadge from '../Components/StatusBadge.vue';
 import AppLayout from '../Layouts/AppLayout.vue';
-import { date, daysUntil, money, relativeDays } from '../lib/format.js';
-import { card, textLink } from '../lib/ui.js';
+import { date } from '../lib/format.js';
+import ActivityFeed from '../Modules/Dashboard/ActivityFeed.vue';
+import AttentionStrip from '../Modules/Dashboard/AttentionStrip.vue';
+import BlockCard from '../Modules/Dashboard/BlockCard.vue';
+import { greeting } from '../Modules/Dashboard/dashboard.js';
+import DeadlineTimeline from '../Modules/Dashboard/DeadlineTimeline.vue';
+import ExpiringList from '../Modules/Dashboard/ExpiringList.vue';
+import KpiCard from '../Modules/Dashboard/KpiCard.vue';
+import OnboardingGuide from '../Modules/Dashboard/OnboardingGuide.vue';
+import PipelineStages from '../Modules/Dashboard/PipelineStages.vue';
+import TaskList from '../Modules/Dashboard/TaskList.vue';
+import ImportCaptureModal from '../Modules/Tenders/ImportCaptureModal.vue';
+import BarChart from './Finance/Partials/BarChart.vue';
+import { monthLabel, useChartPalette } from './Finance/Partials/finance.js';
 
 const props = defineProps({
-    dashboard: { type: Object, default: () => ({}) },
-    alerts: { type: Array, default: () => [] },
-    deadlines: { type: Array, default: () => [] },
+    period: { type: Object, required: true },
+    periods: { type: Array, default: () => [] },
+    kpis: { type: Array, default: () => [] },
+    attention: { type: Array, default: () => [] },
+    charts: { type: Object, default: null },
+    agenda: { type: Object, default: null },
+    can: { type: Object, default: () => ({}) },
+    maxImageMb: { type: Number, default: 10 },
 });
 
-const AWARD_RATE_GOAL = 25;
+const page = usePage();
+const palette = useChartPalette();
+const preset = ref(props.period.preset);
+const switching = ref(false);
+const importOpen = ref(false);
+const moreOpen = ref(false);
+let cancelToken = null;
 
-const today = computed(() => {
+const firstName = computed(() => String(page.props.auth?.user?.name ?? '').trim().split(/\s+/)[0] ?? '');
+const todayText = computed(() => {
     const text = date(new Date(), 'long');
     return text.charAt(0).toUpperCase() + text.slice(1);
 });
+const companyName = computed(() => page.props.activeCompany?.name ?? '');
 
-const suggestion = computed(() => {
-    const data = props.dashboard;
-    if (!data.submittedTenders) return { status: 'info', title: 'Aún no hay ofertas presentadas', detail: 'La tasa de adjudicación se calcula cuando presentes la primera oferta.' };
-    if (data.awardRate < AWARD_RATE_GOAL) return { status: 'warning', title: `Tu tasa de adjudicación es ${data.awardRate} %, bajo la meta de ${AWARD_RATE_GOAL} %`, detail: 'Revisa la calidad documental de tus ofertas con la matriz documental.' };
-    if (data.overdueReceivables) return { status: 'warning', title: `Tienes ${money(data.overdueReceivables)} en cartera vencida`, detail: 'Revisa los cobros pendientes de pago.' };
-    if (data.expiredDocuments) return { status: 'warning', title: `Tienes ${data.expiredDocuments} ${data.expiredDocuments === 1 ? 'documento vencido' : 'documentos vencidos'}`, detail: 'Renuévalos en el Directorio Institucional antes de presentar otra oferta.' };
-    return { status: 'ok', title: 'Gestión en orden', detail: 'Revisa los procesos vigentes y las próximas fechas de cierre.' };
-});
-
-const tenderCounters = computed(() => [
-    { label: 'Cierran hoy', value: props.dashboard.tenders?.closingToday ?? 0, dot: 'bg-cap-status-error dark:bg-cap-status-dark-error' },
-    { label: 'Cierran en 30 días', value: props.dashboard.tenders?.closingSoon ?? 0, dot: 'bg-cap-status-warning dark:bg-cap-status-dark-warning' },
-    { label: 'Procesos vigentes', value: props.dashboard.tenders?.active ?? 0, dot: 'bg-cap-status-info dark:bg-cap-status-dark-info' },
+const monthly = computed(() => (props.charts?.monthly ?? []).map((month) => ({ month: month.month, won: Number(month.won) || 0, collected: Number(month.collected) || 0 })));
+const monthlyEmpty = computed(() => monthly.value.every((month) => !month.won && !month.collected));
+const monthSeries = computed(() => [
+    { key: 'won', label: 'Adjudicado', values: monthly.value.map((month) => month.won) },
+    { key: 'collected', label: 'Cobrado', values: monthly.value.map((month) => month.collected) },
 ]);
+const monthCategories = computed(() => monthly.value.map((month) => monthLabel(month.month, true)));
 
-const institutionCounters = computed(() => [
-    { label: 'Potencial alto', value: props.dashboard.institutions?.high ?? 0, dot: 'bg-cap-status-ok dark:bg-cap-status-dark-ok' },
-    { label: 'Potencial medio', value: props.dashboard.institutions?.medium ?? 0, dot: 'bg-cap-status-warning dark:bg-cap-status-dark-warning' },
-    { label: 'Potencial bajo', value: props.dashboard.institutions?.low ?? 0, dot: 'bg-cap-status-neutral dark:bg-cap-status-dark-neutral' },
-]);
-
-const sortedDeadlines = computed(() => [...props.deadlines].sort((a, b) => String(a.due_at).localeCompare(String(b.due_at))));
-
-function deadlineStatus(deadline) {
-    const days = daysUntil(deadline.due_at);
-    if (days === null) return 'neutral';
-    if (days <= 0) return 'error';
-    return days <= 2 ? 'warning' : 'info';
+function changePeriod(value) {
+    if (value === props.period.preset && !switching.value) return;
+    preset.value = value;
+    cancelToken?.cancel();
+    router.get('/', value === 'mes' ? {} : { periodo: value }, {
+        only: ['period', 'kpis', 'charts'],
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+        onCancelToken: (token) => (cancelToken = token),
+        onStart: () => (switching.value = true),
+        onFinish: () => {
+            switching.value = false;
+            cancelToken = null;
+        },
+    });
 }
 
-const DEADLINE_ICONS = { tender: 'gavel', quote: 'file-document-outline', document: 'folder-account-outline', contract: 'file-sign', collection: 'cash-multiple', event: 'calendar-month-outline' };
-const ALERT_ICONS = { danger: 'alert-circle-outline', error: 'alert-circle-outline', warning: 'alert-outline', info: 'information-outline' };
-const ALERT_TONES = {
-    danger: 'bg-cap-status-error-tint text-cap-status-error-ink',
-    error: 'bg-cap-status-error-tint text-cap-status-error-ink',
-    warning: 'bg-cap-status-warning-tint text-cap-status-warning-ink',
-    info: 'bg-cap-status-info-tint text-cap-status-info-ink',
-};
+onBeforeUnmount(() => cancelToken?.cancel());
 
-const shortcuts = [
-    { label: 'Licitaciones', hint: 'Captura y seguimiento', icon: 'gavel', href: '/licitaciones' },
-    { label: 'Cotizaciones', hint: 'Crear, firmar y enviar', icon: 'file-document-outline', href: '/cotizaciones' },
-    { label: 'Pipeline', hint: 'Oportunidades por etapa', icon: 'view-column-outline', href: '/pipeline' },
-    { label: 'Calendario', hint: 'Plazos y recordatorios', icon: 'calendar-month-outline', href: '/calendario' },
-    { label: 'Directorio Institucional', hint: 'Documentos vigentes', icon: 'folder-account-outline', href: '/directorio' },
-    { label: 'Cobros', hint: 'Cartera y pagos', icon: 'cash-multiple', href: '/cobros' },
-];
-
-const tile = 'rounded-cap-card border border-cap-divider bg-cap-card p-4 transition-transform duration-cap-fast ease-cap hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-cap-chrome focus-visible:ring-offset-2 focus-visible:ring-offset-cap-page dark:focus-visible:ring-gray-100';
+const more = 'max-lg:hidden';
 </script>
 
 <template>
     <AppLayout title="Dashboard">
-        <PageHeader :description="`Resumen ejecutivo · ${today}`" />
-
-        <CapAlert v-bind="suggestion" />
-
-        <div class="cap-stagger grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <StatCard variant="featured" label="Pipeline estimado" :count="Number(dashboard.pipeline ?? 0)" format="currency-compact" :hint="`${dashboard.opportunities ?? 0} oportunidades activas`" href="/pipeline" />
-            <StatCard label="Tasa de adjudicación" :count="Number(dashboard.awardRate ?? 0)" format="percent" :hint="`${dashboard.wonTenders ?? 0} ganadas de ${dashboard.submittedTenders ?? 0} presentadas`" href="/licitaciones" />
-            <StatCard :variant="Number(dashboard.overdueReceivables) > 0 ? 'alert' : 'normal'" label="Cartera vencida" :count="Number(dashboard.overdueReceivables ?? 0)" format="currency-compact" hint="Cobros pendientes de pago" href="/cobros" />
-            <StatCard label="Documentos por vencer" :count="Number(dashboard.expiringDocuments ?? 0)" :hint="`${dashboard.expiredDocuments ?? 0} ya vencidos`" href="/directorio" />
-        </div>
-
-        <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <section :class="[card, 'p-4 md:p-5']" aria-labelledby="dashboard-deadlines">
-                <div class="mb-4 flex items-center justify-between gap-3">
-                    <h2 id="dashboard-deadlines" class="font-display text-lg font-semibold text-gray-900 dark:text-gray-100">Plazos de la semana</h2>
-                    <Link href="/calendario" class="text-sm text-gray-900 dark:text-gray-100" :class="textLink">Ver calendario</Link>
+        <section class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between" aria-labelledby="dashboard-greeting">
+            <div class="min-w-0">
+                <div class="cap-module-home">
+                    <small class="cap-module-home__eyebrow">{{ greeting() }}<template v-if="firstName">,</template></small>
+                    <h2 v-if="firstName" id="dashboard-greeting" class="cap-module-home__name">{{ firstName }}</h2>
+                    <h2 v-else id="dashboard-greeting" class="sr-only">Resumen</h2>
+                    <p class="cap-module-home__hint">{{ todayText }}<template v-if="companyName"> · {{ companyName }}</template></p>
                 </div>
-                <EmptyState v-if="sortedDeadlines.length === 0" compact icon="calendar-check-outline" title="Sin plazos en los próximos 7 días" description="Los cierres de licitación, vencimientos y entregas aparecerán aquí." />
-                <ul v-else v-stagger class="flex flex-col gap-2">
-                    <li v-for="deadline in sortedDeadlines" :key="deadline.id ?? `${deadline.title}-${deadline.due_at}`">
-                        <component :is="deadline.href ? Link : 'div'" :href="deadline.href || undefined" class="flex min-h-16 items-center gap-3 rounded-cap-control bg-cap-card-2 p-3" :class="deadline.href ? 'transition-colors duration-cap-fast ease-cap hover:bg-cap-divider focus:outline-none focus-visible:ring-2 focus-visible:ring-cap-chrome dark:focus-visible:ring-gray-100' : ''">
-                            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-cap-control bg-cap-card text-cap-text-soft" aria-hidden="true">
-                                <i class="mdi text-xl leading-none" :class="`mdi-${DEADLINE_ICONS[deadline.kind] ?? 'calendar-clock-outline'}`" />
-                            </span>
-                            <span class="min-w-0 flex-1">
-                                <span class="block truncate text-sm font-semibold text-gray-900 dark:text-gray-100" :title="deadline.title">{{ deadline.title }}</span>
-                                <span class="block truncate text-xs text-cap-text-soft">{{ [date(deadline.due_at, 'medium'), deadline.detail].filter(Boolean).join(' · ') }}</span>
-                            </span>
-                            <StatusBadge :status="deadlineStatus(deadline)" :label="relativeDays(deadline.due_at)" />
-                        </component>
-                    </li>
-                </ul>
-            </section>
-
-            <section :class="[card, 'p-4 md:p-5']" aria-labelledby="dashboard-alerts">
-                <div class="mb-4 flex items-center justify-between gap-3">
-                    <h2 id="dashboard-alerts" class="font-display text-lg font-semibold text-gray-900 dark:text-gray-100">Alertas activas</h2>
-                    <StatusBadge v-if="alerts.length" status="error" :label="String(alerts.length)" />
-                </div>
-                <EmptyState v-if="alerts.length === 0" compact icon="check-circle-outline" title="No hay alertas activas" description="Cuando algo requiera tu atención lo verás aquí." />
-                <ul v-else v-stagger class="flex flex-col gap-2">
-                    <li v-for="alert in alerts" :key="`${alert.type}-${alert.message}`">
-                        <Link :href="`/${alert.type}`" class="group flex min-h-12 items-center gap-3 rounded-cap-control bg-cap-card-2 p-3 transition-colors duration-cap-fast ease-cap hover:bg-cap-divider focus:outline-none focus-visible:ring-2 focus-visible:ring-cap-chrome dark:focus-visible:ring-gray-100">
-                            <span class="flex h-8 w-8 shrink-0 items-center justify-center rounded-full" :class="ALERT_TONES[alert.severity] ?? ALERT_TONES.warning" aria-hidden="true">
-                                <i class="mdi text-base leading-none" :class="`mdi-${ALERT_ICONS[alert.severity] ?? ALERT_ICONS.warning}`" />
-                            </span>
-                            <span class="min-w-0 flex-1 text-sm text-gray-900 dark:text-gray-100">{{ alert.message }}</span>
-                            <i class="mdi mdi-chevron-right shrink-0 text-xl leading-none text-cap-text-soft transition-transform duration-cap-base ease-cap group-hover:translate-x-1" aria-hidden="true" />
-                        </Link>
-                    </li>
-                </ul>
-            </section>
-        </div>
-
-        <div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
-            <section aria-labelledby="dashboard-tenders">
-                <div class="mb-3 flex items-center justify-between gap-3">
-                    <h2 id="dashboard-tenders" class="font-display text-base font-semibold text-gray-900 dark:text-gray-100">Licitaciones</h2>
-                    <Link href="/licitaciones" class="text-sm text-gray-900 dark:text-gray-100" :class="textLink">Ver procesos</Link>
-                </div>
-                <div v-stagger class="grid grid-cols-3 gap-3">
-                    <Link v-for="counter in tenderCounters" :key="counter.label" href="/licitaciones" :class="tile">
-                        <p v-count="counter.value" class="font-display text-3xl font-semibold tabular-nums text-gray-900 dark:text-gray-100" />
-                        <p class="mt-1 flex items-center gap-1.5 text-xs text-cap-text-soft"><span class="h-1.5 w-1.5 shrink-0 rounded-full" :class="counter.dot" aria-hidden="true" />{{ counter.label }}</p>
-                    </Link>
-                </div>
-            </section>
-
-            <section aria-labelledby="dashboard-institutions">
-                <div class="mb-3 flex items-center justify-between gap-3">
-                    <h2 id="dashboard-institutions" class="font-display text-base font-semibold text-gray-900 dark:text-gray-100">Instituciones por potencial</h2>
-                    <Link href="/instituciones" class="text-sm text-gray-900 dark:text-gray-100" :class="textLink">Ver instituciones</Link>
-                </div>
-                <div v-stagger class="grid grid-cols-3 gap-3">
-                    <Link v-for="counter in institutionCounters" :key="counter.label" href="/instituciones" :class="tile">
-                        <p v-count="counter.value" class="font-display text-3xl font-semibold tabular-nums text-gray-900 dark:text-gray-100" />
-                        <p class="mt-1 flex items-center gap-1.5 text-xs text-cap-text-soft"><span class="h-1.5 w-1.5 shrink-0 rounded-full" :class="counter.dot" aria-hidden="true" />{{ counter.label }}</p>
-                    </Link>
-                </div>
-            </section>
-        </div>
-
-        <section aria-labelledby="dashboard-shortcuts">
-            <h2 id="dashboard-shortcuts" class="mb-3 font-display text-base font-semibold text-gray-900 dark:text-gray-100">Accesos</h2>
-            <div v-stagger class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                <Link v-for="shortcut in shortcuts" :key="shortcut.href" :href="shortcut.href" class="group flex min-h-16 items-center gap-3" :class="tile">
-                    <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-cap-control bg-cap-red-200 text-cap-red-800 dark:bg-cap-red-600/20 dark:text-cap-brand-soft" aria-hidden="true">
-                        <i class="m-hop mdi text-xl leading-none" :class="`mdi-${shortcut.icon}`" />
-                    </span>
-                    <span class="min-w-0 flex-1">
-                        <span class="block truncate text-sm font-semibold text-gray-900 dark:text-gray-100">{{ shortcut.label }}</span>
-                        <span class="block truncate text-xs text-cap-text-soft">{{ shortcut.hint }}</span>
-                    </span>
-                    <i class="mdi mdi-arrow-right shrink-0 text-xl leading-none text-cap-text-soft transition-transform duration-cap-base ease-cap group-hover:translate-x-1" aria-hidden="true" />
-                </Link>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <CapSegmented :model-value="preset" :items="periods" label="Período de las cifras" @update:model-value="changePeriod" />
+                <AppButton v-if="can.create" variant="primary" icon="text-recognition" class="max-sm:w-full" @click="importOpen = true">Importar licitación</AppButton>
             </div>
         </section>
+
+        <AttentionStrip :items="attention" />
+
+        <Deferred data="agenda">
+            <template #fallback><span class="hidden" /></template>
+            <OnboardingGuide v-if="agenda?.onboarding?.show" :steps="agenda.onboarding.steps" @import="importOpen = true" />
+        </Deferred>
+
+        <div class="cap-stagger grid grid-cols-2 gap-3 transition-opacity duration-cap-fast ease-cap sm:gap-4 xl:grid-cols-4" :class="{ 'opacity-50': switching }" :aria-busy="switching ? 'true' : undefined" aria-label="Indicadores del período">
+            <KpiCard v-for="kpi in kpis" :key="kpi.key" :kpi="kpi" :palette="palette" />
+        </div>
+
+        <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 xl:grid-cols-12">
+            <BlockCard id="dashboard-deadlines" class="xl:col-span-7" title="Plazos de los próximos 14 días" description="Licitaciones, contratos, documentos y cobros." icon="calendar-clock-outline" href="/calendario" link-label="Calendario">
+                <Deferred data="agenda">
+                    <template #fallback><div class="flex flex-col gap-3" aria-busy="true"><span class="cap-skeleton h-16" /><span v-for="row in 3" :key="row" class="cap-skeleton h-14" /></div></template>
+                    <DeadlineTimeline :items="agenda?.timeline ?? []" :palette="palette" :limit="5" />
+                </Deferred>
+            </BlockCard>
+
+            <BlockCard id="dashboard-tasks" class="xl:col-span-5" title="Mis tareas" description="Plazos de los que eres responsable." icon="checkbox-marked-circle-outline" href="/notificaciones" link-label="Recordatorios">
+                <Deferred data="agenda">
+                    <template #fallback><div class="flex flex-col gap-2" aria-busy="true"><span v-for="row in 3" :key="row" class="cap-skeleton h-14" /></div></template>
+                    <TaskList :items="agenda?.tasks ?? []" />
+                </Deferred>
+            </BlockCard>
+
+            <BlockCard id="dashboard-pipeline" class="transition-opacity duration-cap-fast ease-cap xl:col-span-5" :class="[{ 'opacity-50': switching }, moreOpen ? '' : more]" title="Pipeline por etapa" :description="`Oportunidades creadas ${period.label.toLowerCase()}.`" icon="view-column-outline" href="/pipeline" link-label="Kanban">
+                <Deferred data="charts">
+                    <template #fallback><div class="flex flex-col gap-3" aria-busy="true"><span class="cap-skeleton h-12" /><span v-for="row in 5" :key="row" class="cap-skeleton h-8" /></div></template>
+                    <PipelineStages :stages="charts?.stages ?? []" :palette="palette" :open-tenders="charts?.open_tenders ?? 0" />
+                </Deferred>
+            </BlockCard>
+
+            <button
+                type="button"
+                class="flex min-h-11 items-center justify-center gap-1 rounded-cap-card border border-cap-divider bg-cap-card text-sm font-medium text-gray-900 transition-colors duration-cap-fast ease-cap hover:bg-cap-card-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-cap-chrome dark:text-gray-100 dark:focus-visible:ring-gray-100 lg:hidden"
+                :aria-expanded="moreOpen ? 'true' : 'false'"
+                aria-controls="dashboard-more"
+                @click="moreOpen = !moreOpen"
+            >
+                {{ moreOpen ? 'Ver menos' : 'Ver más del tablero' }}
+                <i class="mdi text-xl leading-none" :class="moreOpen ? 'mdi-chevron-up' : 'mdi-chevron-down'" aria-hidden="true" />
+            </button>
+
+            <BlockCard id="dashboard-cashflow" class="transition-opacity duration-cap-fast ease-cap xl:col-span-7" :class="[{ 'opacity-50': switching }, moreOpen ? '' : more]" title="Adjudicado frente a cobrado" description="Cotizaciones ganadas por fecha de cotización y facturas por fecha de pago." icon="chart-bar" :href="can.reports ? '/reportes' : ''" link-label="Reportes">
+                <Deferred data="charts">
+                    <template #fallback><span class="cap-skeleton block h-60" aria-busy="true" /></template>
+                    <EmptyState v-if="monthlyEmpty" compact icon="chart-box-outline" title="Sin adjudicaciones ni cobros" description="Cuando ganes una cotización o cobres una factura verás aquí su evolución mes a mes." />
+                    <BarChart v-else :categories="monthCategories" :series="monthSeries" :highlight="monthly.length - 1" title="Adjudicado frente a cobrado por mes" />
+                </Deferred>
+            </BlockCard>
+
+            <div id="dashboard-more" class="contents">
+                <BlockCard id="dashboard-expiring" class="xl:col-span-5" :class="moreOpen ? '' : more" title="Por vencer" description="Contratos y documentos de los próximos 30 días." icon="timer-sand" href="/post-adjudicacion" link-label="Contratos">
+                    <Deferred data="agenda">
+                        <template #fallback><div class="flex flex-col gap-2" aria-busy="true"><span class="cap-skeleton h-10" /><span v-for="row in 3" :key="row" class="cap-skeleton h-14" /></div></template>
+                        <ExpiringList :expiring="agenda?.expiring" />
+                    </Deferred>
+                </BlockCard>
+
+                <BlockCard id="dashboard-activity" class="xl:col-span-7" :class="moreOpen ? '' : more" title="Actividad reciente" description="Lo último que hizo el equipo." icon="history">
+                    <Deferred data="agenda">
+                        <template #fallback><div class="flex flex-col gap-4" aria-busy="true"><span v-for="row in 4" :key="row" class="cap-skeleton h-10" /></div></template>
+                        <ActivityFeed :items="agenda?.activity ?? []" />
+                    </Deferred>
+                </BlockCard>
+            </div>
+        </div>
+
+        <ImportCaptureModal v-if="can.create" v-model:open="importOpen" :max-size-mb="maxImageMb" />
     </AppLayout>
 </template>

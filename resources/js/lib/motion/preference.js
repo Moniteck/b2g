@@ -66,3 +66,17 @@ if (typeof document !== 'undefined') {
     document.addEventListener('visibilitychange', syncVisibility);
     syncVisibility();
 }
+
+// ───────── Primera pintura de una carga completa ─────────
+// Para no retrasar el LCP, en la carga completa el contenido principal no entra animado y las cifras
+// no cuentan: aparecen ya en su sitio. Desde la primera navegación de Inertia todo se anima.
+// <html data-first-load> lo pone `installPageTransitions` y se quita al llegar a otra página.
+let firstLoad = typeof window !== 'undefined';
+
+export const isFirstLoad = () => firstLoad;
+
+export function endFirstLoad() {
+    if (!firstLoad) return;
+    firstLoad = false;
+    document.documentElement.removeAttribute('data-first-load');
+}

@@ -29,7 +29,7 @@ class ReportsTest extends TestCase
 
         $this->actingAs($viewer)->get('/reportes'.self::PERIOD)
             ->assertOk()
-            ->assertInertia(fn (Assert $page) => $page
+            ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $page) => $page
                 ->component('Finance/Reports')
                 ->where('report.metrics.won_count', 2)
                 ->where('report.metrics.lost_count', 1)
@@ -46,7 +46,7 @@ class ReportsTest extends TestCase
                 ->where('report.funnel.4.stage', 'no_adjudicado')
                 ->has('report.funnel', 5)
                 ->where('report.monthly.0.month', '2026-08')
-                ->where('report.monthly.0.collected', 500));
+                ->where('report.monthly.0.collected', 500)));
     }
 
     public function test_award_rate_is_null_without_decided_quotes(): void
@@ -55,7 +55,7 @@ class ReportsTest extends TestCase
         Quote::factory()->for($company)->status('Presentada')->create(['quoted_at' => '2026-08-05']);
 
         $this->actingAs($viewer)->get('/reportes'.self::PERIOD)
-            ->assertInertia(fn (Assert $page) => $page->where('report.metrics.award_rate', null)->where('report.metrics.pending_count', 1));
+            ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $page) => $page->where('report.metrics.award_rate', null)->where('report.metrics.pending_count', 1)));
     }
 
     public function test_figures_never_mix_companies(): void
@@ -66,11 +66,11 @@ class ReportsTest extends TestCase
         Quote::factory()->for($company)->won()->create(['quoted_at' => '2026-08-10', 'total' => 40, 'awarded_amount' => 40]);
 
         $this->actingAs($viewer)->get('/reportes'.self::PERIOD)
-            ->assertInertia(fn (Assert $page) => $page
+            ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $page) => $page
                 ->where('report.metrics.won_count', 1)
                 ->where('report.metrics.won_amount', 40)
                 ->where('report.metrics.collected', 0)
-                ->where('report.metrics.pipeline_count', 0));
+                ->where('report.metrics.pipeline_count', 0)));
     }
 
     public function test_module_filter_limits_the_rows(): void
@@ -79,10 +79,10 @@ class ReportsTest extends TestCase
         $this->seedCompany($company);
 
         $this->actingAs($viewer)->get('/reportes'.self::PERIOD.'&module=cobros')
-            ->assertInertia(fn (Assert $page) => $page
+            ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $page) => $page
                 ->has('report.rows', 2)
                 ->where('report.rows.0.module', 'cobros')
-                ->where('report.rows.0.amount', 500));
+                ->where('report.rows.0.amount', 500)));
     }
 
     public function test_exports_follow_filters_and_company(): void
@@ -95,7 +95,7 @@ class ReportsTest extends TestCase
         $csv->assertOk()->assertHeader('content-type', 'text/csv; charset=UTF-8');
         $content = $csv->streamedContent();
         $this->assertStringStartsWith("\xEF\xBB\xBF", $content);
-        $this->assertStringContainsString('"Cotizaciones ganadas",cotizaciones,2,300', $content);
+        $this->assertStringContainsString('"Cotizaciones ganadas",Cotizaciones,2,300', $content);
         $this->assertStringNotContainsString('Cobros recibidos', $content);
 
         $xlsx = $this->actingAs($viewer)->get('/reportes/xlsx'.self::PERIOD);

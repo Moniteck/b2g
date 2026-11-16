@@ -1,9 +1,12 @@
 <script setup>
-// Botón de solo ícono (36 × 36 px) del recetario. Siempre con `label`: es su nombre accesible y su tooltip.
+// Botón de solo ícono (36 × 36 px del recetario; 44 × 44 px en táctil, por debajo de `lg`, B-23). Siempre con `label`: es su nombre accesible y su tooltip.
 // Props: icon (sin `mdi-`), label, href (Link de Inertia), external (<a>), disabled, type.
 import { Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { iconButton } from '../lib/ui.js';
+
+// Área táctil mínima de 44 px en tableta y móvil.
+const TOUCH = 'max-lg:h-11 max-lg:w-11';
 
 const props = defineProps({
     icon: { type: String, required: true },
@@ -19,7 +22,7 @@ const attributes = computed(() => (props.href ? { href: props.href } : { type: p
 </script>
 
 <template>
-    <component :is="tag" v-bind="attributes" :aria-label="label" :title="label" :class="iconButton">
+    <component :is="tag" v-bind="attributes" :aria-label="label" :title="label" :class="[iconButton, TOUCH]">
         <i class="mdi text-xl leading-none" :class="`mdi-${icon}`" aria-hidden="true" />
     </component>
 </template>

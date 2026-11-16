@@ -21,6 +21,15 @@ class BidDocumentAnalyzer
     /** Caracteres de texto por tramo (≈ 15–20 mil tokens en español). */
     public const CHUNK_CHARS = 60000;
 
+    /** Tope de páginas de un pliego que se analiza (hallazgo A1: costo de la IA). */
+    public const MAX_PAGES = 300;
+
+    /** Tope de tramos (= llamadas a la IA) por análisis. */
+    public const MAX_CHUNKS = 15;
+
+    /** Caracteres por token en español, para estimar el consumo antes de llamar. */
+    private const CHARS_PER_TOKEN = 3;
+
     /** Datos simples: clave => descripción para la IA. */
     public const FIELDS = [
         'process_number' => 'número o código del proceso (p. ej. LPN-007-2026)',
@@ -46,19 +55,32 @@ class BidDocumentAnalyzer
         'evaluation_criteria' => ['criterion'],
     ];
 
-    public function __construct(protected OpenAIService $openAI) {}
+    public function __construct(protected OpenAIService $openAI, protected AiTokenBudget $budget) {}
 
     /**
      * @param  array<int, string>  $pages  texto por página (índice 0 = página 1)
      * @return array{fields: array<string, array<int, array<string, mixed>>>, lists: array<string, array<int, array<string, mixed>>>, usage: array<string, int>, chunks: int, model: string}
      */
-    public function analyze(array $pages): array
+    public function analyze(array $pages, ?int $companyId = null): array
     {
         if (! $this->openAI->isConfigured()) {
             throw new RuntimeException('El análisis con IA no está disponible: falta configurar OPENAI_API_KEY. Puedes completar los datos a mano.');
         }
 
-        $chunks = $this->chunks($pages);
+        if (count($pages) > self::MAX_PAGES) {
+            throw new RuntimeException('El pliego tiene '.count($pages).' páginas y el análisis con IA admite hasta '.self::MAX_PAGES.'. Sube solo la parte del pliego con los datos del proceso o completa los datos a mano.');
+        }
+
+        $chunks = $this->split($pages);
+
+        if (count($chunks) > self::MAX_CHUNKS) {
+            throw new RuntimeException('El texto del pliego es demasiado extenso para analizarlo con IA ('.count($chunks).' tramos; el máximo es '.self::MAX_CHUNKS.'). Sube solo la parte del pliego con los datos del proceso o completa los datos a mano.');
+        }
+
+        $this->openAI->forCompany($companyId ?? $this->openAI->billedCompanyId());
+        $estimate = (int) ceil(array_sum(array_map('mb_strlen', $chunks)) / self::CHARS_PER_TOKEN);
+        $this->budget->ensureAvailable($this->openAI->billedCompanyId(), $estimate);
+
         $fields = array_fill_keys(array_keys(self::FIELDS), []);
         $lists = array_fill_keys(array_keys(self::LISTS), []);
         $usage = ['prompt_tokens' => 0, 'completion_tokens' => 0, 'total_tokens' => 0];
@@ -101,12 +123,24 @@ class BidDocumentAnalyzer
     }
 
     /**
-     * Agrupa páginas en tramos sin partir ninguna página.
+     * Tramos que se enviarían a la IA, como mucho MAX_CHUNKS (un pliego que necesita más no se
+     * analiza: `analyze()` lo rechaza antes de llamar).
      *
      * @param  array<int, string>  $pages
      * @return array<int, string>
      */
     public function chunks(array $pages): array
+    {
+        return array_slice($this->split(array_slice($pages, 0, self::MAX_PAGES)), 0, self::MAX_CHUNKS);
+    }
+
+    /**
+     * Agrupa páginas en tramos sin partir ninguna página.
+     *
+     * @param  array<int, string>  $pages
+     * @return array<int, string>
+     */
+    private function split(array $pages): array
     {
         $chunks = [];
         $current = '';

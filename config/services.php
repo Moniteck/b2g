@@ -38,6 +38,11 @@ return [
     'openai' => [
         'key' => env('OPENAI_API_KEY'),
         'model' => env('OPENAI_MODEL', 'gpt-4o-mini'),
+        // Límites de costo (hallazgo A1): consultas por minuto por usuario, consultas al día por
+        // empresa y tokens al día por empresa (suma de lo que reporta OpenAI en cada llamada).
+        'per_minute' => (int) env('OPENAI_PER_MINUTE', 5),
+        'per_company_day' => (int) env('OPENAI_PER_COMPANY_DAY', 100),
+        'daily_token_budget' => (int) env('OPENAI_DAILY_TOKEN_BUDGET', 2000000),
     ],
 
 ];

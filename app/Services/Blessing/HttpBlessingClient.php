@@ -2,6 +2,7 @@
 
 namespace App\Services\Blessing;
 
+use App\Rules\SafeExternalUrl;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
@@ -109,6 +110,11 @@ class HttpBlessingClient implements BlessingClient
 
     protected function request(): PendingRequest
     {
+        // Seguridad (B8): aunque la URL se valide al guardarla, se vuelve a revisar antes de llamar.
+        if (($problem = SafeExternalUrl::problem($this->baseUrl)) !== null) {
+            throw new BlessingException('La URL de Blessing no es válida: '.$problem);
+        }
+
         return Http::baseUrl(rtrim($this->baseUrl, '/').'/')
             ->withToken($this->token)
             ->acceptJson()

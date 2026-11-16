@@ -1,30 +1,28 @@
 <script setup>
-// Empresas del grupo. La raíz las crea y administra; un administrador de empresa solo ve las suyas.
-import { router, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+// Empresas del grupo. La raíz las crea (asistente del marco: datos fiscales, logo, primer
+// administrador, Blessing e ISV) y administra; un administrador de empresa solo ve las suyas.
+// La prop del paginador es `companyRecords`: `companies` es la prop compartida del selector (B-12).
+import { router } from '@inertiajs/vue3';
 import CapAlert from '../../../../design/vue/CapAlert.vue';
 import AppButton from '../../../Components/AppButton.vue';
-import BaseModal from '../../../Components/BaseModal.vue';
 import DataTable from '../../../Components/DataTable.vue';
-import FormField from '../../../Components/FormField.vue';
 import PageHeader from '../../../Components/PageHeader.vue';
 import Pagination from '../../../Components/Pagination.vue';
 import StatusBadge from '../../../Components/StatusBadge.vue';
-import TextInput from '../../../Components/TextInput.vue';
 import Toolbar from '../../../Components/Toolbar.vue';
 import AppLayout from '../../../Layouts/AppLayout.vue';
-import { focusFirstError } from '../../../lib/errors.js';
+import { useShell } from '../../../Layouts/shell.js';
 import { number } from '../../../lib/format.js';
 import { useListFilters } from '../Partials/useListFilters.js';
 
 const props = defineProps({
-    companies: { type: Object, required: true },
+    companyRecords: { type: Object, required: true },
     filters: { type: Object, default: () => ({}) },
     can: { type: Object, default: () => ({}) },
 });
 
 const { filters, loading, error, active, reset, reload } = useListFilters('/empresas', props.filters, {
-    only: ['companies', 'records', 'filters'],
+    only: ['companyRecords', 'filters'],
     defaults: { search: '' },
 });
 
@@ -38,24 +36,13 @@ const columns = [
     { key: 'is_active', label: 'Estado' },
 ];
 
-const creating = ref(false);
-const body = ref(null);
-const form = useForm({ name: '', code: '', tax_id: '' });
-
-function openCreate() {
-    form.reset();
-    form.clearErrors();
-    creating.value = true;
-}
-
-function create() {
-    form.post('/empresas', { onSuccess: () => (creating.value = false), onError: () => focusFirstError(body.value) });
-}
+const shell = useShell();
+const openCreate = () => shell?.openCompanyWizard?.();
 </script>
 
 <template>
     <AppLayout title="Empresas" :fab-label="can.manage ? 'Nueva empresa' : ''" @fab="openCreate">
-        <PageHeader :description="`${number(companies.total)} ${companies.total === 1 ? 'empresa' : 'empresas'} del grupo`">
+        <PageHeader :description="`${number(companyRecords.total)} ${companyRecords.total === 1 ? 'empresa' : 'empresas'} del grupo`">
             <template #actions>
                 <AppButton v-if="can.manage" class="max-lg:hidden" variant="primary" icon="plus" @click="openCreate">Nueva empresa</AppButton>
             </template>
@@ -68,7 +55,7 @@ function create() {
         <div>
             <DataTable
                 :columns="columns"
-                :rows="companies.data"
+                :rows="companyRecords.data"
                 :loading="loading"
                 :error="error"
                 :filtered="active"
@@ -95,19 +82,8 @@ function create() {
                 <template #cell-is_active="{ value }"><StatusBadge :value="value ? 'Activa' : 'Inactiva'" /></template>
                 <template #empty-action><AppButton v-if="can.manage" variant="primary" icon="plus" @click="openCreate">Nueva empresa</AppButton></template>
             </DataTable>
-            <Pagination :paginator="companies" :per-page-options="[]" :only="['companies', 'records', 'filters']" />
+            <Pagination :paginator="companyRecords" :per-page-options="[]" :only="['companyRecords', 'filters']" />
         </div>
 
-        <BaseModal v-model:open="creating" as="form" size="md" title="Nueva empresa" description="Después podrá completar sus datos fiscales, logo, Blessing y miembros." :persistent="form.processing" @submit="create">
-            <div ref="body" class="flex flex-col gap-4">
-                <FormField label="Nombre" required :error="form.errors.name"><TextInput v-model="form.name" maxlength="255" /></FormField>
-                <FormField label="Código" optional :error="form.errors.code" help="Abreviatura interna, única."><TextInput v-model="form.code" maxlength="50" /></FormField>
-                <FormField label="RTN" optional :error="form.errors.tax_id"><TextInput v-model="form.tax_id" maxlength="50" inputmode="numeric" /></FormField>
-            </div>
-            <template #footer>
-                <AppButton :disabled="form.processing" @click="creating = false">Cancelar</AppButton>
-                <AppButton variant="primary" type="submit" icon="plus" :loading="form.processing">Crear empresa</AppButton>
-            </template>
-        </BaseModal>
     </AppLayout>
 </template>

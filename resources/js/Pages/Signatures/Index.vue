@@ -26,6 +26,7 @@ const props = defineProps({
     assets: { type: Object, default: () => ({ firma: null, sello: null }) },
     history: { type: Object, default: () => ({ data: [] }) },
     lastPlacements: { type: Array, default: () => [] },
+    company: { type: Object, default: () => ({ name: '', tax_id: '' }) },
     can: { type: Object, default: () => ({}) },
     limits: { type: Object, default: () => ({ imageMb: 2, pdfMb: 25 }) },
 });
@@ -107,11 +108,12 @@ onBeforeUnmount(releaseUrl);
 
         <CapAlert v-if="!can.sign" status="warning" title="Tu rol no permite firmar en la empresa activa" detail="Puedes preparar tu firma y tu sello; para firmar documentos pide acceso de operador." />
 
+        <!-- El título visible ya lo pone la cabecera; este solo nombra la sección para lectores de pantalla (B-26). -->
         <section aria-labelledby="mis-activos" class="flex flex-col gap-3">
-            <h2 id="mis-activos" :class="heading">Mi firma y sello</h2>
+            <h2 id="mis-activos" class="sr-only">Mi firma y mi sello</h2>
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <AssetCard type="firma" :asset="assets.firma" :max-size-mb="limits.imageMb" />
-                <AssetCard type="sello" :asset="assets.sello" :max-size-mb="limits.imageMb" />
+                <AssetCard type="firma" :asset="assets.firma" :max-size-mb="limits.imageMb" :company="company" />
+                <AssetCard type="sello" :asset="assets.sello" :max-size-mb="limits.imageMb" :company="company" />
             </div>
         </section>
 
@@ -155,7 +157,7 @@ onBeforeUnmount(releaseUrl);
             <div class="flex flex-wrap items-center gap-2">
                 <AppButton v-if="result" external :href="result.application.downloadUrl" icon="download-outline">Descargar PDF firmado</AppButton>
                 <AppButton variant="primary" icon="draw-pen" :disabled="!ready || !can.sign" @click="openModal">Colocar firma y sello</AppButton>
-                <span v-if="!hasAnyAsset && can.sign" class="text-xs text-cap-text-soft">Aún no tienes firma ni sello: podrás subirlos al colocar.</span>
+                <span v-if="!hasAnyAsset && can.sign" class="text-xs text-cap-text-soft">Aún no tienes firma ni sello: podrás crearlos al colocar.</span>
             </div>
         </section>
 

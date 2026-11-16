@@ -31,6 +31,7 @@ use App\Models\SignatureApplication;
 use App\Models\SigningAsset;
 use App\Models\Tender;
 use App\Models\User;
+use App\Listeners\AuditAuthenticationEvents;
 use App\Observers\CalendarSourceObserver;
 use App\Policies\CatalogPolicy;
 use App\Policies\ClientPolicy;
@@ -47,13 +48,18 @@ use App\Policies\ProcessHistoryPolicy;
 use App\Policies\QuotePolicy;
 use App\Policies\SigningAssetPolicy;
 use App\Policies\TenderPolicy;
+use App\Services\Tenancy\CompanyContext;
 use App\Support\Permissions;
+use App\Support\TooManyRequests;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Foundation\DevCommands;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event as EventBus;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 use Laravel\Passport\Passport;
 
 class AppServiceProvider extends ServiceProvider
@@ -119,6 +125,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         CalendarSourceObserver::register(); // Fase 6: plazos al calendario.
+        EventBus::subscribe(AuditAuthenticationEvents::class); // Seguridad B6: auditoría del acceso.
 
         Passport::authorizationView(function ($parameters) {
             return view('mcp.authorize', $parameters);
@@ -136,5 +143,59 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute(120)->by($request->user()?->id ?: $request->ip()),
             Limit::perHour(1000)->by($request->user()?->id ?: $request->ip()),
         ]);
+
+        $this->registerCostLimiters();
+
+        // Contraseñas nuevas: 10 caracteres con letras y números; en producción, además, que no
+        // aparezcan en filtraciones conocidas (consulta k-anónima a Have I Been Pwned). En pruebas
+        // y en local no hay llamadas externas.
+        Password::defaults(fn () => $this->app->isProduction()
+            ? Password::min(10)->letters()->numbers()->uncompromised()
+            : Password::min(10)->letters()->numbers());
+    }
+
+    /**
+     * Límites de las rutas costosas (seguridad, hallazgo A1). Se aplican con `throttle:<nombre>`:
+     *
+     * - `ai`      llamadas a OpenAI: 5 por minuto por usuario y 100 al día por empresa.
+     * - `ocr`     lecturas con Tesseract: 10 por minuto por usuario.
+     * - `exports` PDF, XLSX, CSV y ZIP: 20 por minuto por usuario.
+     * - `login`   20 por minuto por IP (y 20 fallos por hora por correo en AuthController).
+     * - `password-reset` 5 por minuto por IP y 5 por hora por correo.
+     *
+     * Al superarlos, `TooManyRequests` responde con un aviso en español (toast o JSON 429).
+     */
+    private function registerCostLimiters(): void
+    {
+        $user = fn (Request $request) => (string) ($request->user()?->id ?: $request->ip());
+        $company = fn (Request $request) => (string) (($request->hasSession() ? $request->session()->get(CompanyContext::SESSION_KEY) : null) ?? $request->user()?->defaultCompanyId() ?? 'sin-empresa');
+        $respond = fn (string $what) => fn (Request $request, array $headers) => TooManyRequests::respond(
+            $request, TooManyRequests::message((int) ($headers['Retry-After'] ?? 60), $what), $headers,
+        );
+
+        RateLimiter::for('ai', fn (Request $request) => [
+            Limit::perMinute((int) config('services.openai.per_minute', 5))->by('usuario:'.$user($request))
+                ->response($respond('Hiciste muchas consultas a la IA seguidas.')),
+            Limit::perDay((int) config('services.openai.per_company_day', 100))->by('empresa:'.$company($request))
+                ->response($respond('La empresa alcanzó el límite diario de consultas a la IA.')),
+        ]);
+
+        RateLimiter::for('ocr', fn (Request $request) => Limit::perMinute(10)->by($user($request))
+            ->response($respond('Subiste muchas capturas seguidas.')));
+
+        RateLimiter::for('exports', fn (Request $request) => Limit::perMinute(20)->by($user($request))
+            ->response($respond('Generaste muchos archivos seguidos.')));
+
+        RateLimiter::for('password-reset', fn (Request $request) => [
+            Limit::perMinute(5)->by('ip:'.$request->ip())
+                ->response($respond('Pediste muchos enlaces seguidos.')),
+            Limit::perHour(5)->by('correo:'.Str::lower(trim((string) $request->input('email'))))
+                ->response($respond('Pediste muchos enlaces para este correo.')),
+        ]);
+
+        // El tope por correo (20 intentos fallidos por hora) lo lleva AuthController: así los
+        // ingresos correctos no lo consumen.
+        RateLimiter::for('login', fn (Request $request) => Limit::perMinute(20)->by('ip:'.$request->ip())
+            ->response($respond('Demasiados intentos de acceso.')));
     }
 }

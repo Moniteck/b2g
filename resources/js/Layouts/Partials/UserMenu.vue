@@ -1,6 +1,7 @@
 <script setup>
-// Menú de usuario de la cabecera de escritorio: quién soy, mi rol, mi firma, tema y cerrar sesión.
-// (En móvil esas mismas acciones están al pie de la hoja «Más».)
+// Menú de usuario de la cabecera de escritorio: quién soy, mi rol, lo personal (Mi cuenta, Mi firma y
+// sello, Mis recordatorios, Mis conexiones MCP: `accountMenu` de config/navigation.js), tema,
+// animaciones y cerrar sesión. (En móvil están en el bloque «Tu cuenta» de la hoja «Más».)
 // Props: user ({ name, email, initials?, is_root?, company_role? }), company ({ name }).
 // Eventos: logout.
 import { Link } from '@inertiajs/vue3';
@@ -8,7 +9,7 @@ import { computed } from 'vue';
 import CapAvatar from '../../../design/vue/CapAvatar.vue';
 import { toggleTheme } from '../../../design/shell/js/theme.js';
 import DropdownMenu from '../../Components/DropdownMenu.vue';
-import { endpoints } from '../../config/navigation.js';
+import { accountMenu } from '../../config/navigation.js';
 import { motionPreference, systemReducedMotion, toggleMotionPreference } from '../../lib/motion/index.js';
 import { menuItem } from '../../lib/ui.js';
 
@@ -42,12 +43,10 @@ const role = computed(() => (props.user.is_root ? 'Usuario raíz' : (ROLE_LABELS
             </div>
         </template>
         <template #default="{ close }">
-            <Link role="menuitem" href="/mi-cuenta" :class="[menuItem, 'mt-1']" @click="close">
-                <i class="mdi mdi-account-circle-outline text-xl leading-none" aria-hidden="true" /><span>Mi cuenta</span>
+            <Link v-for="(entry, index) in accountMenu" :key="entry.href" role="menuitem" :href="entry.href" :class="[menuItem, index === 0 ? 'mt-1' : '']" @click="close">
+                <i class="mdi text-xl leading-none" :class="`mdi-${entry.icon}`" aria-hidden="true" /><span>{{ entry.label }}</span>
             </Link>
-            <Link role="menuitem" :href="endpoints.signature" :class="menuItem" @click="close">
-                <i class="mdi mdi-draw-pen text-xl leading-none" aria-hidden="true" /><span>Mi firma y sello</span>
-            </Link>
+            <div class="my-1 border-t border-cap-divider" role="separator" />
             <button type="button" role="menuitem" :class="menuItem" @click="toggleTheme()">
                 <i class="mdi mdi-weather-night text-xl leading-none" aria-hidden="true" /><span>Cambiar a modo <span class="dark:hidden">oscuro</span><span class="hidden dark:inline">claro</span></span>
             </button>

@@ -5,6 +5,7 @@
 //        «Acciones de F-000123»), icon ('dots-vertical'), align ('end' | 'start'), width (clase, 'w-48').
 // Slots: trigger ({ open, toggle, attrs }) para un disparador propio; header (encima de los ítems);
 //        default ({ close }) para contenido libre en lugar de `items`.
+// Disparador y opciones con área táctil de 44 px por debajo de `lg` (B-23).
 // Eventos: select (ítem). Teclado: ↑ ↓ Inicio Fin recorren, Enter activa, Esc cierra y devuelve el foco.
 import { Link } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, ref, useId, watch } from 'vue';
@@ -122,7 +123,7 @@ function itemAttrs(item) {
 <template>
     <span ref="anchor" class="inline-flex" v-bind="$attrs" @keydown="onTriggerKeydown">
         <slot name="trigger" :open="open" :toggle="toggle" :attrs="triggerAttrs">
-            <button type="button" :aria-label="label" :title="label" v-bind="triggerAttrs" :class="iconButton" @click.stop="toggle">
+            <button type="button" :aria-label="label" :title="label" v-bind="triggerAttrs" :class="[iconButton, 'max-lg:h-11 max-lg:w-11']" @click.stop="toggle">
                 <i class="mdi text-xl leading-none" :class="`mdi-${icon}`" aria-hidden="true" />
             </button>
         </slot>
@@ -150,7 +151,7 @@ function itemAttrs(item) {
                             :is="itemTag(item)"
                             role="menuitem"
                             v-bind="itemAttrs(item)"
-                            :class="[item.danger ? menuItemDanger : menuItem, item.disabled ? 'cursor-not-allowed opacity-50' : '']"
+                            :class="[item.danger ? menuItemDanger : menuItem, 'max-lg:h-11', item.disabled ? 'cursor-not-allowed opacity-50' : '']"
                             @click="select(item)"
                         >
                             <i v-if="item.icon" class="mdi text-xl leading-none" :class="`mdi-${item.icon}`" aria-hidden="true" />

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Rules\SafeExternalUrl;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -40,7 +41,7 @@ class CompanyRequest extends FormRequest
             'contact_phone' => ['nullable', 'string', 'max:50'],
             'is_active' => ['nullable', 'boolean'],
             'address' => ['nullable', 'string', 'max:500'],
-            'blessing_base_url' => ['nullable', 'url:https,http', 'max:255'],
+            'blessing_base_url' => ['nullable', 'url:https,http', 'max:255', new SafeExternalUrl],
             'blessing_token' => ['nullable', 'string', 'max:2000'],
             'clear_blessing_token' => ['nullable', 'boolean'],
             'blessing_price_list' => ['nullable', 'string', 'max:100'],

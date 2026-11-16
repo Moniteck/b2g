@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 150" width="160" height="150" role="img" aria-label="Lici, el búho del CRM">
+  <ellipse cx="80" cy="145" rx="40" ry="4" fill="#1E1B1A" opacity=".12"/>
+  <path d="M42 58 L30 20 L64 46 Z" fill="#6E1219"/>
+  <path d="M118 58 L130 20 L96 46 Z" fill="#6E1219"/>
+  <ellipse cx="80" cy="92" rx="54" ry="51" fill="#B12530"/>
+  <ellipse cx="80" cy="112" rx="33" ry="30" fill="#F3DADD"/>
+  <path d="M68 108 q4 4 8 0 M84 108 q4 4 8 0 M76 120 q4 4 8 0" fill="none" stroke="#F2D3D6" stroke-width="2.2" stroke-linecap="round"/>
+  <path d="M80 101 L68 94 L68 108 Z M80 101 L92 94 L92 108 Z" fill="#6E1219"/>
+  <circle cx="80" cy="101" r="3.2" fill="#6E1219"/>
+  <ellipse cx="64" cy="141" rx="9" ry="4.5" fill="#A89C91"/>
+  <ellipse cx="96" cy="141" rx="9" ry="4.5" fill="#A89C91"/>
+  <circle cx="60" cy="70" r="23" fill="#FBEDEE"/>
+  <circle cx="100" cy="70" r="23" fill="#FBEDEE"/>
+  <circle cx="60" cy="70" r="13.5" fill="#FFFFFF"/>
+  <circle cx="100" cy="70" r="13.5" fill="#FFFFFF"/>
+  <g transform="translate(0 0)">
+    <circle cx="60" cy="71" r="6.5" fill="#1E1B1A"/>
+    <circle cx="100" cy="71" r="6.5" fill="#1E1B1A"/>
+    <circle cx="62.5" cy="68" r="2.1" fill="#FFFFFF"/>
+    <circle cx="102.5" cy="68" r="2.1" fill="#FFFFFF"/>
+  </g>
+  
+  <g fill="none" stroke="#6E1219" stroke-width="3.6" stroke-linecap="round">
+    <circle cx="60" cy="70" r="17"/>
+    <circle cx="100" cy="70" r="17"/>
+    <path d="M77 69 q3 -5 6 0 M43 66 L36 62 M117 66 L124 62"/>
+  </g>
+  <path d="M50 60 q4 -4 9 -4 M90 60 q4 -4 9 -4" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+  
+  <path d="M73 84 Q80 80 87 84 L80 97 Z" fill="#A89C91"/>
+  
+  <g transform="translate(30 90) rotate(110) scale(.62 .55) translate(-30 -90)">
+    <path d="M28 82 C29 58 48 42 72 41 C83 41 92 45 98 52 L91 57 L99 63 L91 68 L97 75 L88 78 L91 85 L80 86 C68 95 50 101 34 102 C26 101 24 92 28 82 Z" fill="#6E1219"/>
+    <path d="M46 58 C58 52 72 52 86 56 M42 72 C56 66 72 66 88 69 M42 86 C56 80 70 80 82 81" fill="none" stroke="#B12530" stroke-width="2.4" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(130 90) rotate(-110) scale(.62 .55) translate(-130 -90)">
+    <path d="M132 82 C131 58 112 42 88 41 C77 41 68 45 62 52 L69 57 L61 63 L69 68 L63 75 L72 78 L69 85 L80 86 C92 95 110 101 126 102 C134 101 136 92 132 82 Z" fill="#6E1219"/>
+    <path d="M114 58 C102 52 88 52 74 56 M118 72 C104 66 88 66 72 69 M118 86 C104 80 90 80 78 81" fill="none" stroke="#B12530" stroke-width="2.4" stroke-linecap="round"/>
+  </g>
+</svg>

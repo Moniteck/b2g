@@ -3,9 +3,11 @@
 namespace App\Services\Notifications;
 
 use App\Models\Event;
+use App\Models\PushSubscription;
 use App\Models\ReminderDelivery;
 use App\Models\ReminderRule;
 use App\Models\User;
+use App\Services\Pwa\WebPushService;
 use App\Support\Permissions;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Carbon;
@@ -228,6 +230,13 @@ class ReminderService
     {
         $userIds = $this->recipientUserIds($event);
         $recipients = [];
+
+        // Push: solo quien tiene al menos un dispositivo suscrito, y nada si faltan las claves VAPID.
+        if ($channel === 'push') {
+            $userIds = app(WebPushService::class)->enabled() && $userIds !== []
+                ? PushSubscription::query()->whereIn('user_id', $userIds)->distinct()->pluck('user_id')->map(fn ($id) => (int) $id)->all()
+                : [];
+        }
 
         if ($userIds !== []) {
             User::query()->whereIn('id', $userIds)->orderBy('id')->get(['id', 'email'])

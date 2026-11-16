@@ -39,7 +39,7 @@ function send() {
         <div class="flex flex-col gap-4">
             <p class="text-sm text-cap-text-soft">Sube una captura de pantalla de la ficha del expediente (tabla con Expediente, Entidad, fechas, Modalidad…). La leeremos y podrás revisar cada dato antes de guardarlo.</p>
             <FileDropzone v-model="files" :uploader="uploader" accept=".png,.jpg,.jpeg,.webp" :max-size-mb="maxSizeMb" title="Arrastra la captura o elígela" />
-            <CapAlert v-if="uploader.uploading.value" status="info" title="Leyendo la captura…" detail="El reconocimiento de texto tarda unos segundos." />
+            <CapAlert v-if="uploader.uploading.value" status="info" title="Subiendo la captura…" detail="Al terminar se abre la revisión mientras leemos el texto." />
         </div>
         <template #footer>
             <AppButton :disabled="uploader.uploading.value" @click="emit('update:open', false)">Cancelar</AppButton>

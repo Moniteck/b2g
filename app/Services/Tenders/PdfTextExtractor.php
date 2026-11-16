@@ -25,6 +25,9 @@ class PdfTextExtractor
     /** Por debajo de estos caracteres útiles la página se considera sin texto. */
     public const MIN_PAGE_CHARS = 40;
 
+    /** Páginas que se extraen como máximo (hallazgo A1): un PDF más largo se rechaza. */
+    public const MAX_PAGES = 300;
+
     public function __construct(protected OcrReader $ocr) {}
 
     /**
@@ -32,13 +35,18 @@ class PdfTextExtractor
      */
     public function pages(string $pdfPath): array
     {
-        $output = $this->run([Binaries::poppler('pdftotext'), '-layout', '-enc', 'UTF-8', $pdfPath, '-'], 'pdftotext');
+        // Se lee una página de más para saber si el PDF supera el tope sin extraerlo entero.
+        $output = $this->run([Binaries::poppler('pdftotext'), '-layout', '-enc', 'UTF-8', '-l', (string) (self::MAX_PAGES + 1), $pdfPath, '-'], 'pdftotext');
 
         $pages = explode("\f", $output);
 
         // pdftotext deja un salto de página final: la última «página» vacía no existe.
         if (count($pages) > 1 && trim((string) end($pages)) === '') {
             array_pop($pages);
+        }
+
+        if (count($pages) > self::MAX_PAGES) {
+            throw new RuntimeException('El PDF tiene más de '.self::MAX_PAGES.' páginas: es demasiado extenso para analizarlo. Sube solo la parte del pliego con los datos del proceso o completa los datos a mano.');
         }
 
         $pages = array_map(fn (string $page) => rtrim($this->clean($page)), $pages);

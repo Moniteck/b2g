@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/pipeline', [OpportunityController::class, 'index'])->name('pipeline');
 Route::post('/pipeline', [OpportunityController::class, 'store'])->name('opportunities.store');
 
-Route::get('/pipeline/export/pdf', [OpportunityController::class, 'pdf'])->name('opportunities.pdf');
-Route::get('/pipeline/export/xlsx', [OpportunityController::class, 'xlsx'])->name('opportunities.xlsx');
+Route::get('/pipeline/export/pdf', [OpportunityController::class, 'pdf'])->middleware(['throttle:exports', 'audit.export'])->name('opportunities.pdf');
+Route::get('/pipeline/export/xlsx', [OpportunityController::class, 'xlsx'])->middleware(['throttle:exports', 'audit.export'])->name('opportunities.xlsx');
 
 Route::whereNumber('opportunity')->group(function () {
     Route::get('/pipeline/{opportunity}', [OpportunityController::class, 'show'])->name('opportunities.show');

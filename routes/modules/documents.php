@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Route;
 /* Directorio Institucional (documentos de la empresa) */
 
 Route::get('/directorio', [DocumentController::class, 'index'])->name('directory.index');
-Route::get('/directorio/paquete', [DocumentController::class, 'package'])->name('directory.package');
+Route::get('/directorio/paquete', [DocumentController::class, 'package'])->middleware(['throttle:exports', 'audit.export'])->name('directory.package');
 
 // Vista de prueba del panel de adjuntos (solo local y pruebas): la usa tests/visual/documentos.mjs.
 if (app()->environment(['local', 'testing'])) {

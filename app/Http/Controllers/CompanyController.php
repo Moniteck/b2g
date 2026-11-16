@@ -60,8 +60,8 @@ class CompanyController extends Controller
             ]);
 
         return Inertia::render('Admin/Companies/Index', [
-            'records' => $companies->items(),
-            'companies' => $companies,
+            // `companyRecords` y no `companies`: esa es la prop compartida del selector de empresa (B-12).
+            'companyRecords' => $companies,
             'filters' => ['search' => $search],
             'can' => ['manage' => $isRoot],
         ]);

@@ -41,10 +41,25 @@ teclado. Ejemplos vivos: `Pages/Dev/Components.vue` (`/dev/componentes`).
 </AppLayout>
 ```
 
-Props opcionales: `title` (también pone el título de la pestaña), `breadcrumbs`, `sections` (2 a 5 vistas
-hermanas), `backHref` (flecha «Volver» en móvil), `fabLabel` (+ evento `fab`). Slots: `header-actions`,
-`topbar-actions`, `search` (solo buscador global). El menú sale de `config/navigation.js`; el selector de
-empresa, la campana, el menú de usuario, los toasts de `flash` y la confirmación ya vienen incluidos.
+Props opcionales: `title` (cabecera de escritorio, barra superior móvil y pestaña del navegador),
+`breadcrumbs`, `sections` (2 a 5 vistas hermanas), `backHref` (flecha «Volver» en móvil), `fabLabel`
+(+ evento `fab`). Slots: `header-actions`, `topbar-actions`, `search`.
+
+**El marco es persistente.** `Layouts/AppShell.vue` es el layout por defecto de Inertia (`app.js`): se
+monta una sola vez y no se vuelve a montar al navegar (sidebar, cabecera, barra móvil, hoja «Más»,
+toasts, confirmación, paleta ⌘K, asistente de empresa, franja de modo soporte). `<AppLayout>` dentro de
+la página solo publica sus datos en el marco (`usePageMeta` de `Layouts/shell.js`) y envuelve el
+contenido; las páginas no cambian. Sin sesión (acceso, errores) no hay marco.
+- Durante una visita lenta la página no se congela: barra de progreso y, a los 300 ms, un esqueleto.
+- `useShell()` da acceso al marco desde una página: `openCompanyWizard()`, `openSearch()`.
+- Menú (14 entradas con subniveles), tarjetas de `/administracion`, menú del avatar (`accountMenu`) y
+  barra móvil en `config/navigation.js`.
+- Búsqueda global: `GET /buscar?q=` (`SearchController`) + `Layouts/Partials/CommandPalette.vue`.
+- Rutas «solo JSON» (detalle de una modal): márcalas con
+  `->middleware(\App\Http\Middleware\RedirectBrowserToScreen::class.':/pantalla?ver={param}')` y al
+  abrirlas en el navegador redirigen a su pantalla en lugar de mostrar JSON crudo.
+- Errores 403/404/419/429/500/503: `Pages/Errors/Show.vue` (`App\Support\ErrorPage`).
+- Íconos: subconjunto generado (`node scripts/mdi-subset.mjs` tras usar un ícono `mdi-*` nuevo).
 
 ## Qué usar para qué
 
@@ -111,6 +126,9 @@ empresa, la campana, el menú de usuario, los toasts de `flash` y la confirmaci�
 ```
 
 **FormField + controles** — el control toma solo su id, `aria-invalid` y `aria-describedby`.
+`DateInput` y `DateTimeInput` son propios (no el control nativo): se escriben y se ven `dd/mm/aaaa` y
+`14:30` (con ayuda «2:30 p. m.»), abren un calendario (popover; hoja inferior en móvil) y su `v-model`
+sigue siendo `AAAA-MM-DD` / `AAAA-MM-DDTHH:mm`. `Tabs` conserva montadas las pestañas ya abiertas.
 ```vue
 <div class="grid grid-cols-1 gap-x-6 gap-y-4 md:grid-cols-2">
     <FormField label="Nombre" required :error="form.errors.name"><TextInput v-model="form.name" /></FormField>

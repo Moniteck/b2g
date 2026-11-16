@@ -8,6 +8,7 @@ use App\Models\Contract;
 use App\Models\Quote;
 use App\Services\AuditLogger;
 use App\Services\Tenancy\CompanyContext;
+use App\Support\SafeCell;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -176,7 +177,7 @@ class ClientController extends Controller
 
             $query->chunk(500, function ($clients) use ($out) {
                 foreach ($clients as $client) {
-                    fputcsv($out, [
+                    fputcsv($out, SafeCell::csvRow([
                         $client->name,
                         $client->tax_id,
                         $client->institution?->name,
@@ -187,7 +188,7 @@ class ClientController extends Controller
                         $client->status,
                         number_format((float) $client->accumulated_amount, 2, '.', ''),
                         $client->last_purchase_at?->format('d/m/Y'),
-                    ]);
+                    ]));
                 }
             });
 

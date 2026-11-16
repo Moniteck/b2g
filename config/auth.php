@@ -41,6 +41,8 @@ return [
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
+            // «Mantener la sesión»: 30 días (en minutos).
+            'remember' => 43200,
         ],
 
         // Guard utilizado por el servidor MCP (OAuth 2.1 con Passport).

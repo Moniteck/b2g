@@ -76,11 +76,15 @@
 .m-page > .grid > :nth-child(6) { animation-delay: 250ms; }
 .m-page > .grid > :nth-child(n + 7) { animation-delay: 280ms; }
 
-/* Salida: mientras llega la página nueva el contenido actual se atenúa y sube un poco. */
-.cap-shell__content[data-m-leaving] > .m-page {
-    opacity: 0.35;
-    transform: translateY(-6px);
+/* Carga completa (primera pintura): el contenido principal aparece sin animar para no retrasar el LCP
+   (lib/motion/preference.js · isFirstLoad). Las visitas de Inertia posteriores sí entran en cascada. */
+html[data-first-load] .m-page > *,
+html[data-first-load] .m-page > .grid > * {
+    animation: none;
 }
+
+/* Durante una visita lenta la página anterior no se atenúa ni se congela: el marco persistente
+   muestra la barra de progreso y, pasados 300 ms, un esqueleto (Layouts/Partials/PageSkeleton.vue). */
 
 /* Barra de progreso de Inertia con el degradado de la marca y un brillo que la recorre. */
 html #nprogress .bar {
@@ -494,17 +498,17 @@ html #nprogress .peg {
 
 /* Modal (BaseModal): fondo que se desenfoca y panel con escala; en móvil, hoja que sube. */
 .m-modal-enter-active .m-modal-backdrop { transition: opacity 260ms var(--m-ease-enter); }
-.m-modal-leave-active .m-modal-backdrop { transition: opacity 180ms var(--m-ease-exit); }
+.m-modal-leave-active .m-modal-backdrop { transition: opacity 140ms var(--m-ease-exit); }
 .m-modal-enter-from .m-modal-backdrop,
 .m-modal-leave-to .m-modal-backdrop { opacity: 0; }
-.m-modal-enter-active .m-modal-panel { transition: opacity 200ms var(--m-ease-enter), transform 380ms var(--m-ease-expo); }
-.m-modal-leave-active .m-modal-panel { transition: opacity 150ms var(--m-ease-exit), transform 180ms var(--m-ease-exit); }
+.m-modal-enter-active .m-modal-panel { transition: opacity 180ms var(--m-ease-enter), transform 300ms var(--m-ease-expo); }
+.m-modal-leave-active .m-modal-panel { transition: opacity 120ms var(--m-ease-exit), transform 150ms var(--m-ease-exit); }
 .m-modal-enter-from .m-modal-panel { opacity: 0; transform: translateY(16px) scale(0.95); }
 .m-modal-leave-to .m-modal-panel { opacity: 0; transform: scale(0.97); }
 @media (max-width: 767.98px) {
     .m-modal-enter-from .m-modal-panel { opacity: 1; transform: translateY(100%); }
     .m-modal-leave-to .m-modal-panel { opacity: 1; transform: translateY(100%); }
-    .m-modal-leave-active .m-modal-panel { transition: transform 200ms var(--m-ease-exit); }
+    .m-modal-leave-active .m-modal-panel { transition: transform 160ms var(--m-ease-exit); }
 }
 
 /* Contador de páginas, chips y cifras que cambian. */
@@ -587,9 +591,6 @@ html[data-motion="reduced"] .m-modal-enter-active .m-modal-panel {
 }
 html[data-motion="reduced"] :is(.m-menu-enter-from, .m-modal-enter-from .m-modal-panel, .m-slide-left-enter-from, .m-slide-right-enter-from, .m-rise-enter-from, .m-pop-enter-from) {
     transform: none !important;
-}
-html[data-motion="reduced"] .cap-shell__content[data-m-leaving] > .m-page {
-    transform: none;
 }
 html[data-motion="reduced"] .m-nav-ghost,
 html[data-motion="reduced"] .m-confetti {

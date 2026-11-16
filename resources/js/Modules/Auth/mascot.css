@@ -1,0 +1,635 @@
+/* ================================================================================================
+ * Lici (Mascot.vue): estilos propios del búho, para usarlo fuera de la pantalla de acceso
+ * (Agente Legal). Mascot.vue importa este archivo, así que basta con importar el componente.
+ *
+ * Reúne el estado final de las reglas `.lici*` de auth.css (que sigue teniendo las mismas, con
+ * los mismos valores, para la pantalla de acceso) y añade los estados de asistente:
+ *   reading   lee un libro de leyes (los ojos recorren la página)
+ *   writing   escribe con una pluma sobre una hoja
+ *   searching busca con una lupa (espera la respuesta)
+ * Colores solo con variables --cap-*; cambian con el tema y con la marca instalada.
+ * ============================================================================================== */
+
+.lici {
+  display: block;
+  overflow: visible;
+}
+
+.lici * {
+  transform-box: view-box;
+}
+
+.lici__shadow {
+  fill: var(--cap-text);
+  opacity: 0.12;
+  transform-origin: 80px 145px;
+}
+
+.lici__hop {
+  transform-origin: 80px 143px;
+}
+
+.lici__tilt {
+  transform-origin: 80px 140px;
+  transition: transform 420ms cubic-bezier(0.3, 1.3, 0.5, 1);
+}
+
+.lici__body {
+  transform-origin: 80px 143px;
+}
+
+.lici__tuft {
+  fill: var(--cap-red-800);
+  transition: transform 320ms cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+.lici__tuft--left {
+  transform-origin: 46px 50px;
+}
+
+.lici__tuft--right {
+  transform-origin: 114px 50px;
+}
+
+.lici__fill-brand {
+  fill: var(--cap-red-600);
+}
+
+.lici__fill-belly {
+  fill: var(--cap-red-100);
+}
+
+.lici__feather {
+  fill: none;
+  stroke: var(--cap-red-200);
+  stroke-linecap: round;
+  stroke-width: 2.2;
+}
+
+.lici__tie {
+  fill: var(--cap-wine);
+}
+
+.lici__tie-knot {
+  fill: var(--cap-red-800);
+}
+
+.lici__foot,
+.lici__beak {
+  fill: var(--cap-taupe);
+}
+
+.lici__face {
+  transition: transform 220ms var(--cap-ease-standard);
+}
+
+.lici__disc {
+  fill: var(--cap-red-50);
+}
+
+.lici__sclera,
+.lici__glint {
+  fill: var(--cap-on-accent);
+}
+
+.lici__pupils {
+  transition: transform 140ms var(--cap-ease-enter);
+}
+
+.lici__pupil-size {
+  transition: transform 220ms cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+.lici__pupil {
+  fill: var(--cap-chrome);
+}
+
+.lici__lid {
+  fill: var(--cap-red-600);
+  transform: scaleY(0);
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+  transition: transform 260ms var(--cap-ease-standard);
+}
+
+.lici__eyes {
+  transition: opacity var(--cap-duration-fast) var(--cap-ease-standard);
+}
+
+.lici__eyes--hidden {
+  opacity: 0;
+}
+
+.lici__happy {
+  fill: none;
+  stroke: var(--cap-chrome);
+  stroke-linecap: round;
+  stroke-width: 3.6;
+  opacity: 0;
+  transition: opacity var(--cap-duration-fast) var(--cap-ease-standard);
+}
+
+.lici__happy--on {
+  opacity: 1;
+}
+
+.lici__glasses {
+  fill: none;
+  stroke: var(--cap-wine);
+  stroke-linecap: round;
+  stroke-width: 3.6;
+}
+
+.lici__lens-glint {
+  stroke: var(--cap-on-accent);
+  stroke-width: 2;
+  opacity: 0.75;
+}
+
+.lici__brow {
+  fill: none;
+  stroke: var(--cap-red-800);
+  stroke-linecap: round;
+  stroke-width: 3.4;
+  opacity: 0;
+  transition: opacity var(--cap-duration-fast) var(--cap-ease-standard);
+}
+
+.lici__brow-up,
+.lici__mouth,
+.lici__zzz,
+.lici__sparkles {
+  opacity: 0;
+  transition: opacity var(--cap-duration-base) var(--cap-ease-standard);
+}
+
+.lici__brow-up {
+  fill: none;
+  stroke: var(--cap-red-800);
+  stroke-linecap: round;
+  stroke-width: 3.2;
+}
+
+.lici__mouth {
+  fill: var(--cap-wine);
+}
+
+.lici__cheek {
+  fill: var(--cap-red-400);
+  opacity: 0;
+  transition: opacity var(--cap-duration-base) var(--cap-ease-standard);
+}
+
+.lici__sweat {
+  fill: var(--cap-status-info);
+  opacity: 0;
+}
+
+.lici__dots circle {
+  fill: var(--cap-taupe);
+  opacity: 0;
+}
+
+.lici__zzz text {
+  fill: var(--cap-taupe);
+  font: 700 13px var(--cap-font-display);
+}
+
+.lici__sparkles path {
+  fill: var(--cap-red-400);
+}
+
+.lici__wing {
+  transition: transform 480ms cubic-bezier(0.34, 1.25, 0.5, 1);
+}
+
+.lici__wing-shape {
+  fill: var(--cap-red-800);
+  stroke: var(--cap-wine);
+  stroke-linejoin: round;
+  stroke-width: 1.6;
+}
+
+.lici__wing-feather {
+  fill: none;
+  stroke: var(--cap-red-600);
+  stroke-linecap: round;
+  stroke-width: 2.4;
+}
+
+.lici__wing--left {
+  transform: rotate(110deg) scale(0.62, 0.55);
+  transform-origin: 30px 90px;
+}
+
+.lici__wing--right {
+  transform: rotate(-110deg) scale(0.62, 0.55);
+  transform-origin: 130px 90px;
+}
+
+/* ---- Estados de la pantalla de acceso -------------------------------------------------------- */
+
+.lici--shy .lici__wing--left,
+.lici--shy .lici__wing--right {
+  transform: rotate(0deg) scale(1, 1);
+}
+
+.lici--peek .lici__wing--left {
+  transform: rotate(6deg) scale(0.86, 0.96);
+}
+
+.lici--peek .lici__wing--right {
+  transform: rotate(-64deg) scale(0.7, 0.62);
+}
+
+.lici--worried .lici__brow,
+.lici--worried .lici__sweat {
+  opacity: 1;
+}
+
+.lici--worried .lici__hop {
+  animation: lici-shake 520ms ease-in-out 2;
+}
+
+.lici--worried .lici__sweat {
+  animation: lici-drip 1.1s ease-in 2;
+}
+
+.lici--worried .lici__wing--left {
+  transform: rotate(132deg) scale(0.62, 0.55);
+}
+
+.lici--worried .lici__wing--right {
+  transform: rotate(-132deg) scale(0.62, 0.55);
+}
+
+.lici--thinking .lici__dots circle {
+  opacity: 1;
+  animation: lici-dot 1.2s ease-in-out infinite;
+}
+
+.lici--thinking .lici__dots circle:nth-child(2) {
+  animation-delay: 160ms;
+}
+
+.lici--thinking .lici__dots circle:nth-child(3) {
+  animation-delay: 320ms;
+}
+
+.lici--thinking .lici__wing--right {
+  transform: rotate(-30deg) scale(0.55, 0.5);
+}
+
+.lici--surprised .lici__pupil-size {
+  transform: scale(1.35);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.lici--surprised .lici__brow-up,
+.lici--surprised .lici__mouth {
+  opacity: 1;
+}
+
+.lici--surprised .lici__tuft--left {
+  transform: rotate(-12deg);
+}
+
+.lici--surprised .lici__tuft--right {
+  transform: rotate(12deg);
+}
+
+.lici--surprised .lici__hop {
+  animation: lici-startle 420ms cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+
+.lici--surprised .lici__wing--left {
+  transform: rotate(148deg) scale(0.62, 0.55);
+}
+
+.lici--surprised .lici__wing--right {
+  transform: rotate(-148deg) scale(0.62, 0.55);
+}
+
+.lici--happy .lici__cheek,
+.lici--happy .lici__sparkles {
+  opacity: 0.8;
+}
+
+.lici--happy .lici__sparkles path {
+  animation: lici-twinkle 900ms ease-in-out infinite alternate;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.lici--happy .lici__hop {
+  animation: lici-jump 560ms cubic-bezier(0.3, 0, 0.4, 1) 1;
+}
+
+.lici--happy .lici__wing--left {
+  transform: rotate(170deg) scale(0.62, 0.55);
+}
+
+.lici--happy .lici__wing--right {
+  transform: rotate(-170deg) scale(0.62, 0.55);
+}
+
+.lici--sleepy .lici__lid {
+  animation: none;
+  transform: scaleY(0.62);
+}
+
+.lici--sleepy .lici__zzz {
+  opacity: 1;
+}
+
+.lici--sleepy .lici__zzz text {
+  animation: lici-zzz 2.4s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.lici--sleepy .lici__zzz text:nth-child(2) {
+  animation-delay: 0.4s;
+}
+
+.lici--sleepy .lici__zzz text:nth-child(3) {
+  animation-delay: 0.8s;
+}
+
+.lici--sleepy .lici__wing--left {
+  transform: rotate(100deg) scale(0.62, 0.55);
+}
+
+.lici--sleepy .lici__wing--right {
+  transform: rotate(-100deg) scale(0.62, 0.55);
+}
+
+.lici--celebrate .lici__cheek,
+.lici--wave .lici__cheek {
+  opacity: 0.6;
+}
+
+.lici--celebrate .lici__hop {
+  animation: lici-jump 700ms cubic-bezier(0.3, 0, 0.4, 1) infinite;
+}
+
+.lici--celebrate .lici__shadow {
+  animation: lici-shadow 700ms cubic-bezier(0.3, 0, 0.4, 1) infinite;
+}
+
+.lici--celebrate .lici__wing--left {
+  transform: rotate(250deg) scale(0.62, 0.55);
+  animation: lici-flap-left 350ms ease-in-out infinite alternate;
+}
+
+.lici--celebrate .lici__wing--right {
+  transform: rotate(-250deg) scale(0.62, 0.55);
+  animation: lici-flap-right 350ms ease-in-out infinite alternate;
+}
+
+.lici--wave .lici__hop {
+  animation: lici-jump 620ms cubic-bezier(0.3, 0, 0.4, 1) 1;
+}
+
+.lici--wave .lici__wing--right {
+  transform: rotate(-250deg) scale(0.62, 0.55);
+  animation: lici-wave 420ms ease-in-out infinite alternate;
+}
+
+.lici--watch .lici__tuft--left {
+  transform: rotate(-4deg);
+}
+
+.lici--watch .lici__tuft--right {
+  transform: rotate(4deg);
+}
+
+/* ---- Estados de asistente: utilería (libro, hoja y pluma, lupa) ---------------------------- */
+
+.lici__prop {
+  opacity: 0;
+  transform: translateY(8px) scale(0.9);
+  transform-origin: 80px 125px;
+  transition: opacity var(--cap-duration-base) var(--cap-ease-standard), transform 360ms cubic-bezier(0.3, 1.4, 0.5, 1);
+  pointer-events: none;
+}
+
+.lici__book-cover {
+  fill: var(--cap-wine);
+}
+
+.lici__book-page,
+.lici__paper {
+  fill: var(--cap-on-accent);
+  stroke: var(--cap-red-200);
+  stroke-width: 1.2;
+}
+
+.lici__book-lines,
+.lici__paper-lines {
+  fill: none;
+  stroke: var(--cap-taupe);
+  stroke-linecap: round;
+  stroke-width: 1.4;
+  opacity: 0.7;
+}
+
+.lici__book-mark {
+  fill: var(--cap-red-400);
+}
+
+.lici__quill-shaft {
+  fill: none;
+  stroke: var(--cap-chrome);
+  stroke-linecap: round;
+  stroke-width: 2.2;
+}
+
+.lici__quill-vane {
+  fill: var(--cap-red-200);
+  stroke: var(--cap-red-400);
+  stroke-width: 1;
+}
+
+.lici__lens-ring {
+  fill: color-mix(in srgb, var(--cap-on-accent) 35%, transparent);
+  stroke: var(--cap-taupe);
+  stroke-width: 4;
+}
+
+.lici__lens-handle {
+  fill: none;
+  stroke: var(--cap-wine);
+  stroke-linecap: round;
+  stroke-width: 6;
+}
+
+.lici__lens-shine {
+  fill: none;
+  stroke: var(--cap-on-accent);
+  stroke-linecap: round;
+  stroke-width: 2;
+  opacity: 0.8;
+}
+
+.lici--reading .lici__book,
+.lici--writing .lici__write,
+.lici--searching .lici__magnifier {
+  opacity: 1;
+  transform: none;
+}
+
+/* Lee: mira hacia abajo y los ojos recorren las líneas; las alas sostienen el libro. */
+.lici--reading .lici__pupils {
+  animation: lici-read 2.6s ease-in-out infinite;
+}
+
+.lici--reading .lici__wing--left {
+  transform: rotate(138deg) scale(0.62, 0.55);
+}
+
+.lici--reading .lici__wing--right {
+  transform: rotate(-138deg) scale(0.62, 0.55);
+}
+
+/* Escribe: la pluma va y viene sobre la hoja; la cabeza acompaña. */
+.lici--writing .lici__quill {
+  animation: lici-quill 900ms ease-in-out infinite alternate;
+  transform-origin: 112px 132px;
+}
+
+.lici--writing .lici__pupils {
+  animation: lici-follow-quill 900ms ease-in-out infinite alternate;
+}
+
+.lici--writing .lici__wing--right {
+  transform: rotate(-150deg) scale(0.62, 0.55);
+}
+
+.lici--writing .lici__tuft--left {
+  transform: rotate(-4deg);
+}
+
+/* Busca: la lupa da vueltas delante del ojo derecho, que se agranda tras el cristal. */
+.lici--searching .lici__magnifier {
+  animation: lici-search 2.2s ease-in-out infinite;
+  transform-origin: 100px 72px;
+}
+
+.lici--searching .lici__wing--right {
+  transform: rotate(-70deg) scale(0.6, 0.55);
+}
+
+.lici--searching .lici__tilt {
+  transform: rotate(-5deg);
+}
+
+.lici--searching .lici__dots circle {
+  opacity: 1;
+  animation: lici-dot 1.2s ease-in-out infinite;
+}
+
+.lici--searching .lici__dots circle:nth-child(2) {
+  animation-delay: 160ms;
+}
+
+.lici--searching .lici__dots circle:nth-child(3) {
+  animation-delay: 320ms;
+}
+
+/* ---- Fotogramas ------------------------------------------------------------------------------ */
+
+@keyframes lici-shake {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  20% { transform: translateX(-7px) rotate(-4deg); }
+  40% { transform: translateX(6px) rotate(3deg); }
+  60% { transform: translateX(-4px) rotate(-2deg); }
+  80% { transform: translateX(2px) rotate(1deg); }
+}
+
+@keyframes lici-drip {
+  from { transform: translateY(0); opacity: 1; }
+  to { transform: translateY(14px); opacity: 0; }
+}
+
+@keyframes lici-dot {
+  0%, 100% { transform: translateY(0); opacity: 0.35; }
+  50% { transform: translateY(-4px); opacity: 1; }
+}
+
+@keyframes lici-jump {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  15% { transform: translateY(0) scale(1.06, 0.92); }
+  45% { transform: translateY(-26px) scale(0.97, 1.04); }
+  75% { transform: translateY(0) scale(1.04, 0.95); }
+}
+
+@keyframes lici-shadow {
+  0%, 15%, 75%, 100% { transform: scale(1); opacity: 0.12; }
+  45% { transform: scale(0.7); opacity: 0.06; }
+}
+
+@keyframes lici-startle {
+  0% { transform: translateY(0) scale(1); }
+  40% { transform: translateY(-10px) scale(1.04, 0.97); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes lici-twinkle {
+  from { transform: scale(0.6) rotate(0deg); opacity: 0.4; }
+  to { transform: scale(1.15) rotate(30deg); opacity: 1; }
+}
+
+@keyframes lici-zzz {
+  0% { transform: translate(0, 6px) scale(0.6); opacity: 0; }
+  40% { opacity: 1; }
+  100% { transform: translate(6px, -10px) scale(1.1); opacity: 0; }
+}
+
+@keyframes lici-flap-left {
+  from { transform: rotate(232deg) scale(0.62, 0.55); }
+  to { transform: rotate(268deg) scale(0.62, 0.55); }
+}
+
+@keyframes lici-flap-right {
+  from { transform: rotate(-232deg) scale(0.62, 0.55); }
+  to { transform: rotate(-268deg) scale(0.62, 0.55); }
+}
+
+@keyframes lici-wave {
+  from { transform: rotate(-228deg) scale(0.62, 0.55); }
+  to { transform: rotate(-272deg) scale(0.62, 0.55); }
+}
+
+@keyframes lici-read {
+  0%, 100% { transform: translate(-4px, 4px); }
+  45% { transform: translate(4px, 4px); }
+  50% { transform: translate(4px, 5px); }
+  55% { transform: translate(-4px, 5px); }
+}
+
+@keyframes lici-quill {
+  from { transform: translate(-14px, 0) rotate(-6deg); }
+  to { transform: translate(4px, 2px) rotate(4deg); }
+}
+
+@keyframes lici-follow-quill {
+  from { transform: translate(-1px, 4px); }
+  to { transform: translate(3px, 5px); }
+}
+
+@keyframes lici-search {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(-6px, 3px) rotate(-6deg); }
+  50% { transform: translate(-30px, 2px) rotate(-4deg); }
+  75% { transform: translate(-6px, -3px) rotate(4deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lici *,
+  .lici {
+    animation: none !important;
+    transition-duration: 1ms !important;
+  }
+}

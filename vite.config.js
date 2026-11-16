@@ -13,6 +13,9 @@ export default defineConfig({
         vue(),
     ],
     server: {
+        // Origen fijo `http://localhost:5173` en public/hot: la CSP de desarrollo no admite
+        // fuentes con IPv6 literal (`http://[::1]:5173`), que Chrome descarta por inválidas.
+        host: 'localhost',
         watch: {
             ignored: ['**/storage/framework/views/**'],
         },

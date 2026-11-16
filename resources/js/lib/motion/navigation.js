@@ -1,34 +1,33 @@
 // Movimiento entre páginas y del marco.
 //
-// Cada página de Inertia monta su propio `AppLayout`, así que el marco se vuelve a montar al navegar.
-// Para que se sienta continuo:
-//   - al empezar una visita a otra página, el contenido actual sale (se atenúa y sube un poco) y el
-//     indicador activo del sidebar (y de la barra móvil) empieza a deslizarse hacia el destino;
-//   - al montar la página nueva, el contenido entra en cascada (`motion.css`), el indicador termina
-//     su recorrido desde donde iba y el scroll del menú se conserva.
+// El marco (`Layouts/AppShell.vue`) es persistente: Inertia lo monta una vez y al navegar solo cambia
+// la página de adentro. Por eso aquí ya no hay parches para conservar el estado del menú entre
+// montajes. Lo que queda:
+//   - el indicador activo del sidebar y de la barra móvil se desliza del ítem anterior al nuevo
+//     cuando LLEGA la página (no antes: el menú nunca adelanta a la cabecera);
+//   - el contenido de la página entra en cascada (`motion.css`, `.m-page > *`);
+//   - durante una visita lenta la página anterior NO se atenúa ni se congela: el marco muestra la
+//     barra de progreso y, pasados 300 ms, un esqueleto (`AppShell.vue`, `PageSkeleton.vue`);
+//   - las cifras grandes cuentan al aparecer, la cabecera gana sombra al bajar y la campana se agita
+//     con avisos nuevos.
 // Las visitas que conservan estado (filtros, paginación, recargas parciales) no animan nada.
 import { router } from '@inertiajs/vue3';
 import { onBeforeUnmount, onMounted, watch } from 'vue';
 import { pop, ring } from './animate.js';
-import { isReducedMotion } from './preference.js';
+import { endFirstLoad, isFirstLoad, isReducedMotion } from './preference.js';
 import { DURATION, EASE } from './tokens.js';
 import { countUpText } from './useCountUp.js';
 
-const ACTIVE = '[aria-current="page"]';
+const ACTIVE = '[aria-current="page"], [data-active="true"]';
 const INDICATORS = [
     { container: '.cap-shell-sidebar__nav', items: '.cap-shell-sidebar__item, .cap-shell-sidebar__child' },
     { container: '.cap-shell-tabbar', items: '.cap-shell-tabbar__tab' },
 ];
 
-// Estado entre el marco que se va y el que llega (módulo: sobrevive al re-montaje).
-let pending = null; // { startedAt, from: [{ index, rect }] , path }
-let sidebarScroll = 0;
-let lastUnread = null;
-let mounted = false;
-
 const pathOf = (url) => new URL(url, window.location.href).pathname;
 
-function isPageVisit(visit) {
+/** Visita a OTRA página (no recargas parciales, ni envíos, ni filtros que conservan estado). */
+export function isPageVisit(visit) {
     if (!visit || visit.prefetch) return false;
     if (String(visit.method ?? 'get').toLowerCase() !== 'get') return false;
     if (visit.only?.length || visit.except?.length) return false;
@@ -43,6 +42,12 @@ const relativeRect = (container, element) => {
     const rect = element.getBoundingClientRect();
     return { left: rect.left - box.left + container.scrollLeft, top: rect.top - box.top + container.scrollTop, width: rect.width, height: rect.height };
 };
+
+/** El indicador visible de un contenedor: el más específico (un hijo antes que su grupo). */
+function activeIn(box, items) {
+    const candidates = [...box.querySelectorAll(`:is(${items}):is(${ACTIVE})`)].filter((element) => element.getClientRects().length);
+    return candidates.at(-1) ?? null;
+}
 
 /** Copia la pintura del ítem activo (fondo, borde, sombra y la barra `::before`) a un fantasma. */
 function makeGhost(container, target) {
@@ -76,7 +81,7 @@ function makeGhost(container, target) {
     return ghost;
 }
 
-function slide(container, target, from, elapsed = 0) {
+function slide(container, target, from) {
     if (!container || !target || !from) return;
     const to = relativeRect(container, target);
     const dx = from.left - to.left;
@@ -95,7 +100,6 @@ function slide(container, target, from, elapsed = 0) {
         ],
         { duration: DURATION.spring, easing: EASE.spring, fill: 'both' },
     );
-    animation.currentTime = Math.min(elapsed, DURATION.spring - 1);
     const done = () => {
         target.removeAttribute('data-m-ghosting');
         ghost.remove();
@@ -103,96 +107,40 @@ function slide(container, target, from, elapsed = 0) {
     animation.finished.then(done, done);
 }
 
-function captureIndicators() {
+/** Posición de los indicadores activos antes de que cambie la página. */
+export function captureIndicators() {
     return INDICATORS.map(({ container, items }) => {
         const box = document.querySelector(container);
-        const active = box?.querySelector(`:is(${items})${ACTIVE}`);
-        return box && active ? relativeRect(box, active) : null;
+        const active = box && activeIn(box, items);
+        return active ? relativeRect(box, active) : null;
     });
 }
 
-function startIndicators(path) {
+/** Desliza los indicadores desde `from` (de captureIndicators) hasta el ítem activo actual. */
+export function slideIndicators(from) {
+    if (!from || isReducedMotion()) return;
     INDICATORS.forEach(({ container, items }, index) => {
         const box = document.querySelector(container);
-        if (!box) return;
-        const target = [...box.querySelectorAll(items)].find((item) => item.getAttribute('href') && pathOf(item.getAttribute('href')) === path);
-        const active = box.querySelector(`:is(${items})${ACTIVE}`);
-        if (target && pending.from[index]) {
-            active?.setAttribute('data-m-ghosting', '');
-            slide(box, target, pending.from[index]);
-        }
+        const active = box && activeIn(box, items);
+        if (active && from[index]) slide(box, active, from[index]);
     });
-    // Píldora de secciones de la cabecera: se mueve sola cuando cambia `aria-current` (pill-nav.js).
-    const sections = [...document.querySelectorAll('.cap-shell-header__nav-item')];
-    const section = sections.find((item) => item.getAttribute('href') && pathOf(item.getAttribute('href')) === path);
-    if (section) {
-        pending.sections = sections.map((item) => [item, item.getAttribute('aria-current')]);
-        sections.forEach((item) => (item === section ? item.setAttribute('aria-current', 'page') : item.removeAttribute('aria-current')));
-    }
-}
-
-function finishIndicators() {
-    if (!pending || isReducedMotion()) return;
-    const elapsed = performance.now() - pending.startedAt;
-    INDICATORS.forEach(({ container, items }, index) => {
-        const box = document.querySelector(container);
-        const active = box?.querySelector(`:is(${items})${ACTIVE}`);
-        if (active && pending.from[index]) slide(box, active, pending.from[index], elapsed);
-    });
-    const tab = document.querySelector(`.cap-shell-tabbar__tab${ACTIVE} .mdi`);
+    const tab = document.querySelector('.cap-shell-tabbar__tab[aria-current="page"] .mdi');
     if (tab) pop(tab, 1.18);
-}
-
-function restoreAfterCancel() {
-    document.querySelectorAll('[data-m-ghosting]').forEach((element) => element.removeAttribute('data-m-ghosting'));
-    document.querySelectorAll('.m-nav-ghost').forEach((ghost) => ghost.remove());
-    pending?.sections?.forEach(([item, value]) => (value ? item.setAttribute('aria-current', value) : item.removeAttribute('aria-current')));
 }
 
 // ───────────────────────── Visitas de Inertia ─────────────────────────
 
 let installed = false;
-let leaving = null;
 
 export function installPageTransitions() {
     if (installed || typeof window === 'undefined') return;
     installed = true;
 
-    router.on('start', (event) => {
-        const visit = event.detail.visit;
-        if (!isPageVisit(visit)) return;
-        const content = document.querySelector('.cap-shell__content');
-        sidebarScroll = document.querySelector('.cap-shell-sidebar__nav')?.scrollTop ?? 0;
-        pending = { startedAt: performance.now(), from: captureIndicators(), path: pathOf(visit.url) };
-        if (isReducedMotion()) return;
-        leaving = content;
-        content?.setAttribute('data-m-leaving', '');
-        startIndicators(pending.path);
-    });
-
-    router.on('navigate', () => {
-        // Misma página con otros datos (p. ej. ficha → ficha): el contenido no se re-monta; se repite la entrada.
-        if (leaving?.isConnected) {
-            leaving.removeAttribute('data-m-leaving');
-            const page = leaving.querySelector(':scope > .m-page');
-            if (page) {
-                page.classList.remove('m-page');
-                void page.offsetWidth;
-                page.classList.add('m-page');
-            }
-        }
-        leaving = null;
-    });
-
-    router.on('finish', (event) => {
-        const visit = event.detail.visit;
-        if (visit.completed) return;
-        if (visit.cancelled || visit.interrupted || !visit.completed) {
-            leaving?.removeAttribute('data-m-leaving');
-            leaving = null;
-            restoreAfterCancel();
-            pending = null;
-        }
+    // Carga completa: sin entrada animada ni conteo hasta la primera navegación (LCP).
+    document.documentElement.setAttribute('data-first-load', '');
+    const initialPath = window.location.pathname;
+    router.on('navigate', (event) => {
+        if (isFirstLoad() && pathOf(event.detail.page?.url ?? '/') !== initialPath) endFirstLoad();
     });
 
     // Éxito de un envío: el botón que lo disparó muestra un check (si sigue en pantalla).
@@ -225,10 +173,6 @@ export function markSuccess(button) {
 
 // ───────────────────────── Marco ─────────────────────────
 
-/**
- * Enlaza el movimiento del marco al `AppLayout` montado: indicadores, sombra de la cabecera al hacer
- * scroll, scroll del menú y campana. `unread` es una función que devuelve los avisos sin leer.
- */
 // Cifras grandes de las páginas (StatCard con `value`, contadores de tablero): cuentan al aparecer,
 // también las que llegan después con props diferidas. Las de `count`/`v-count` ya cuentan solas.
 const FIGURES = '.font-display.tabular-nums:not([data-cap-count]):not([data-m-count])';
@@ -254,28 +198,28 @@ function watchFigures(root) {
     };
 }
 
+/**
+ * Movimiento del marco persistente: sombra de la cabecera al hacer scroll, cifras que cuentan y
+ * campana. `unread` es una función que devuelve los avisos sin leer. Se llama una vez, en AppShell.
+ */
 export function useShellMotion({ unread = () => 0 } = {}) {
     let onScroll = null;
     let stopFigures = () => {};
+    let lastUnread = null;
 
     onMounted(() => {
-        const nav = document.querySelector('.cap-shell-sidebar__nav');
-        if (nav && sidebarScroll) nav.scrollTop = sidebarScroll;
-        if (pending) finishIndicators();
-        pending = null;
+        stopFigures = watchFigures(document.querySelector('.cap-shell__content'));
 
-        stopFigures = watchFigures(document.querySelector('.cap-shell__content > .m-page'));
-
-        const headers = document.querySelectorAll('.cap-shell-header, .cap-shell-topbar');
+        const headers = () => document.querySelectorAll('.cap-shell-header, .cap-shell-topbar');
         onScroll = () => {
             const scrolled = window.scrollY > 8;
-            headers.forEach((header) => header.toggleAttribute('data-m-scrolled', scrolled));
+            headers().forEach((header) => header.toggleAttribute('data-m-scrolled', scrolled));
         };
         onScroll();
         window.addEventListener('scroll', onScroll, { passive: true });
 
         const count = unread();
-        if (!mounted && count > 0) {
+        if (count > 0) {
             try {
                 if (!sessionStorage.getItem('m-bell-rung')) {
                     sessionStorage.setItem('m-bell-rung', '1');
@@ -286,7 +230,6 @@ export function useShellMotion({ unread = () => 0 } = {}) {
             }
         }
         lastUnread = count;
-        mounted = true;
     });
 
     watch(unread, (count) => {
@@ -297,7 +240,6 @@ export function useShellMotion({ unread = () => 0 } = {}) {
     onBeforeUnmount(() => {
         stopFigures();
         if (onScroll) window.removeEventListener('scroll', onScroll);
-        sidebarScroll = document.querySelector('.cap-shell-sidebar__nav')?.scrollTop ?? sidebarScroll;
     });
 }
 
