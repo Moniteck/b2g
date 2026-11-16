@@ -4,6 +4,7 @@ namespace App\Services\Auth;
 
 use App\Mail\AccessApprovedMail;
 use App\Mail\AccessRequestedMail;
+use App\Mail\AccessRequestVerifyMail;
 use App\Models\AccessRequest;
 use App\Models\Company;
 use App\Models\ReminderDelivery;
@@ -17,20 +18,30 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Solicitudes de acceso: envío desde la pantalla de acceso, revisión en Usuarios y el estado que
- * ve quien intenta entrar con una cuenta aún no aprobada.
+ * Solicitudes de acceso: envío desde la pantalla de acceso, confirmación del correo, revisión en
+ * Usuarios y el estado que ve quien intenta entrar con una cuenta aún no aprobada.
+ *
+ * Seguridad (M4): quien envía la solicitud recibe un enlace firmado (24 horas) en el correo que
+ * escribió; hasta confirmarlo, la solicitud no llega a los revisores. Una solicitud sin confirmar
+ * caduca y otra con el mismo correo la reemplaza, así que nadie bloquea a la persona real. Si un
+ * administrador aprobara una sin confirmar, la cuenta no entra hasta que el correo se confirme.
  *
  *   app(AccessRequestService::class)->submit($datos, $request->ip());
+ *   app(AccessRequestService::class)->verify($solicitud, $hash);
  *   app(AccessRequestService::class)->approve($solicitud, $admin, $empresa, 'operator');
  *
  * Las empresas viajan al navegador con un identificador opaco (`companyToken`), nunca con su id.
  */
 class AccessRequestService
 {
+    /** Horas de validez del enlace de confirmación del correo. */
+    public const VERIFY_HOURS = 24;
+
     public function __construct(
         private AuditLogger $audit,
         private MembershipService $memberships,
@@ -65,8 +76,10 @@ class AccessRequestService
     }
 
     /**
-     * Registra la solicitud. Si el correo ya tiene cuenta o una solicitud pendiente no crea nada:
-     * quien envía ve la misma respuesta, así el formulario no revela qué correos existen.
+     * Registra la solicitud y envía el enlace de confirmación al correo. Si el correo ya tiene
+     * cuenta o una solicitud pendiente ya confirmada no crea nada: quien envía ve la misma
+     * respuesta, así el formulario no revela qué correos existen. Una solicitud pendiente SIN
+     * confirmar con el mismo correo se reemplaza (pudo enviarla alguien que no es su dueño).
      *
      * @param  array{name: string, email: string, phone?: string|null, position: string, company?: string|null, company_name?: string|null, password: string}  $data
      */
@@ -80,9 +93,14 @@ class AccessRequestService
                 return null;
             }
 
-            if (AccessRequest::query()->pending()->where('email', $email)->lockForUpdate()->exists()) {
+            if (AccessRequest::query()->pending()->verified()->where('email', $email)->lockForUpdate()->exists()) {
                 return null;
             }
+
+            // Sin confirmar: la anterior con este correo se reemplaza y las caducadas se limpian.
+            AccessRequest::query()->pending()->whereNull('email_verified_at')
+                ->where(fn ($query) => $query->where('email', $email)->orWhere('created_at', '<', now()->subHours(self::VERIFY_HOURS)))
+                ->delete();
 
             return AccessRequest::create([
                 'name' => trim($data['name']),
@@ -106,9 +124,69 @@ class AccessRequestService
             'empresa' => $company?->name ?? $created->company_name,
         ], companyId: $company?->id);
 
-        $this->notifyReviewers($created, $company);
+        $this->sendVerification($created);
 
         return $created;
+    }
+
+    /** Enlace firmado de confirmación del correo, válido VERIFY_HOURS horas. */
+    public function verificationUrl(AccessRequest $request): string
+    {
+        return URL::temporarySignedRoute('access-request.verify', now()->addHours(self::VERIFY_HOURS), [
+            'accessRequest' => $request->getKey(),
+            'hash' => $request->emailHash(),
+        ]);
+    }
+
+    /**
+     * Confirma el correo de la solicitud (el enlace firmado ya se validó en el controlador) y,
+     * si sigue pendiente, la envía a los revisores. Idempotente.
+     *
+     * @return string «verified» (recién confirmado), «already» (ya lo estaba) o «invalid»
+     */
+    public function verify(AccessRequest $request, string $hash): string
+    {
+        [$status, $locked] = DB::transaction(function () use ($request, $hash) {
+            $locked = AccessRequest::query()->whereKey($request->getKey())->lockForUpdate()->first();
+
+            if ($locked === null || ! hash_equals($locked->emailHash(), $hash) || $locked->status === AccessRequest::REJECTED) {
+                return ['invalid', null];
+            }
+
+            if ($locked->hasVerifiedEmail()) {
+                return ['already', $locked];
+            }
+
+            $locked->forceFill(['email_verified_at' => now()])->save();
+            $this->audit->record('acceso.correo_verificado', $locked, ['email' => $locked->email], companyId: $locked->company_id);
+
+            return ['verified', $locked];
+        });
+
+        if ($status === 'verified' && $locked->isPending()) {
+            $this->notifyReviewers($locked, $locked->company_id ? Company::query()->find($locked->company_id) : null);
+        }
+
+        return $status;
+    }
+
+    /**
+     * ¿La cuenta nació de una solicitud aprobada cuyo correo nadie confirmó? Entonces no entra
+     * hasta que se confirme (quien eligió la contraseña pudo no ser el dueño del correo).
+     */
+    public function awaitsEmailVerification(User $user): bool
+    {
+        return AccessRequest::query()
+            ->where('user_id', $user->getKey())
+            ->where('status', AccessRequest::APPROVED)
+            ->whereNull('email_verified_at')
+            ->exists();
+    }
+
+    private function sendVerification(AccessRequest $request): void
+    {
+        $url = $this->verificationUrl($request);
+        $this->mail(fn () => Mail::to($request->email)->queue(new AccessRequestVerifyMail($request->name, $url, self::VERIFY_HOURS)));
     }
 
     /**
@@ -119,7 +197,7 @@ class AccessRequestService
     {
         $request = AccessRequest::query()->where('email', Str::lower(trim($email)))
             ->whereIn('status', [AccessRequest::PENDING, AccessRequest::REJECTED])
-            ->latest('id')->first(['id', 'password', 'status']);
+            ->latest('id')->first(['id', 'password', 'status', 'email_verified_at']);
 
         // Sin solicitud se compara igual contra un cifrado de relleno: el tiempo de respuesta no
         // delata si el correo tiene una solicitud.
@@ -129,10 +207,11 @@ class AccessRequestService
             return null;
         }
 
-        return $request->status;
+        return $request->isPending() && ! $request->hasVerifiedEmail() ? 'unverified' : $request->status;
     }
 
-    private static function dummyHash(): string
+    /** Cifrado de relleno: comparar contra él cuesta lo mismo que contra una contraseña real. */
+    public static function dummyHash(): string
     {
         static $hash = null;
 
@@ -147,13 +226,13 @@ class AccessRequestService
      */
     public function pendingFor(User $actor, Company $company): Collection
     {
-        return AccessRequest::query()->pending()
+        return AccessRequest::query()->pending()->verified()
             ->where(fn ($query) => $query->where('company_id', $company->id)
                 ->when($actor->isRoot(), fn ($inner) => $inner->orWhereNull('company_id')))
             ->with('company:id,name')
             ->latest('id')
             ->limit(100)
-            ->get(['id', 'name', 'email', 'phone', 'position', 'company_id', 'company_name', 'created_at'])
+            ->get(['id', 'name', 'email', 'phone', 'position', 'company_id', 'company_name', 'email_verified_at', 'created_at'])
             ->map(fn (AccessRequest $request) => [
                 'id' => $request->id,
                 'name' => $request->name,
@@ -163,6 +242,8 @@ class AccessRequestService
                 'company' => $request->company?->name,
                 'company_name' => $request->company_name,
                 'targeted' => $request->company_id !== null,
+                'email_verified' => $request->hasVerifiedEmail(),
+                'email_verified_at' => $request->email_verified_at?->toDateTimeString(),
                 'created_at' => $request->created_at?->toDateTimeString(),
             ]);
     }
@@ -210,7 +291,11 @@ class AccessRequestService
             return $user;
         });
 
-        $this->mail(fn () => Mail::to($user->email)->queue(new AccessApprovedMail($user->name, $company->name, Permissions::ROLE_LABELS[$role] ?? $role)));
+        // Sin correo confirmado la cuenta no entra: se reenvía el enlace en lugar del aviso de aprobación.
+        $request->refresh();
+        $request->hasVerifiedEmail()
+            ? $this->mail(fn () => Mail::to($user->email)->queue(new AccessApprovedMail($user->name, $company->name, Permissions::ROLE_LABELS[$role] ?? $role)))
+            : $this->sendVerification($request);
 
         return $user;
     }

@@ -8,6 +8,8 @@
 // saltos: solo fundidos cortos. Las animaciones se pausan con la pestaña oculta.
 //
 // Rutas: /login (cara «Ingresar») y /solicitar-acceso (cara «Crear cuenta»); la URL sigue a la cara.
+// La misma escena sirve, con una sola tarjeta, para /restablecer-contrasena/{token} (mode «reset») y
+// para el enlace de confirmación del correo de una solicitud (mode «confirmed», Lici celebra).
 import { interceptors } from '@inertiajs/core';
 import { Head, router } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
@@ -20,22 +22,31 @@ import IntroSplash from '../../Modules/Auth/IntroSplash.vue';
 import Mascot from '../../Modules/Auth/Mascot.vue';
 import { confetti, prefersReducedMotion, useMedia } from '../../Modules/Auth/motion.js';
 import '../../Modules/Auth/auth.css';
+import AccessConfirmed from './Partials/AccessConfirmed.vue';
 import AuthCard from './Partials/AuthCard.vue';
 import BrandPanel from './Partials/BrandPanel.vue';
 import LoginForm from './Partials/LoginForm.vue';
 import RequestForm from './Partials/RequestForm.vue';
+import ResetForm from './Partials/ResetForm.vue';
 
 const props = defineProps({
     mode: { type: String, default: 'login' },
     companies: { type: Array, default: () => [] },
     helpEmail: { type: String, default: '' },
+    status: { type: String, default: '' },
+    reset: { type: Object, default: null },
+    confirmation: { type: Object, default: null },
 });
+
+// Una sola tarjeta (sin voltear) para restablecer la contraseña o confirmar el correo.
+const single = computed(() => (props.mode === 'reset' && props.reset) || (props.mode === 'confirmed' && props.confirmation) ? props.mode : null);
+const confirmedOk = computed(() => ['verified', 'already'].includes(props.confirmation?.result));
 
 const URLS = { login: '/login', register: '/solicitar-acceso' };
 // Cargadores de las páginas: durante la salida animada se descarga ya la página de destino, así la
 // animación no suma tiempo a la navegación.
 const PAGES = import.meta.glob('../**/*.vue');
-const TITLES = { login: 'Ingresar', register: 'Solicitar acceso' };
+const TITLES = { login: 'Ingresar', register: 'Solicitar acceso', reset: 'Nueva contraseña', confirmed: 'Confirmar correo' };
 const TAGLINE = 'Licitaciones, cotizaciones y contratos con el Estado, de la oportunidad al cobro.';
 const INTRO_KEY = 'crm.acceso.intro';
 const SLEEP_AFTER = 15000;
@@ -270,7 +281,18 @@ function onResize() {
 
 function onIntroDone() {
     intro.value = null;
-    setMood('wave', 1200);
+    if (single.value === 'confirmed') greetConfirmation();
+    else setMood('wave', 1200);
+}
+
+// Correo confirmado: Lici celebra con confeti; si el enlace venció o no vale, se queda pensando.
+function greetConfirmation() {
+    if (!confirmedOk.value) {
+        setMood('thinking', 2400);
+        return;
+    }
+    setMood('celebrate', 3200);
+    nextTick(() => confetti(mascotRef.value?.root, { count: 80 }));
 }
 
 // ---- Salida animada al entrar ------------------------------------------------------------------
@@ -296,6 +318,7 @@ onMounted(() => {
         waiting.value = true;
     }
     wake();
+    if (!intro.value && single.value === 'confirmed') window.setTimeout(greetConfirmation, 400);
     window.addEventListener('pointermove', onPointerMove, { passive: true });
     window.addEventListener('resize', onResize);
     window.addEventListener('scroll', onResize, { passive: true, capture: true });
@@ -332,7 +355,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <Head :title="TITLES[face]" />
+    <Head :title="TITLES[single ?? face]" />
     <main
         ref="scene"
         class="auth"
@@ -357,13 +380,20 @@ onBeforeUnmount(() => {
 
                 <div class="auth__card-entry">
                     <div ref="tiltEl" class="auth__tilt">
-                        <AuthCard ref="cardRef" :face="face" :mobile="mobile" @update:face="changeFace" @settled="onSettled" @drag="onDrag">
+                        <div v-if="single" class="auth-card cap-glass--light" :class="{ 'auth-card--slide': mobile }">
+                            <section class="auth-card__face">
+                                <ResetForm v-if="single === 'reset'" :token="reset.token" :email="reset.email" @busy="busy = $event" @failed="onFailed" @reveal="revealed = $event" />
+                                <AccessConfirmed v-else :confirmation="confirmation" />
+                            </section>
+                        </div>
+                        <AuthCard v-else ref="cardRef" :face="face" :mobile="mobile" @update:face="changeFace" @settled="onSettled" @drag="onDrag">
                             <template #login>
                                 <LoginForm
                                     :system-name="SYSTEM_NAME"
                                     :subtitle="company.loginSubtitle"
                                     :help-email="helpEmail"
                                     :prefill-email="prefill"
+                                    :status="status"
                                     @switch="changeFace('register')"
                                     @busy="busy = $event"
                                     @failed="onFailed"
@@ -379,7 +409,7 @@ onBeforeUnmount(() => {
                     </div>
                 </div>
 
-                <p v-if="mobile" class="auth__hint" aria-hidden="true"><i class="mdi mdi-gesture-swipe-horizontal" /> Desliza la tarjeta para cambiar</p>
+                <p v-if="mobile && !single" class="auth__hint" aria-hidden="true"><i class="mdi mdi-gesture-swipe-horizontal" /> Desliza la tarjeta para cambiar</p>
             </div>
         </section>
 

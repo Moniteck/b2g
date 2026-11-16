@@ -28,13 +28,18 @@ class AccessRequestController extends Controller
     public function __construct(private AccessRequestService $requests) {}
 
     /**
-     * Pantalla de acceso con la cara indicada; la usa también `AuthController::create`.
+     * Pantalla de acceso con la cara indicada; la usan también `AuthController::create`, el
+     * restablecimiento de contraseña (`reset`) y la confirmación del correo (`confirmed`).
+     *
+     * @param  array<string, mixed>  $extra
      */
-    public static function screen(string $mode): Response
+    public static function screen(string $mode, array $extra = []): Response
     {
         return Inertia::render('Auth/Login', [
             'mode' => $mode,
-            'companies' => fn () => app(AccessRequestService::class)->companyOptions(),
+            'companies' => fn () => in_array($mode, ['login', 'register'], true) ? app(AccessRequestService::class)->companyOptions() : [],
+            'status' => fn () => session('status'),
+            ...$extra,
         ]);
     }
 
@@ -47,7 +52,7 @@ class AccessRequestController extends Controller
     {
         // Robot: misma respuesta que una solicitud válida, sin guardar nada.
         if (filled($request->input('website'))) {
-            return back();
+            return redirect()->route('access-request.create');
         }
 
         $key = 'access-request:'.Str::transliterate(Str::lower(trim($request->validated('email'))));
@@ -55,13 +60,32 @@ class AccessRequestController extends Controller
         if (RateLimiter::tooManyAttempts($key, self::MAX_PER_EMAIL)) {
             $minutes = max(1, (int) ceil(RateLimiter::availableIn($key) / 60));
 
-            return back()->withErrors(['email' => "Ya recibimos varias solicitudes con este correo. Intenta de nuevo en {$minutes} minutos."]);
+            return redirect()->route('access-request.create')->withErrors(['email' => "Ya recibimos varias solicitudes con este correo. Intenta de nuevo en {$minutes} minutos."]);
         }
 
         RateLimiter::hit($key, 3600);
         $this->requests->submit($request->validated(), $request->ip());
 
-        return back();
+        return redirect()->route('access-request.create');
+    }
+
+    /**
+     * Enlace del correo de confirmación (firmado, 24 horas). Muestra la escena del acceso con Lici
+     * celebrando, o el aviso de enlace vencido o inválido.
+     */
+    public function verify(Request $request, AccessRequest $accessRequest, string $hash): Response
+    {
+        $result = $request->hasValidSignature()
+            ? $this->requests->verify($accessRequest, $hash)
+            : 'expired';
+
+        return self::screen('confirmed', [
+            'confirmation' => [
+                'result' => $result,
+                'name' => $result === 'invalid' ? null : Str::before(trim($accessRequest->name), ' '),
+                'approved' => $result !== 'invalid' && $accessRequest->fresh()?->status === AccessRequest::APPROVED,
+            ],
+        ]);
     }
 
     public function approve(Request $request, AccessRequest $accessRequest, CompanyContext $context): RedirectResponse

@@ -16,6 +16,9 @@ class StoreAccessRequestRequest extends FormRequest
         return true;
     }
 
+    /** Los errores vuelven a la pantalla de solicitud, nunca a la cabecera Referer. */
+    protected $redirectRoute = 'access-request.create';
+
     public function rules(): array
     {
         return [
@@ -25,7 +28,7 @@ class StoreAccessRequestRequest extends FormRequest
             'company' => ['nullable', 'string', 'max:40'],
             'company_name' => ['nullable', 'string', 'max:160', 'required_without:company'],
             'position' => ['required', 'string', 'min:2', 'max:120'],
-            'password' => ['required', 'string', 'confirmed', Password::min(10)->letters()->numbers()],
+            'password' => ['required', 'string', 'confirmed', Password::defaults()],
             'website' => ['nullable', 'string', 'max:255'],
         ];
     }
@@ -51,6 +54,7 @@ class StoreAccessRequestRequest extends FormRequest
             'password.min' => 'La contraseña debe tener al menos 10 caracteres.',
             'password.letters' => 'La contraseña debe incluir al menos una letra.',
             'password.numbers' => 'La contraseña debe incluir al menos un número.',
+            'password.uncompromised' => 'Esta contraseña apareció en una filtración de datos. Elige otra.',
         ];
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Rules\AllowedCompany;
+use App\Services\AuditLogger;
 use App\Services\Tenancy\CompanyContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,7 +15,7 @@ use Illuminate\Http\Request;
  */
 class ActiveCompanyController extends Controller
 {
-    public function __invoke(Request $request, CompanyContext $context): RedirectResponse
+    public function __invoke(Request $request, CompanyContext $context, AuditLogger $audit): RedirectResponse
     {
         $data = $request->validate([
             'company_id' => ['required', 'integer', new AllowedCompany],
@@ -24,6 +25,7 @@ class ActiveCompanyController extends Controller
 
         $request->session()->put(CompanyContext::SESSION_KEY, $companyId);
         $context->setCurrentCompanyId($companyId);
+        $audit->record('sesion.empresa_cambiada', null, ['empresa' => $companyId], companyId: $companyId);
 
         return back()->with('success', 'Empresa activa: '.($context->currentCompany()['name'] ?? '').'.');
     }

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccessRequestController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PasswordResetController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -22,11 +23,23 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'create'])->name('login');
-    Route::post('/login', [AuthController::class, 'store'])->middleware('throttle:20,1')->name('login.store');
+    Route::post('/login', [AuthController::class, 'store'])->middleware('throttle:login')->name('login.store');
     // «Crear cuenta»: solicitud de acceso pendiente de aprobación (límite por IP aquí y por correo en el controlador).
     Route::get('/solicitar-acceso', [AccessRequestController::class, 'create'])->name('access-request.create');
     Route::post('/solicitar-acceso', [AccessRequestController::class, 'store'])->middleware('throttle:10,10,solicitud-acceso')->name('access-request.store');
 });
+
+// Recuperar la contraseña por correo (enlace con token de 60 minutos).
+Route::middleware('guest')->group(function () {
+    Route::post('/olvide-contrasena', [PasswordResetController::class, 'send'])->middleware('throttle:password-reset')->name('password.email');
+    Route::get('/restablecer-contrasena/{token}', [PasswordResetController::class, 'show'])->name('password.reset');
+    Route::post('/restablecer-contrasena', [PasswordResetController::class, 'update'])->middleware('throttle:password-reset')->name('password.update');
+});
+
+// Confirmación del correo de una solicitud de acceso (enlace firmado de 24 horas; sin `guest`
+// para que funcione aunque haya otra sesión abierta en el navegador).
+Route::get('/solicitar-acceso/confirmar/{accessRequest}/{hash}', [AccessRequestController::class, 'verify'])
+    ->whereNumber('accessRequest')->middleware('throttle:20,1')->name('access-request.verify');
 
 Route::post('/logout', [AuthController::class, 'destroy'])->middleware('auth')->name('logout');
 

@@ -185,11 +185,14 @@ class DocumentController extends Controller
     }
 
     /** Vista en línea del archivo vigente (visor de las modales). */
-    public function preview(Document $document): SymfonyResponse
+    public function preview(Request $request, Document $document, AuditLogger $audit): SymfonyResponse
     {
         $this->authorize('view', $document);
 
-        return $this->fileResponse($document->disk, $document->path, $document->original_filename ?? $document->name, $document->mime_type, HeaderUtils::DISPOSITION_INLINE);
+        $response = $this->fileResponse($document->disk, $document->path, $document->original_filename ?? $document->name, $document->mime_type, HeaderUtils::DISPOSITION_INLINE);
+        $this->auditPreview($request, $audit, $document, $document->version);
+
+        return $response;
     }
 
     public function versionDownload(Document $document, DocumentVersion $version, AuditLogger $audit): SymfonyResponse
@@ -203,11 +206,27 @@ class DocumentController extends Controller
         return $response;
     }
 
-    public function versionPreview(Document $document, DocumentVersion $version): SymfonyResponse
+    public function versionPreview(Request $request, Document $document, DocumentVersion $version, AuditLogger $audit): SymfonyResponse
     {
         $this->authorize('view', $document);
 
-        return $this->fileResponse($version->disk, $version->path, $version->original_filename ?? $document->name, $version->mime_type, HeaderUtils::DISPOSITION_INLINE);
+        $response = $this->fileResponse($version->disk, $version->path, $version->original_filename ?? $document->name, $version->mime_type, HeaderUtils::DISPOSITION_INLINE);
+        $this->auditPreview($request, $audit, $document, $version->version);
+
+        return $response;
+    }
+
+    /**
+     * Vista previa auditada (B6). El visor de PDF puede pedir el archivo por partes (Range):
+     * solo cuenta la primera petición de cada apertura.
+     */
+    private function auditPreview(Request $request, AuditLogger $audit, Document $document, mixed $version): void
+    {
+        $range = (string) $request->headers->get('Range', '');
+
+        if ($range === '' || str_starts_with($range, 'bytes=0-')) {
+            $audit->record('documento.vista_previa', $document, ['version' => $version]);
+        }
     }
 
     /**

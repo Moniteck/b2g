@@ -106,12 +106,12 @@ function another() {
                 <p class="auth-form__subtitle">Gracias. Esto es lo que sigue:</p>
                 <ol class="auth-steps">
                     <li class="auth-steps__item" style="--i: 0">
-                        <span class="auth-steps__icon"><i class="mdi mdi-shield-check-outline" aria-hidden="true" /></span>
-                        <span>Un administrador {{ sent.company ? `de ${sent.company}` : 'del sistema' }} revisa tu solicitud y te asigna un rol.</span>
+                        <span class="auth-steps__icon"><i class="mdi mdi-email-check-outline" aria-hidden="true" /></span>
+                        <span>Revisa tu correo <strong>{{ sent.email }}</strong> para confirmar que es tuyo: el enlace vence en 24 horas. Sin confirmarlo, la solicitud no avanza.</span>
                     </li>
                     <li class="auth-steps__item" style="--i: 1">
-                        <span class="auth-steps__icon"><i class="mdi mdi-email-fast-outline" aria-hidden="true" /></span>
-                        <span>Te avisamos a <strong>{{ sent.email }}</strong> cuando quede aprobada.</span>
+                        <span class="auth-steps__icon"><i class="mdi mdi-shield-check-outline" aria-hidden="true" /></span>
+                        <span>Un administrador {{ sent.company ? `de ${sent.company}` : 'del sistema' }} revisa tu solicitud, te asigna un rol y te avisamos por correo.</span>
                     </li>
                     <li class="auth-steps__item" style="--i: 2">
                         <span class="auth-steps__icon"><i class="mdi mdi-account-check-outline" aria-hidden="true" /></span>

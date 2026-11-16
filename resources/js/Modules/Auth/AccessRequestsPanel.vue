@@ -81,6 +81,7 @@ const where = (item) => item.company ?? (item.company_name ? `Dice ser de «${it
                 <div class="min-w-0">
                     <p class="font-medium text-gray-900 dark:text-gray-100">{{ item.name }} <span class="font-normal text-cap-text-soft">· {{ item.position }}</span></p>
                     <p class="truncate text-sm text-cap-text-soft">{{ item.email }}<template v-if="item.phone"> · {{ item.phone }}</template></p>
+                    <span v-if="item.email_verified" class="my-1 inline-block"><StatusBadge status="success" label="Correo verificado" /></span>
                     <p class="text-xs text-cap-text-soft">{{ where(item) }} · {{ dateTime(item.created_at) }}</p>
                 </div>
                 <div class="flex shrink-0 gap-2">
