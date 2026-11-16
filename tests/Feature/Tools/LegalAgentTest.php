@@ -4,6 +4,7 @@ namespace Tests\Feature\Tools;
 
 use App\Models\LegalConversation;
 use App\Models\LegalMessage;
+use App\Services\OpenAIService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -37,7 +38,8 @@ class LegalAgentTest extends TestCase
 
         $this->actingInCompany($operator, $company)->postJson('/agente-legal/chat', ['conversation_id' => $conversationId, 'message' => '¿Y si me lo niegan?'])->assertOk();
 
-        Http::assertSent(fn ($request) => count($request['messages']) === 4 && $request['messages'][0]['role'] === 'system');
+        Http::assertSent(fn ($request) => count($request['messages']) === 4 && $request['messages'][0]['role'] === 'system'
+            && $request['messages'][0]['content'] === OpenAIService::LEGAL_SYSTEM_PROMPT);
         $this->assertSame(4, LegalMessage::count());
 
         $this->actingInCompany($operator, $company)->get('/agente-legal')
