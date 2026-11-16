@@ -11,6 +11,7 @@ use App\Services\Documents\SignatureService;
 use App\Services\Tenancy\CompanyContext;
 use App\Support\Binaries;
 use App\Support\Permissions;
+use App\Support\Tools\CompanyLetterhead;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -47,6 +48,7 @@ class SigningAssetController extends Controller
             'assets' => $this->assetsOf($request),
             'history' => $history,
             'lastPlacements' => SignatureController::lastPlacements($user),
+            'company' => $this->stampCompany(),
             'can' => [
                 'sign' => $user->hasPermission(Permissions::SIGN_DOCUMENTS),
                 'saveDocuments' => $user->can('create', Document::class),
@@ -86,6 +88,7 @@ class SigningAssetController extends Controller
             'assets' => $this->assetsOf($request),
             'last_placements' => SignatureController::lastPlacements($user),
             'can_sign' => $user->hasPermission(Permissions::SIGN_DOCUMENTS),
+            'company' => $this->stampCompany(),
             'document' => $signed,
         ]);
     }
@@ -201,6 +204,18 @@ class SigningAssetController extends Controller
         }
 
         return back()->with('success', $message);
+    }
+
+    /**
+     * Nombre y RTN de la empresa activa: valores iniciales del generador de sellos.
+     *
+     * @return array{name: string, tax_id: string}
+     */
+    protected function stampCompany(): array
+    {
+        $company = CompanyLetterhead::current();
+
+        return ['name' => (string) ($company['name'] ?? ''), 'tax_id' => (string) ($company['tax_id'] ?? '')];
     }
 
     /**

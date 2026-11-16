@@ -40,6 +40,7 @@ const status = ref('idle'); // idle | loading | ready | error
 const loadError = ref('');
 const assets = ref({ firma: null, sello: null });
 const canSign = ref(true);
+const company = ref({ name: '', tax_id: '' });
 const alreadySigned = ref(null);
 const pageCount = ref(0);
 const targetPage = ref(1);
@@ -76,6 +77,7 @@ async function loadState() {
         const state = await fetchState(isLoose.value ? null : props.document?.id);
         applyAssets(state.assets);
         canSign.value = state.can_sign;
+        company.value = state.company ?? company.value;
         alreadySigned.value = state.document?.already_signed ? state.document : null;
         lastPlacements = state.last_placements ?? [];
         lastPlacements.forEach((placement) => {
@@ -270,13 +272,13 @@ function close() {
 
                     <fieldset class="flex flex-col gap-3">
                         <legend class="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-100">Qué aplicar</legend>
-                        <Checkbox v-model="use.firma" :disabled="!assets.firma" label="Firma" :description="assets.firma ? 'Arrástrala sobre la página y ajusta su tamaño desde la esquina.' : 'Aún no has subido tu firma.'" />
-                        <Checkbox v-model="use.sello" :disabled="!assets.sello" label="Sello" :description="assets.sello ? 'Se coloca y se ajusta igual que la firma.' : 'Aún no has subido tu sello.'" />
+                        <Checkbox v-model="use.firma" :disabled="!assets.firma" label="Firma" :description="assets.firma ? 'Arrástrala sobre la página y ajusta su tamaño desde la esquina.' : 'Aún no tienes firma: créala abajo.'" />
+                        <Checkbox v-model="use.sello" :disabled="!assets.sello" label="Sello" :description="assets.sello ? 'Se coloca y se ajusta igual que la firma.' : 'Aún no tienes sello: créalo abajo.'" />
                     </fieldset>
 
                     <div v-if="missing.length" class="flex flex-col gap-3">
-                        <p class="text-sm text-cap-text-soft">Súbelos aquí mismo; no pierdes lo que estás firmando.</p>
-                        <AssetCard v-for="type in missing" :key="type" :type="type" :asset="null" compact @saved="refreshAssets" />
+                        <p class="text-sm text-cap-text-soft">Créalos aquí mismo (dibujados, escritos o subidos); no pierdes lo que estás firmando.</p>
+                        <AssetCard v-for="type in missing" :key="type" :type="type" :asset="null" :company="company" compact @saved="refreshAssets" />
                     </div>
 
                     <FormField label="Página" help="Por defecto, la última.">
