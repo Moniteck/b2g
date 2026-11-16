@@ -169,6 +169,7 @@ const runners = {
         await shot(page, `paleta-${view}-${theme}-resultados`);
         await page.keyboard.press('ArrowDown');
         await page.keyboard.press('Enter');
+        await page.waitForURL((url) => url.pathname !== '/', { timeout: 30000 }).catch(() => {});
         await stable(page);
         note({ mode: 'paleta', view, theme, destino: new URL(page.url()).pathname + new URL(page.url()).search });
     },

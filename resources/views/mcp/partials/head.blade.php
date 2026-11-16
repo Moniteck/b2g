@@ -7,7 +7,7 @@
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<link rel="preconnect" href="https://fonts.bunny.net">
-<link href="https://fonts.bunny.net/css?family={{ config('design.fonts.webfont') }}&display=swap" rel="stylesheet">
+{{-- Fuentes alojadas en el sistema (resources/css/fonts.css, dentro de app.css). --}}
+<link rel="preload" href="{{ \Illuminate\Support\Facades\Vite::asset('resources/fonts/inter/inter-latin-400.woff2') }}" as="font" type="font/woff2" crossorigin>
 <title>{{ $title }} · CRM B2G</title>
 @vite('resources/css/app.css')

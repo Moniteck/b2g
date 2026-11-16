@@ -49,7 +49,14 @@ for (const dir of SCAN) {
     for (const path of files(join(ROOT, dir))) {
         const text = readFileSync(path, 'utf8');
         for (const match of text.matchAll(/mdi-([a-z0-9]+(?:-[a-z0-9]+)*)/g)) if (icons.has(match[1])) used.add(match[1]);
-        for (const match of text.matchAll(/['"`]([a-z0-9]+(?:-[a-z0-9]+)*)['"`]/g)) if (icons.has(match[1])) used.add(match[1]);
+        for (const match of text.matchAll(/['"`]([a-z0-9]+(?:-[a-z0-9]+)*)['"`]/g)) {
+            if (!icons.has(match[1])) continue;
+            // Valor de un atributo enlazado o de evento (`@click="restart"`, `:key="row"`, `v-if="open"`):
+            // es una expresión, no un nombre de ícono. `:icon="'gavel'"` sí cuenta (comillas internas).
+            const before = text.slice(Math.max(0, match.index - 60), match.index);
+            if (match[0][0] === '"' && /(?:^|\s)(?:@|:|v-|#)[\w.:\[\]-]*=$/.test(before)) continue;
+            used.add(match[1]);
+        }
     }
 }
 // Glifos referidos por su código en el CSS (p. ej. el check de `markSuccess` en motion.css).

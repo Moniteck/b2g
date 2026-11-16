@@ -1,8 +1,8 @@
-/* Material Design Icons 7.4.47: subconjunto con los 487 íconos que usa el sistema.
+/* Material Design Icons 7.4.47: subconjunto con los 482 íconos que usa el sistema.
    ARCHIVO GENERADO por scripts/mdi-subset.mjs: no se edita a mano; tras usar un ícono nuevo, vuelve a ejecutarlo. */
 @font-face {
   font-family: "Material Design Icons";
-  src: url("../fonts/mdi/mdi-subset.woff?v=7.4.47-487") format("woff");
+  src: url("../fonts/mdi/mdi-subset.woff?v=7.4.47-482") format("woff");
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -419,7 +419,6 @@
 .mdi-handshake::before { content: "\F1218"; }
 .mdi-handshake-outline::before { content: "\F15A1"; }
 .mdi-head::before { content: "\F135E"; }
-.mdi-help::before { content: "\F02D6"; }
 .mdi-help-circle::before { content: "\F02D7"; }
 .mdi-help-circle-outline::before { content: "\F0625"; }
 .mdi-history::before { content: "\F02DA"; }
@@ -495,7 +494,6 @@
 .mdi-origin::before { content: "\F0B43"; }
 .mdi-owl::before { content: "\F03D2"; }
 .mdi-package-variant-closed::before { content: "\F03D7"; }
-.mdi-palette::before { content: "\F03D8"; }
 .mdi-paperclip::before { content: "\F03E2"; }
 .mdi-passport::before { content: "\F07E3"; }
 .mdi-pen::before { content: "\F03EA"; }
@@ -523,8 +521,6 @@
 .mdi-read::before { content: "\F0447"; }
 .mdi-record::before { content: "\F044A"; }
 .mdi-refresh::before { content: "\F0450"; }
-.mdi-reload::before { content: "\F0453"; }
-.mdi-reminder::before { content: "\F088C"; }
 .mdi-resize::before { content: "\F0A68"; }
 .mdi-restore::before { content: "\F099B"; }
 .mdi-restore-alert::before { content: "\F110D"; }
@@ -554,7 +550,6 @@
 .mdi-shimmer::before { content: "\F1545"; }
 .mdi-signature::before { content: "\F0DFB"; }
 .mdi-slack::before { content: "\F04B1"; }
-.mdi-slide::before { content: "\F15A5"; }
 .mdi-solid::before { content: "\F068D"; }
 .mdi-sort::before { content: "\F04BA"; }
 .mdi-spa::before { content: "\F0CD1"; }
