@@ -7,6 +7,9 @@ import './pwa/index.js';
 
 const SYSTEM_NAME = 'CRM B2G';
 
+// Fuentes locales en el manifiesto de Vite (para el `preload` de app.blade.php con Vite::asset).
+import.meta.glob('../fonts/**/*.woff2', { query: '?url', import: 'default' });
+
 // Carga perezosa: cada página viaja en su propio trozo y solo se descarga al visitarla.
 const pages = import.meta.glob('./Pages/**/*.vue');
 

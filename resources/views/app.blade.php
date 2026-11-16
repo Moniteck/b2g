@@ -9,8 +9,8 @@
         const theme = storedTheme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
         document.documentElement.classList.toggle('dark', theme === 'dark');
     </script>
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family={{ config('design.fonts.webfont') }}&display=swap" rel="stylesheet">
+    {{-- Fuentes alojadas en el sistema (resources/css/fonts.css); se precarga la del texto. --}}
+    <link rel="preload" href="{{ \Illuminate\Support\Facades\Vite::asset('resources/fonts/inter/inter-latin-400.woff2') }}" as="font" type="font/woff2" crossorigin>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     @include('partials.pwa-head')
     <meta name="csrf-token" content="{{ csrf_token() }}">
