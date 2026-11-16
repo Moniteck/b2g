@@ -21,8 +21,8 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { focusFirstError } from '@/lib/errors.js';
 import { visit } from '@/lib/http.js';
 import { card } from '@/lib/ui.js';
-import { useListFilters } from '@/Pages/Admin/Partials/useListFilters.js';
-import AccessRequestsPanel from '@/Modules/Auth/AccessRequestsPanel.vue';
+import { useListFilters } from '@/composables/useListFilters.js';
+import AccessRequestsPanel from '@/Pages/Admin/Partials/AccessRequestsPanel.vue';
 
 const props = defineProps({
     users: { type: Object, required: true },

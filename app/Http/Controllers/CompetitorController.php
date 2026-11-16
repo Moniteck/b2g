@@ -41,7 +41,7 @@ class CompetitorController extends Controller
             ->first();
         $decisions = (int) $totals->wins + (int) $totals->losses;
 
-        return Inertia::render('Competitors', [
+        return Inertia::render('Competitors/Index', [
             'records' => $records,
             'filters' => ['search' => $search, 'category' => $category],
             'categories' => Competitor::query()->whereNotNull('category')->distinct()->orderBy('category')->pluck('category'),

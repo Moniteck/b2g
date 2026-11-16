@@ -61,7 +61,7 @@ class PoaTest extends TestCase
         $this->entry(Company::factory()->create(), ['project' => 'Ajena', 'estimated_date' => today()->addDays(1)->toDateString()]);
 
         $this->actingAs($viewer)->get('/alertas-poa')->assertOk()->assertInertia(fn (Assert $page) => $page
-            ->component('Finance/Poa')
+            ->component('Poa/Index')
             ->where('stats.count', 4)
             ->where('stats.alerts', 2)
             ->where('stats.budgeted', 4000)

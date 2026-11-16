@@ -3,7 +3,7 @@
 // en la ruta local `/directorio/adjuntos-prueba/{tipo}/{id}` para validar
 // `AttachmentPanel` y `DocumentViewerModal` mientras ninguna pantalla los usa todavía.
 import AppLayout from '@/Layouts/AppLayout.vue';
-import AttachmentPanel from '@/Modules/Documents/AttachmentPanel.vue';
+import AttachmentPanel from '@/Pages/Directory/Partials/AttachmentPanel.vue';
 
 defineProps({
     entityType: { type: String, default: 'quote' },

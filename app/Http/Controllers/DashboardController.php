@@ -31,7 +31,7 @@ class DashboardController extends Controller
         $preset = (string) $request->query('periodo', 'mes');
         $period = $dashboard->period(array_key_exists($preset, BusinessMetrics::PERIODS) ? $preset : 'mes');
 
-        return Inertia::render('Dashboard', [
+        return Inertia::render('Dashboard/Index', [
             'period' => $period,
             'periods' => collect(BusinessMetrics::PERIODS)->map(fn (string $label, string $value) => ['value' => $value, 'label' => $label])->values(),
             'kpis' => fn () => $dashboard->kpis($period),

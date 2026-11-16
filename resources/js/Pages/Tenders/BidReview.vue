@@ -20,7 +20,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { dateTime, number, quantity } from '@/lib/format.js';
 import { focusFirstError } from '@/lib/errors.js';
 import { card, textLink } from '@/lib/ui.js';
-import { EVIDENCE_STATUS } from '@/Modules/Tenders/tenders.js';
+import { EVIDENCE_STATUS } from '@/Pages/Tenders/Partials/tenders.js';
 
 const props = defineProps({
     tender: { type: Object, required: true },

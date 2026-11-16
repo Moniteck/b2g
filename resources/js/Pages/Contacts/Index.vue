@@ -14,7 +14,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { number } from '@/lib/format.js';
 import { visit } from '@/lib/http.js';
 import { tableLink } from '@/lib/ui.js';
-import { useListFilters } from '@/Pages/Admin/Partials/useListFilters.js';
+import { useListFilters } from '@/composables/useListFilters.js';
 import ContactFormModal from '@/Pages/Contacts/Partials/ContactFormModal.vue';
 
 const props = defineProps({

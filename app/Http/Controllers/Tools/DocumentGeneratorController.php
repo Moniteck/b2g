@@ -47,7 +47,7 @@ class DocumentGeneratorController extends Controller
             ->paginate($perPage)->withQueryString()
             ->through(fn (GeneratedDocument $document) => $this->present($document));
 
-        return Inertia::render('Tools/DocumentGenerator', [
+        return Inertia::render('DocumentGenerator/Index', [
             'records' => $records,
             'filters' => ['search' => $search, 'type' => $type],
             'types' => DocumentTypes::businessOptions(),

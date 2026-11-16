@@ -22,9 +22,9 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { focusFirstError } from '@/lib/errors.js';
 import { getJson } from '@/lib/http.js';
 import { card, tableLink, textLink } from '@/lib/ui.js';
-import Mascot from '@/Modules/Auth/Mascot.vue';
-import CaptureViewer from '@/Modules/Tenders/CaptureViewer.vue';
-import { captureWarnings, createPoller, READ_STATUS } from '@/Modules/Tenders/tenders.js';
+import Mascot from '@/Components/Mascot/Mascot.vue';
+import CaptureViewer from '@/Pages/Tenders/Partials/CaptureViewer.vue';
+import { captureWarnings, createPoller, READ_STATUS } from '@/Pages/Tenders/Partials/tenders.js';
 
 const props = defineProps({
     review: { type: Object, required: true },

@@ -7,7 +7,7 @@
 import { useForm } from '@inertiajs/vue3';
 import { computed, nextTick, ref, watch } from 'vue';
 import CapAlert from '@design/vue/CapAlert.vue';
-import { shakeErrors } from '@/Modules/Auth/motion.js';
+import { shakeErrors } from '@/Components/Mascot/motion.js';
 import AuthButton from '@/Pages/Auth/Partials/AuthButton.vue';
 import AuthField from '@/Pages/Auth/Partials/AuthField.vue';
 

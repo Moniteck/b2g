@@ -22,7 +22,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { focusFirstError } from '@/lib/errors.js';
 import { EMPTY, date, dateTime, daysUntil, number, relativeDays } from '@/lib/format.js';
 import { visit } from '@/lib/http.js';
-import ProgressBar from '@/Pages/Tools/Partials/ProgressBar.vue';
+import ProgressBar from '@/Components/ProgressBar.vue';
 
 const props = defineProps({
     matrix: { type: Object, required: true },

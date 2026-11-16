@@ -34,7 +34,7 @@ class RevolvingBudgetTest extends TestCase
         $this->actingAs($adminA)->post('/presupuesto-revolvente', $this->movement(['type' => 'Ingreso', 'amount' => 100, 'moved_at' => '2026-10-06']))->assertSessionHasNoErrors();
 
         $this->actingAs($adminB)->get('/presupuesto-revolvente')->assertInertia(fn (Assert $page) => $page
-            ->component('Finance/RevolvingBudget')
+            ->component('RevolvingBudget/Index')
             ->where('budget.current_balance', 0)
             ->has('records.data', 0));
 

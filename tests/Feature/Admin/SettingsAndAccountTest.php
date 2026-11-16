@@ -66,7 +66,7 @@ class SettingsAndAccountTest extends TestCase
         [$user] = $this->memberOf(role: 'viewer', attributes: ['password' => 'ClaveVieja123']);
 
         $this->actingAs($user)->get('/mi-cuenta')->assertOk()->assertInertia(fn (Assert $page) => $page
-            ->component('Admin/Account')->where('account.email', $user->email)->has('memberships', 1));
+            ->component('Account/Index')->where('account.email', $user->email)->has('memberships', 1));
 
         $this->actingAs($user)->put('/mi-cuenta', ['name' => 'Nombre Nuevo', 'phone' => '9999-0000'])->assertSessionHasNoErrors();
         $this->assertSame('Nombre Nuevo', $user->fresh()->name);

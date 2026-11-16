@@ -41,7 +41,7 @@ class RelationTest extends TestCase
             ->assertOk()->assertJsonCount(1, 'interactions')->assertJsonPath('interactions.0.user', $operator->name);
 
         $this->actingInCompany($operator, $company)->get('/relaciones-institucionales?filter=upcoming')
-            ->assertInertia(fn (Assert $page) => $page->component('Relations')->has('records.data', 1)->where('counts.upcoming', 1));
+            ->assertInertia(fn (Assert $page) => $page->component('Relations/Index')->has('records.data', 1)->where('counts.upcoming', 1));
     }
 
     public function test_validation_rejects_a_contact_of_another_institution(): void

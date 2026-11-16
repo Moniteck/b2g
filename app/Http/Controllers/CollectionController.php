@@ -35,7 +35,7 @@ class CollectionController extends Controller
 
         $filters = $this->filters($request);
 
-        return Inertia::render('Finance/Collections', [
+        return Inertia::render('Collections/Index', [
             'records' => $this->filtered($filters)
                 ->with(['client:id,name', 'institution:id,name'])
                 ->orderByRaw('CASE WHEN status = ? THEN 1 ELSE 0 END', [CollectionInvoice::STATUS_PAID])

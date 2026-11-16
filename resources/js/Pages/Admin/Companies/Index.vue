@@ -13,7 +13,7 @@ import Toolbar from '@/Components/Toolbar.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { useShell } from '@/Layouts/shell.js';
 import { number } from '@/lib/format.js';
-import { useListFilters } from '@/Pages/Admin/Partials/useListFilters.js';
+import { useListFilters } from '@/composables/useListFilters.js';
 
 const props = defineProps({
     companyRecords: { type: Object, required: true },

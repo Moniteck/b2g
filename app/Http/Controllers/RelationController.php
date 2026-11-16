@@ -57,7 +57,7 @@ class RelationController extends Controller
             ->paginate($perPage)->withQueryString()
             ->through(fn (InstitutionalRelation $relation) => $this->present($relation));
 
-        return Inertia::render('Relations', [
+        return Inertia::render('Relations/Index', [
             'records' => $records,
             'filters' => ['search' => $search, 'filter' => $filter],
             'counts' => [

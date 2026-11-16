@@ -37,7 +37,7 @@ class TrainingController extends Controller
             ];
         })->values();
 
-        return Inertia::render('Tools/Training', ['courses' => $courses]);
+        return Inertia::render('Training/Index', ['courses' => $courses]);
     }
 
     /**

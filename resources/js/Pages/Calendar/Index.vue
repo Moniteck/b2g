@@ -15,12 +15,12 @@ import IconButton from '@/Components/IconButton.vue';
 import SelectInput from '@/Components/SelectInput.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { getJson } from '@/lib/http.js';
-import AgendaList from '@/Modules/Calendar/AgendaList.vue';
-import { LEGEND, monthLabel, monthWeeks, shiftMonth, todayKey } from '@/Modules/Calendar/calendar.js';
-import EventDetailModal from '@/Modules/Calendar/EventDetailModal.vue';
-import EventFormModal from '@/Modules/Calendar/EventFormModal.vue';
-import MonthGrid from '@/Modules/Calendar/MonthGrid.vue';
-import RulesModal from '@/Modules/Calendar/RulesModal.vue';
+import AgendaList from '@/Pages/Calendar/Partials/AgendaList.vue';
+import { LEGEND, monthLabel, monthWeeks, shiftMonth, todayKey } from '@/Pages/Calendar/Partials/calendar.js';
+import EventDetailModal from '@/Pages/Calendar/Partials/EventDetailModal.vue';
+import EventFormModal from '@/Pages/Calendar/Partials/EventFormModal.vue';
+import MonthGrid from '@/Pages/Calendar/Partials/MonthGrid.vue';
+import RulesModal from '@/Pages/Calendar/Partials/RulesModal.vue';
 
 const props = defineProps({
     types: { type: Array, default: () => [] },

@@ -43,7 +43,7 @@ class ConsortiumTest extends TestCase
         $this->assertSame($first->id, $consortium->members()->where('name', 'Empresa A')->value('id'));
 
         $this->actingInCompany($operator, $company)->get('/consorcios')
-            ->assertInertia(fn (Assert $page) => $page->component('Consortia')->where('records.data.0.members_total', 100));
+            ->assertInertia(fn (Assert $page) => $page->component('Consortia/Index')->where('records.data.0.members_total', 100));
     }
 
     public function test_percentages_must_add_up_to_one_hundred(): void

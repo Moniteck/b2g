@@ -1,7 +1,7 @@
 <script setup>
 // Inventario Blessing de la empresa activa: buscador, filtros, precio sugerido y, por cantidad,
 // subtotal, ISV y total en vivo; resumen flotante de la selección para llevarla a una cotización.
-// Los importes se calculan con `Modules/Inventory/pricing.js`, espejo del calculador del servidor.
+// Los importes se calculan con `Pages/Inventory/Partials/pricing.js`, espejo del calculador del servidor.
 import { router, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import CapAlert from '@design/vue/CapAlert.vue';
@@ -20,13 +20,13 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { dateTime, money, number, percent, quantity as formatQuantity, relativeTime } from '@/lib/format.js';
 import { getJson, postJson } from '@/lib/http.js';
 import { tableLink } from '@/lib/ui.js';
-import { documentTotals, itemLine } from '@/Modules/Inventory/pricing.js';
-import ProductDetailModal from '@/Modules/Inventory/ProductDetailModal.vue';
-import QuantityInput from '@/Modules/Inventory/QuantityInput.vue';
-import { QUOTE_URL, readDraft, saveQuoteSelection, writeDraft } from '@/Modules/Inventory/selection.js';
-import SelectionSummary from '@/Modules/Inventory/SelectionSummary.vue';
-import SyncHistoryModal from '@/Modules/Inventory/SyncHistoryModal.vue';
-import SyncResultModal from '@/Modules/Inventory/SyncResultModal.vue';
+import { documentTotals, itemLine } from '@/Pages/Inventory/Partials/pricing.js';
+import ProductDetailModal from '@/Pages/Inventory/Partials/ProductDetailModal.vue';
+import QuantityInput from '@/Pages/Inventory/Partials/QuantityInput.vue';
+import { QUOTE_URL, readDraft, saveQuoteSelection, writeDraft } from '@/Pages/Inventory/Partials/selection.js';
+import SelectionSummary from '@/Pages/Inventory/Partials/SelectionSummary.vue';
+import SyncHistoryModal from '@/Pages/Inventory/Partials/SyncHistoryModal.vue';
+import SyncResultModal from '@/Pages/Inventory/Partials/SyncResultModal.vue';
 
 const props = defineProps({
     items: { type: Object, required: true },

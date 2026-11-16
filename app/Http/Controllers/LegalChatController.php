@@ -40,7 +40,7 @@ class LegalChatController extends Controller
     {
         $this->authorize('use-ai');
 
-        return Inertia::render('LegalAgent', [
+        return Inertia::render('LegalAgent/Index', [
             'conversations' => $this->conversations($request),
             'writingTypes' => DocumentTypes::legalOptions(),
             'companyName' => CompanyLetterhead::current()['name'] ?? '',

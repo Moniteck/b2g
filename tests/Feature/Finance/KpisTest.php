@@ -31,7 +31,7 @@ class KpisTest extends TestCase
         $this->actingAs($viewer)->get('/kpis?from=2026-08-01&to=2026-08-31')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->component('Finance/Kpis')
+                ->component('Kpis/Index')
                 ->where('can.manage', false)
                 ->where('kpis.1.metric', 'adjudicaciones')
                 ->where('kpis.1.actual', 300)

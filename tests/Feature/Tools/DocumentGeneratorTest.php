@@ -38,7 +38,7 @@ class DocumentGeneratorTest extends TestCase
         $this->assertSame($company->id, $document->company_id);
 
         $this->actingInCompany($operator, $company)->get('/generador-documentos')
-            ->assertInertia(fn (Assert $page) => $page->component('Tools/DocumentGenerator')->has('records.data', 1)->where('can.delete', false));
+            ->assertInertia(fn (Assert $page) => $page->component('DocumentGenerator/Index')->has('records.data', 1)->where('can.delete', false));
 
         $this->actingInCompany($operator, $company)->get("/generador-documentos/{$document->id}/pdf")
             ->assertOk()->assertHeader('content-type', 'application/pdf');

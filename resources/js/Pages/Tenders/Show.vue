@@ -21,10 +21,10 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { date, dateTime, fileSize, money } from '@/lib/format.js';
 import { visit } from '@/lib/http.js';
 import { card, tableLink, textLink } from '@/lib/ui.js';
-import BidAnalysisPanel from '@/Modules/Tenders/BidAnalysisPanel.vue';
-import TenderFormModal from '@/Modules/Tenders/TenderFormModal.vue';
-import TenderStepper from '@/Modules/Tenders/TenderStepper.vue';
-import { countdown, CRITICAL_DATES, DEADLINE_ICONS, instantOf, stageBadge } from '@/Modules/Tenders/tenders.js';
+import BidAnalysisPanel from '@/Pages/Tenders/Partials/BidAnalysisPanel.vue';
+import TenderFormModal from '@/Pages/Tenders/Partials/TenderFormModal.vue';
+import TenderStepper from '@/Pages/Tenders/Partials/TenderStepper.vue';
+import { countdown, CRITICAL_DATES, DEADLINE_ICONS, instantOf, stageBadge } from '@/Pages/Tenders/Partials/tenders.js';
 
 const props = defineProps({
     tender: { type: Object, required: true },

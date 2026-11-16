@@ -19,7 +19,7 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { fieldError } from '@/lib/errors.js';
 import { money, percent, quantity as formatQuantity } from '@/lib/format.js';
 import { postJson } from '@/lib/http.js';
-import { QUOTE_URL, saveQuoteSelection } from '@/Modules/Inventory/selection.js';
+import { QUOTE_URL, saveQuoteSelection } from '@/Pages/Inventory/Partials/selection.js';
 
 const props = defineProps({
     tax: { type: Object, default: () => ({ rate: 15 }) },

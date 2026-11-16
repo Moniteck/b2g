@@ -27,7 +27,7 @@ use Illuminate\Validation\ValidationException;
  * siempre los mismos efectos. Toda operación corre en una transacción con bloqueo de la
  * cotización y de la oportunidad, y es idempotente: repetirla no duplica nada.
  *
- * API pública (ver resources/js/Modules/Quotes/README.md):
+ * API pública (ver resources/js/Pages/Quotes/Partials/README.md):
  *
  *   win(Quote|Opportunity, ['awarded_amount', 'awarded_at', 'quote_id'?], ?User): AdjudicationResult
  *   lose(Quote|Opportunity, ['winner_name', 'winner_amount', 'winner_tax_id'?, 'winner_participant_id'?,

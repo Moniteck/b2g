@@ -28,13 +28,13 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { date, dateTime, money, number, percent } from '@/lib/format.js';
 import { visit } from '@/lib/http.js';
 import { card, tableLink } from '@/lib/ui.js';
-import FilterSheet from '@/Modules/Tenders/FilterSheet.vue';
-import ImportCaptureModal from '@/Modules/Tenders/ImportCaptureModal.vue';
-import TenderBoardCard from '@/Modules/Tenders/TenderBoardCard.vue';
-import TenderCalendar from '@/Modules/Tenders/TenderCalendar.vue';
-import TenderFormModal from '@/Modules/Tenders/TenderFormModal.vue';
+import FilterSheet from '@/Pages/Tenders/Partials/FilterSheet.vue';
+import ImportCaptureModal from '@/Pages/Tenders/Partials/ImportCaptureModal.vue';
+import TenderBoardCard from '@/Pages/Tenders/Partials/TenderBoardCard.vue';
+import TenderCalendar from '@/Pages/Tenders/Partials/TenderCalendar.vue';
+import TenderFormModal from '@/Pages/Tenders/Partials/TenderFormModal.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';
-import { countdown, DEADLINE_ICONS, stageBadge } from '@/Modules/Tenders/tenders.js';
+import { countdown, DEADLINE_ICONS, stageBadge } from '@/Pages/Tenders/Partials/tenders.js';
 
 const props = defineProps({
     tenders: { type: Object, default: null },

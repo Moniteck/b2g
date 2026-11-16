@@ -14,7 +14,7 @@ import { useConfirm } from '@/composables/useConfirm.js';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { number } from '@/lib/format.js';
 import { visit } from '@/lib/http.js';
-import { useListFilters } from '@/Pages/Admin/Partials/useListFilters.js';
+import { useListFilters } from '@/composables/useListFilters.js';
 import InstitutionFormModal from '@/Pages/Institutions/Partials/InstitutionFormModal.vue';
 
 const props = defineProps({

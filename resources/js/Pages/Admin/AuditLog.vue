@@ -14,7 +14,7 @@ import StatusBadge from '@/Components/StatusBadge.vue';
 import Toolbar from '@/Components/Toolbar.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { dateTime, number } from '@/lib/format.js';
-import { useListFilters } from '@/Pages/Admin/Partials/useListFilters.js';
+import { useListFilters } from '@/composables/useListFilters.js';
 
 const props = defineProps({
     logs: { type: Object, required: true },

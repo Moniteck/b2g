@@ -34,7 +34,7 @@ class KpiGoalController extends Controller
             ->get(['id', 'metric', 'target', 'period_start', 'period_end'])
             ->unique('metric')->keyBy('metric');
 
-        return Inertia::render('Finance/Kpis', [
+        return Inertia::render('Kpis/Index', [
             'period' => ['from' => $period['from'], 'to' => $period['to']],
             'kpis' => collect(KpiService::METRICS)->map(function (string $label, string $metric) use ($actuals, $goals) {
                 $goal = $goals->get($metric);

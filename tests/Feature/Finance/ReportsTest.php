@@ -30,7 +30,7 @@ class ReportsTest extends TestCase
         $this->actingAs($viewer)->get('/reportes'.self::PERIOD)
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $page) => $page
-                ->component('Finance/Reports')
+                ->component('Reports/Index')
                 ->where('report.metrics.won_count', 2)
                 ->where('report.metrics.lost_count', 1)
                 // Tasa = ganadas / (ganadas + perdidas): 2 / 3.

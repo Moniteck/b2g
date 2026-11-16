@@ -22,7 +22,7 @@ class AccountController extends Controller
     {
         $user = $request->user();
 
-        return Inertia::render('Admin/Account', [
+        return Inertia::render('Account/Index', [
             'account' => [
                 'name' => $user->name,
                 'email' => $user->email,

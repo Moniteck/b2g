@@ -30,7 +30,7 @@ class PoaController extends Controller
 
         $filters = $this->filters($request);
 
-        return Inertia::render('Finance/Poa', [
+        return Inertia::render('Poa/Index', [
             'records' => $this->filtered($filters)
                 ->with('institution:id,name')
                 ->orderByRaw('CASE WHEN estimated_date IS NULL THEN 1 ELSE 0 END')

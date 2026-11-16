@@ -34,7 +34,7 @@ class BudgetController extends Controller
         $budget = $service->budget();
         $filters = $this->filters($request);
 
-        return Inertia::render('Finance/RevolvingBudget', [
+        return Inertia::render('RevolvingBudget/Index', [
             'budget' => [
                 'initial_amount' => (float) $budget->initial_amount,
                 'current_balance' => (float) $budget->current_balance,

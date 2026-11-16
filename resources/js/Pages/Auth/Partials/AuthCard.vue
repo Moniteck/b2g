@@ -6,8 +6,8 @@
 //  - Movimiento reducido: un fundido corto, sin giro ni desplazamiento.
 // La cara oculta queda `inert` y `aria-hidden`; al cambiar, el foco pasa al título de la nueva cara.
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
-import { prefersReducedMotion } from '@/Modules/Auth/motion.js';
-import { useSwipe } from '@/Modules/Auth/useSwipe.js';
+import { prefersReducedMotion } from '@/Components/Mascot/motion.js';
+import { useSwipe } from '@/Pages/Auth/Partials/useSwipe.js';
 
 const FACES = ['login', 'register'];
 const LABELS = { login: 'Ingresar', register: 'Crear cuenta' };

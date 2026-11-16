@@ -64,7 +64,7 @@ class ComplianceMatrixController extends Controller
             ->paginate($perPage)->withQueryString()
             ->through(fn (ComplianceMatrix $matrix) => $this->summary($matrix));
 
-        return Inertia::render('ComplianceMatrices', [
+        return Inertia::render('ComplianceMatrices/Index', [
             'records' => $records,
             'filters' => ['search' => $search, 'filter' => $filter],
             'tenders' => Tender::query()->select(['id', 'reference', 'title'])->latest('id')->limit(300)->get()

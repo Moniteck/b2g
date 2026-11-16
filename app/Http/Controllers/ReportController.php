@@ -26,7 +26,7 @@ class ReportController extends Controller
 
         // El cálculo va diferido: la pantalla llega al instante con sus filtros y un esqueleto, y las
         // cifras entran en una segunda petición (al filtrar, solo se pide `report`).
-        return Inertia::render('Finance/Reports', [
+        return Inertia::render('Reports/Index', [
             'filters' => $period,
             'report' => Inertia::defer(fn () => $reports->summary($period), 'report'),
             'modules' => collect(ReportService::MODULE_LABELS)->map(fn ($label, $value) => ['value' => $value, 'label' => $label])->values(),

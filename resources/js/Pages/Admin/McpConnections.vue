@@ -13,7 +13,7 @@ import { useConfirm } from '@/composables/useConfirm.js';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { dateTime, number, relativeTime } from '@/lib/format.js';
 import { visit } from '@/lib/http.js';
-import { useListFilters } from '@/Pages/Admin/Partials/useListFilters.js';
+import { useListFilters } from '@/composables/useListFilters.js';
 
 const props = defineProps({
     connections: { type: Object, required: true },

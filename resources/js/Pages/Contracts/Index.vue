@@ -17,10 +17,10 @@ import Toolbar from '@/Components/Toolbar.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { date, money, number } from '@/lib/format.js';
 import { card } from '@/lib/ui.js';
-import ContractFormModal from '@/Modules/Contracts/ContractFormModal.vue';
-import HolidaysModal from '@/Modules/Contracts/HolidaysModal.vue';
-import { percentOf, remaining, tone } from '@/Modules/Contracts/contracts.js';
-import { useListFilters } from '@/Pages/Admin/Partials/useListFilters.js';
+import ContractFormModal from '@/Pages/Contracts/Partials/ContractFormModal.vue';
+import HolidaysModal from '@/Pages/Contracts/Partials/HolidaysModal.vue';
+import { percentOf, remaining, tone } from '@/Pages/Contracts/Partials/contracts.js';
+import { useListFilters } from '@/composables/useListFilters.js';
 
 const props = defineProps({
     contracts: { type: Object, required: true },

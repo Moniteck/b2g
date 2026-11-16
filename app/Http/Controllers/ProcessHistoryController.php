@@ -51,7 +51,7 @@ class ProcessHistoryController extends Controller
 
         $participated = (int) $counts->participated;
 
-        return Inertia::render('ProcessHistory', [
+        return Inertia::render('Tenders/ProcessHistory', [
             'records' => $records,
             'filters' => ['search' => $search, 'filter' => $filter],
             'counts' => [

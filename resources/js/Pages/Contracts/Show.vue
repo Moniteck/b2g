@@ -17,15 +17,15 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { date, dateTime, money, quantity } from '@/lib/format.js';
 import { visit } from '@/lib/http.js';
 import { card, tableLink } from '@/lib/ui.js';
-import AttachmentPanel from '@/Modules/Documents/AttachmentPanel.vue';
-import DocumentViewerModal from '@/Modules/Documents/DocumentViewerModal.vue';
-import SignDocumentModal from '@/Modules/Signatures/SignDocumentModal.vue';
-import ContractFormModal from '@/Modules/Contracts/ContractFormModal.vue';
-import DeliverModal from '@/Modules/Contracts/DeliverModal.vue';
-import DeliveryModal from '@/Modules/Contracts/DeliveryModal.vue';
-import FollowUpModal from '@/Modules/Contracts/FollowUpModal.vue';
-import StatusModal from '@/Modules/Contracts/StatusModal.vue';
-import { CATEGORIES, DELIVERY_TONES, HISTORY_LABELS, historyDetail, percentOf, remaining, termLabel, tone } from '@/Modules/Contracts/contracts.js';
+import AttachmentPanel from '@/Pages/Directory/Partials/AttachmentPanel.vue';
+import DocumentViewerModal from '@/Pages/Directory/Partials/DocumentViewerModal.vue';
+import SignDocumentModal from '@/Pages/Signatures/Partials/SignDocumentModal.vue';
+import ContractFormModal from '@/Pages/Contracts/Partials/ContractFormModal.vue';
+import DeliverModal from '@/Pages/Contracts/Partials/DeliverModal.vue';
+import DeliveryModal from '@/Pages/Contracts/Partials/DeliveryModal.vue';
+import FollowUpModal from '@/Pages/Contracts/Partials/FollowUpModal.vue';
+import StatusModal from '@/Pages/Contracts/Partials/StatusModal.vue';
+import { CATEGORIES, DELIVERY_TONES, HISTORY_LABELS, historyDetail, percentOf, remaining, termLabel, tone } from '@/Pages/Contracts/Partials/contracts.js';
 
 const props = defineProps({
     contract: { type: Object, required: true },

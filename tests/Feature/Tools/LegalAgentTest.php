@@ -43,7 +43,7 @@ class LegalAgentTest extends TestCase
         $this->assertSame(4, LegalMessage::count());
 
         $this->actingInCompany($operator, $company)->get('/agente-legal')
-            ->assertInertia(fn (Assert $page) => $page->component('LegalAgent')->has('conversations', 1)->where('conversations.0.messages_count', 4));
+            ->assertInertia(fn (Assert $page) => $page->component('LegalAgent/Index')->has('conversations', 1)->where('conversations.0.messages_count', 4));
 
         $this->actingInCompany($operator, $company)->getJson("/agente-legal/conversaciones/{$conversationId}")->assertOk()->assertJsonCount(4, 'messages');
         $this->actingInCompany($operator, $company)->deleteJson("/agente-legal/conversaciones/{$conversationId}")->assertOk();

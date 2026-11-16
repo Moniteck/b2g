@@ -17,13 +17,13 @@ import { useConfirm } from '@/composables/useConfirm.js';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { date, number, relativeDays } from '@/lib/format.js';
 import { visit } from '@/lib/http.js';
-import { fileIcon } from '@/Modules/Documents/api.js';
-import DirectoryUploadModal from '@/Modules/Documents/Directory/DirectoryUploadModal.vue';
-import DocumentEditModal from '@/Modules/Documents/Directory/DocumentEditModal.vue';
-import DocumentRenewModal from '@/Modules/Documents/Directory/DocumentRenewModal.vue';
-import DocumentReplaceModal from '@/Modules/Documents/Directory/DocumentReplaceModal.vue';
-import DocumentVersionsModal from '@/Modules/Documents/Directory/DocumentVersionsModal.vue';
-import DocumentViewerModal from '@/Modules/Documents/DocumentViewerModal.vue';
+import { fileIcon } from '@/Pages/Directory/Partials/api.js';
+import DirectoryUploadModal from '@/Pages/Directory/Partials/DirectoryUploadModal.vue';
+import DocumentEditModal from '@/Pages/Directory/Partials/DocumentEditModal.vue';
+import DocumentRenewModal from '@/Pages/Directory/Partials/DocumentRenewModal.vue';
+import DocumentReplaceModal from '@/Pages/Directory/Partials/DocumentReplaceModal.vue';
+import DocumentVersionsModal from '@/Pages/Directory/Partials/DocumentVersionsModal.vue';
+import DocumentViewerModal from '@/Pages/Directory/Partials/DocumentViewerModal.vue';
 
 const props = defineProps({
     documents: { type: Object, required: true },

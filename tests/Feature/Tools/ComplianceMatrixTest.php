@@ -53,7 +53,7 @@ class ComplianceMatrixTest extends TestCase
         ])->assertSessionHasNoErrors();
 
         $this->actingInCompany($operator, $company)->get('/matriz-cumplimiento?filter=complete')
-            ->assertInertia(fn (Assert $page) => $page->component('ComplianceMatrices')->has('records.data', 1)->where('records.data.0.progress', 100));
+            ->assertInertia(fn (Assert $page) => $page->component('ComplianceMatrices/Index')->has('records.data', 1)->where('records.data.0.progress', 100));
 
         $this->actingInCompany($operator, $company)->get("/matriz-cumplimiento/{$matrix->id}/pdf")
             ->assertOk()->assertHeader('content-type', 'application/pdf');

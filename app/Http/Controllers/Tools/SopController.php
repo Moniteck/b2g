@@ -35,7 +35,7 @@ class SopController extends Controller
 
         $selected = SopCatalog::find((string) $request->query('sop')) ? $request->query('sop') : $sops->first()['slug'];
 
-        return Inertia::render('Tools/Sops', ['sops' => $sops, 'selected' => $selected]);
+        return Inertia::render('Sops/Index', ['sops' => $sops, 'selected' => $selected]);
     }
 
     /**

@@ -12,7 +12,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Calculador único de precios: puro, sin base de datos.
- * Los mismos casos deben dar lo mismo en `resources/js/Modules/Inventory/pricing.js`.
+ * Los mismos casos deben dar lo mismo en `resources/js/Pages/Inventory/Partials/pricing.js`.
  */
 class PriceCalculatorTest extends TestCase
 {

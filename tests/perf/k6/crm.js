@@ -155,11 +155,11 @@ export default function () {
     think();
     group('inventario', () => { json(`/inventario/buscar?q=${SEARCHES[Math.floor(Math.random() * SEARCHES.length)]}`, 'inventario_buscar'); });
     think();
-    group('campana', () => { visit('/', 'campana', 'notifications', 'Dashboard'); });
+    group('campana', () => { visit('/', 'campana', 'notifications', 'Dashboard/Index'); });
     think();
     group('reportes', () => {
         const month = String(1 + Math.floor(Math.random() * 10)).padStart(2, '0');
-        visit(`/reportes?from=2026-${month}-01&to=2026-11-14`, 'reportes', 'report,errors', 'Finance/Reports');
+        visit(`/reportes?from=2026-${month}-01&to=2026-11-14`, 'reportes', 'report,errors', 'Reports/Index');
     });
     think();
     group('calendario', () => { json('/calendario/eventos?from=2026-10-26&to=2026-12-06', 'calendario_eventos'); });

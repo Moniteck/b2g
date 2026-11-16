@@ -33,7 +33,7 @@ class CashFlowTest extends TestCase
         $next = today()->addMonthNoOverflow()->format('Y-m');
 
         $this->actingAs($viewer)->get('/flujo-caja')->assertOk()->assertInertia(fn (Assert $page) => $page
-            ->component('Finance/CashFlow')
+            ->component('CashFlow/Index')
             ->where('totals.received', 400)
             ->where('totals.pending', 500)
             ->where('totals.overdue', 300)

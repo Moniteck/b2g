@@ -4,7 +4,7 @@
 // Etiqueta de vidrio con logo y sistema, la frase del sistema palabra por palabra y unas fichas de
 // actividad que se turnan para mostrar de qué va el CRM.
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import { prefersReducedMotion } from '@/Modules/Auth/motion.js';
+import { prefersReducedMotion } from '@/Components/Mascot/motion.js';
 
 const props = defineProps({
     systemName: { type: String, required: true },

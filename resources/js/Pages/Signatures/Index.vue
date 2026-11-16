@@ -18,9 +18,9 @@ import TextInput from '@/Components/TextInput.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { dateTime } from '@/lib/format.js';
 import { card } from '@/lib/ui.js';
-import AssetCard from '@/Modules/Signatures/AssetCard.vue';
-import SignDocumentModal from '@/Modules/Signatures/SignDocumentModal.vue';
-import { endpoints } from '@/Modules/Signatures/api.js';
+import AssetCard from '@/Pages/Signatures/Partials/AssetCard.vue';
+import SignDocumentModal from '@/Pages/Signatures/Partials/SignDocumentModal.vue';
+import { endpoints } from '@/Pages/Signatures/Partials/api.js';
 
 const props = defineProps({
     assets: { type: Object, default: () => ({ firma: null, sello: null }) },

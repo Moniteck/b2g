@@ -1,6 +1,6 @@
 <script setup>
 // Cotizaciones de la empresa activa: cifras, buscador, segmentado por estado o resultado, filtros,
-// lista paginada en el servidor y todas las modales del módulo (resources/js/Modules/Quotes).
+// lista paginada en el servidor y todas las modales del módulo (resources/js/Pages/Quotes/Partials).
 import { Link, router, usePage } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { useToasts } from '@design/vue/composables/useToasts.js';
@@ -20,17 +20,17 @@ import AppLayout from '@/Layouts/AppLayout.vue';
 import { date, money } from '@/lib/format.js';
 import { visit } from '@/lib/http.js';
 import { tableLink, textLink } from '@/lib/ui.js';
-import { clearQuoteSelection, readQuoteSelection } from '@/Modules/Inventory/selection.js';
-import LostModal from '@/Modules/Quotes/LostModal.vue';
-import MailModal from '@/Modules/Quotes/MailModal.vue';
-import ParticipantsModal from '@/Modules/Quotes/ParticipantsModal.vue';
-import QuoteFormModal from '@/Modules/Quotes/QuoteFormModal.vue';
-import QuoteViewerModal from '@/Modules/Quotes/QuoteViewerModal.vue';
-import RevertModal from '@/Modules/Quotes/RevertModal.vue';
-import StatusModal from '@/Modules/Quotes/StatusModal.vue';
-import WonModal from '@/Modules/Quotes/WonModal.vue';
-import { fetchQuote } from '@/Modules/Quotes/api.js';
-import { lineFromSelection } from '@/Modules/Quotes/quotes.js';
+import { clearQuoteSelection, readQuoteSelection } from '@/Pages/Inventory/Partials/selection.js';
+import LostModal from '@/Pages/Quotes/Partials/LostModal.vue';
+import MailModal from '@/Pages/Quotes/Partials/MailModal.vue';
+import ParticipantsModal from '@/Pages/Quotes/Partials/ParticipantsModal.vue';
+import QuoteFormModal from '@/Pages/Quotes/Partials/QuoteFormModal.vue';
+import QuoteViewerModal from '@/Pages/Quotes/Partials/QuoteViewerModal.vue';
+import RevertModal from '@/Pages/Quotes/Partials/RevertModal.vue';
+import StatusModal from '@/Pages/Quotes/Partials/StatusModal.vue';
+import WonModal from '@/Pages/Quotes/Partials/WonModal.vue';
+import { fetchQuote } from '@/Pages/Quotes/Partials/api.js';
+import { lineFromSelection } from '@/Pages/Quotes/Partials/quotes.js';
 import { celebrate } from '@/lib/motion/index.js';
 
 const props = defineProps({

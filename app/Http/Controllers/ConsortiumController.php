@@ -46,7 +46,7 @@ class ConsortiumController extends Controller
             ->paginate($perPage)->withQueryString()
             ->through(fn (Consortium $consortium) => $this->present($consortium));
 
-        return Inertia::render('Consortia', [
+        return Inertia::render('Consortia/Index', [
             'records' => $records,
             'filters' => ['search' => $search, 'status' => $status],
             'counts' => ['all' => (int) $counts->sum(), ...collect(ConsortiumRequest::STATUSES)->mapWithKeys(fn ($value) => [$value => (int) ($counts[$value] ?? 0)])->all()],

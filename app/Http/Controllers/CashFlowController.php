@@ -42,7 +42,7 @@ class CashFlowController extends Controller
             $incomes->where(fn (Builder $inner) => $inner->where('concept', 'like', $term)->orWhere('notes', 'like', $term));
         }
 
-        return Inertia::render('Finance/CashFlow', [
+        return Inertia::render('CashFlow/Index', [
             'records' => $incomes->orderByDesc('received_at')->orderByDesc('id')
                 ->paginate($this->perPage($request))->withQueryString()
                 ->through(fn (ManualCashIncome $income) => [

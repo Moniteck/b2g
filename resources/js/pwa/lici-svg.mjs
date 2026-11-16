@@ -1,5 +1,5 @@
 // Lici en SVG estático (sin animaciones) para los íconos de la app y la página sin conexión.
-// Mismo dibujo que `Modules/Auth/Mascot.vue`, con los colores de `resources/design/tokens.json`
+// Mismo dibujo que `Components/Mascot/Mascot.vue`, con los colores de `resources/design/tokens.json`
 // escritos en el SVG (los PNG y el favicon no pueden leer variables CSS).
 //
 //   liciSvg()                          → solo el búho, fondo transparente (viewBox 160×150)

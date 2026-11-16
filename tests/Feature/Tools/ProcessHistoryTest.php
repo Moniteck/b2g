@@ -44,7 +44,7 @@ class ProcessHistoryTest extends TestCase
         $this->assertSame('No adjudicado', $record->fresh()->result);
 
         $this->actingInCompany($operator, $company)->get('/historial?filter=not_awarded')
-            ->assertInertia(fn (Assert $page) => $page->component('ProcessHistory')
+            ->assertInertia(fn (Assert $page) => $page->component('Tenders/ProcessHistory')
                 ->has('records.data', 1)
                 ->where('records.data.0.cause', 'Precio')
                 ->where('counts.participated', 1)

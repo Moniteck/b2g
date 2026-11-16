@@ -10,7 +10,7 @@ use InvalidArgumentException;
  * configuración; quien lo llama le pasa la tasa y si el precio trae impuesto
  * (ver TaxRules e InventoryPricing).
  *
- * El espejo en el navegador es `resources/js/Modules/Inventory/pricing.js`:
+ * El espejo en el navegador es `resources/js/Pages/Inventory/Partials/pricing.js`:
  * cualquier cambio de regla se hace en los dos y lo cubren las pruebas de
  * `tests/Feature/Inventory/PriceCalculatorTest.php`.
  *

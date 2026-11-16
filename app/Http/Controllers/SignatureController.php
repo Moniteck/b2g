@@ -17,7 +17,7 @@ use Symfony\Component\HttpFoundation\Response as HttpResponse;
  * Firmar documentos con la firma y el sello PERSONALES del usuario.
  *
  * Requiere `sign_documents` en la empresa del documento y permiso de verlo.
- * Responde JSON para `Modules/Signatures/SignDocumentModal.vue`.
+ * Responde JSON para `Pages/Signatures/Partials/SignDocumentModal.vue`.
  */
 class SignatureController extends Controller
 {

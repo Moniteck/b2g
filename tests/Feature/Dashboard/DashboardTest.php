@@ -134,7 +134,7 @@ class DashboardTest extends TestCase
         $this->inCompany($company, fn () => Tender::factory()->for($company)->create(['status' => 'Activa', 'presentation_deadline' => now()->subDay()]));
 
         $this->actingAs($user)->get('/')->assertInertia(fn (Assert $page) => $page
-            ->component('Dashboard')
+            ->component('Dashboard/Index')
             ->missing('charts')
             ->missing('agenda')
             ->loadDeferredProps(fn (Assert $reload) => $reload
@@ -250,7 +250,7 @@ class DashboardTest extends TestCase
         $this->actingAs($user)->get('/', [
             'X-Inertia' => 'true',
             'X-Inertia-Version' => (string) Inertia::getVersion(),
-            'X-Inertia-Partial-Component' => 'Dashboard',
+            'X-Inertia-Partial-Component' => 'Dashboard/Index',
             'X-Inertia-Partial-Data' => 'agenda',
         ])->assertOk();
         $agenda = count(DB::getQueryLog());

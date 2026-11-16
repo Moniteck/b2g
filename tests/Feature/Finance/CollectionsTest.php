@@ -58,7 +58,7 @@ class CollectionsTest extends TestCase
         $this->invoice($company, ['number' => 'FAC-PAGADA', 'status' => 'Pagada', 'paid_at' => today()->toDateString(), 'amount' => 200]);
 
         $this->actingAs($viewer)->get('/cobros')->assertOk()->assertInertia(fn (Assert $page) => $page
-            ->component('Finance/Collections')
+            ->component('Collections/Index')
             ->where('stats.receivable', 1000)
             ->where('stats.overdue', 700)
             ->where('stats.overdue_count', 1)

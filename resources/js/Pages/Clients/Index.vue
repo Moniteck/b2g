@@ -15,7 +15,7 @@ import { useConfirm } from '@/composables/useConfirm.js';
 import AppLayout from '@/Layouts/AppLayout.vue';
 import { date, money, number, relativeDays } from '@/lib/format.js';
 import { visit } from '@/lib/http.js';
-import { useListFilters } from '@/Pages/Admin/Partials/useListFilters.js';
+import { useListFilters } from '@/composables/useListFilters.js';
 import ClientFormModal from '@/Pages/Clients/Partials/ClientFormModal.vue';
 
 const props = defineProps({

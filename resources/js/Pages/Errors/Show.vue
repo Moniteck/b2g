@@ -4,8 +4,8 @@
 // Props: status, message (del servidor, `App\Support\ErrorPage`), retryAfter (segundos, 429).
 import { Head, Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import '@/Modules/Auth/auth.css';
-import Mascot from '@/Modules/Auth/Mascot.vue';
+import '@/Pages/Auth/Partials/auth.css';
+import Mascot from '@/Components/Mascot/Mascot.vue';
 import AppButton from '@/Components/AppButton.vue';
 import AppLayout from '@/Layouts/AppLayout.vue';
 

@@ -1,7 +1,7 @@
 <script setup>
 // «Aplicación y avisos» en Mi cuenta: instalar la app y «Recibir avisos en este dispositivo».
 //
-//   <PwaAccountSection />   (resources/js/Pages/Admin/Account.vue)
+//   <PwaAccountSection />   (resources/js/Pages/Account/Index.vue)
 import { computed, onMounted, ref } from 'vue';
 import AppButton from '@/Components/AppButton.vue';
 import StatusBadge from '@/Components/StatusBadge.vue';

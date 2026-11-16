@@ -32,7 +32,7 @@ class CompetitorTest extends TestCase
         ])->assertSessionHasNoErrors();
 
         $this->actingInCompany($operator, $company)->get('/inteligencia-competitiva')
-            ->assertInertia(fn (Assert $page) => $page->component('Competitors')
+            ->assertInertia(fn (Assert $page) => $page->component('Competitors/Index')
                 ->where('records.data.0.wins', 4)->where('records.data.0.win_rate', 80)
                 ->where('can.delete', false));
     }
