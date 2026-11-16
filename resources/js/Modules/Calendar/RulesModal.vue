@@ -115,6 +115,7 @@ function submit() {
                         <div class="flex flex-wrap gap-x-4 gap-y-1">
                             <Checkbox v-model="rule.channels" value="correo" label="Correo" :disabled="!rule.is_active" />
                             <Checkbox v-model="rule.channels" value="campana" label="Campana" :disabled="!rule.is_active" />
+                            <Checkbox v-model="rule.channels" value="push" label="Push" :disabled="!rule.is_active" />
                         </div>
                         <p v-if="errorOf(index, 'channels')" class="text-xs text-cap-status-error-ink">{{ errorOf(index, 'channels') }}</p>
                     </fieldset>

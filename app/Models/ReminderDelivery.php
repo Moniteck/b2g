@@ -19,7 +19,7 @@ class ReminderDelivery extends Model
 
     public const PENDING = ['Programado', 'Encolado'];
 
-    public const CHANNELS = ['correo' => 'Correo', 'campana' => 'Campana'];
+    public const CHANNELS = ['correo' => 'Correo', 'campana' => 'Campana', 'push' => 'Push'];
 
     protected $fillable = [
         'event_id', 'company_id', 'user_id', 'channel', 'offset_key', 'recipient', 'status', 'scheduled_for',

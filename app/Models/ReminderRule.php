@@ -34,7 +34,7 @@ class ReminderRule extends Model
      */
     public static function defaults(): array
     {
-        $both = ['correo', 'campana'];
+        $both = ['correo', 'campana', 'push'];
 
         return [
             'Licitacion' => ['days_before' => [], 'send_time' => '07:00', 'channels' => $both],
