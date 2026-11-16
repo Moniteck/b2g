@@ -22,8 +22,13 @@ class ReportController extends Controller
     {
         $this->authorize(Permissions::gate(Permissions::VIEW_REPORTS));
 
+        $period = $request->period();
+
+        // El cálculo va diferido: la pantalla llega al instante con sus filtros y un esqueleto, y las
+        // cifras entran en una segunda petición (al filtrar, solo se pide `report`).
         return Inertia::render('Finance/Reports', [
-            'report' => $reports->summary($request->period()),
+            'filters' => $period,
+            'report' => Inertia::defer(fn () => $reports->summary($period), 'report'),
             'modules' => collect(ReportService::MODULE_LABELS)->map(fn ($label, $value) => ['value' => $value, 'label' => $label])->values(),
         ]);
     }
@@ -61,7 +66,7 @@ class ReportController extends Controller
 
         return $export->csv(
             self::HEADINGS,
-            array_map(fn (array $row) => [$row['label'], $row['module'], $row['count'], $row['amount']], $report['rows']),
+            array_map(fn (array $row) => [$row['label'], $row['module_label'], $row['count'], $row['amount']], $report['rows']),
             'reporte-indicadores',
         );
     }
