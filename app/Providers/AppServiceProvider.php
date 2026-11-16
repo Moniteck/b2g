@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Listeners\AuditAuthenticationEvents;
 use App\Models\AuditLog;
 use App\Models\BudgetMovement;
 use App\Models\Client;
@@ -31,7 +32,6 @@ use App\Models\SignatureApplication;
 use App\Models\SigningAsset;
 use App\Models\Tender;
 use App\Models\User;
-use App\Listeners\AuditAuthenticationEvents;
 use App\Observers\CalendarSourceObserver;
 use App\Policies\CatalogPolicy;
 use App\Policies\ClientPolicy;
@@ -48,6 +48,7 @@ use App\Policies\ProcessHistoryPolicy;
 use App\Policies\QuotePolicy;
 use App\Policies\SigningAssetPolicy;
 use App\Policies\TenderPolicy;
+use App\Services\Metrics\BusinessMetrics;
 use App\Services\Tenancy\CompanyContext;
 use App\Support\Permissions;
 use App\Support\TooManyRequests;
@@ -125,6 +126,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         CalendarSourceObserver::register(); // Fase 6: plazos al calendario.
+        BusinessMetrics::watch(); // Dashboard y métricas: la caché de cifras se renueva al guardar.
         EventBus::subscribe(AuditAuthenticationEvents::class); // Seguridad B6: auditoría del acceso.
 
         Passport::authorizationView(function ($parameters) {

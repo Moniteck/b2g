@@ -95,7 +95,7 @@ class DeadlineService
                 'title' => "Vence la vigencia de la cotización {$row['quote']->number}",
                 'detail' => 'Vigencia de la oferta',
                 'due_at' => $row['expires']->toDateTimeString(),
-                'href' => '/cotizaciones?cotizacion='.$row['quote']->id,
+                'href' => '/cotizaciones?ver='.$row['quote']->id,
                 'kind' => 'quote',
             ]);
 

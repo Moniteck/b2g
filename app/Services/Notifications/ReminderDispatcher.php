@@ -24,7 +24,7 @@ class ReminderDispatcher
     public function __construct(protected NotificationFeed $feed) {}
 
     /**
-     * @return array{campana: int, correo: int, cancelados: int, push?: int}  («push» solo si salió alguno)
+     * @return array{campana: int, correo: int, cancelados: int, push?: int} («push» solo si salió alguno)
      */
     public function dispatchDue(int $limit = 500): array
     {

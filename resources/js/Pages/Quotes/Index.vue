@@ -41,6 +41,8 @@ const props = defineProps({
     statuses: { type: Array, default: () => [] },
     issuerCompanies: { type: Array, default: () => [] },
     taxRules: { type: Object, default: () => ({ rate: 15, prices_include_tax: false }) },
+    // `?nueva=1&tender_id=X`: datos iniciales del alta (licitación, institución y oportunidad).
+    newQuote: { type: Object, default: null },
     can: { type: Object, default: () => ({}) },
 });
 
@@ -63,6 +65,7 @@ const modal = reactive({ form: false, viewer: false, participants: false, won: f
 const selected = ref(null);
 const editingId = ref(null);
 const prefill = ref([]);
+const initialValues = ref(null);
 const uploadOnOpen = ref(false);
 
 const activeCompanyId = computed(() => page.props.activeCompany?.id ?? null);
@@ -125,9 +128,10 @@ function open(name, row = null) {
     modal[name] = true;
 }
 
-function create(lines = []) {
+function create(lines = [], initial = null) {
     editingId.value = null;
     prefill.value = lines;
+    initialValues.value = initial;
     modal.form = true;
 }
 
@@ -209,13 +213,14 @@ function dropParams(...names) {
 
 /**
  * Enlaces directos: `?ver={id}` abre la modal Ver (también llega aquí `/cotizaciones/{id}` abierto
- * en el navegador) y `?accion=nueva` abre el formulario de nueva cotización (atajo de la PWA).
+ * en el navegador) y `?accion=nueva` abre el formulario de nueva cotización (atajo de la PWA);
+ * `?nueva=1&tender_id=X` lo abre precargado con la licitación («Crear cotización» de Licitaciones).
  */
 async function takeDirectLink() {
     const params = new URLSearchParams(window.location.search);
-    if (params.get('accion') === 'nueva') {
-        if (props.can.create) create();
-        else dropParams('accion');
+    if (params.get('accion') === 'nueva' || params.get('nueva') === '1') {
+        if (props.can.create) create([], props.newQuote?.tender_id ? props.newQuote : null);
+        else dropParams('accion', 'nueva');
         return;
     }
     const id = Number(params.get('ver'));
@@ -246,7 +251,7 @@ watch(
 watch(
     () => modal.form,
     (open) => {
-        if (!open) dropParams('accion');
+        if (!open) dropParams('accion', 'nueva');
     },
 );
 
@@ -358,7 +363,7 @@ onBeforeUnmount(() => stopListener());
             <Pagination :paginator="quotes" :only="['quotes', 'filters']" />
         </div>
 
-        <QuoteFormModal v-model:open="modal.form" :quote-id="editingId" :prefill="prefill" :issuer-companies="issuerCompanies" :active-company-id="activeCompanyId" :tax-rules="taxRules" :tenders="filterOptions.tenders ?? []" :opportunities="filterOptions.opportunities ?? []" :can-see-cost="Boolean(can.viewCost)" @saved="refresh" />
+        <QuoteFormModal v-model:open="modal.form" :quote-id="editingId" :prefill="prefill" :issuer-companies="issuerCompanies" :active-company-id="activeCompanyId" :tax-rules="taxRules" :tenders="filterOptions.tenders ?? []" :opportunities="filterOptions.opportunities ?? []" :can-see-cost="Boolean(can.viewCost)" :initial="initialValues" @saved="refresh" />
         <QuoteViewerModal v-model:open="modal.viewer" :quote="selected" :start-with-upload="uploadOnOpen" @changed="refresh" />
         <ParticipantsModal v-model:open="modal.participants" :subject="subject" :title="`Participantes · ${selected?.number ?? ''}`" @saved="refresh" />
         <WonModal v-model:open="modal.won" :subject="subject" @done="onWon" />

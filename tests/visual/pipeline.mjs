@@ -288,7 +288,9 @@ async function flow(browser) {
         await dialog.getByText(/Contrato:/).waitFor();
         await shot(page, 'flujo-07-ganada-resultado');
         await dialog.getByRole('button', { name: 'Listo' }).click();
+        await dialog.waitFor({ state: 'detached', timeout: 15000 });
         await waitColumn(page, TITLE_B, 'adjudicado');
+        await page.waitForTimeout(800); // el tablero se recarga tras el resultado
     });
 
     await step(page, 'cancelar la modal Ganada desde una oferta presentada deja la tarjeta', async () => {
@@ -358,7 +360,8 @@ async function flow(browser) {
         if (await prospect.count()) {
             const title = await prospect.locator('[data-card-title]').innerText();
             await dragCard(viewer, prospect, 'oportunidad');
-            await viewer.getByText('Solo lectura').first().waitFor({ timeout: 10000 });
+            // El aviso, no la etiqueta oculta del rol «Solo lectura» del menú de usuario.
+            await viewer.locator('.cap-toast', { hasText: 'Solo lectura' }).first().waitFor({ timeout: 10000 });
             await waitColumn(viewer, title, 'prospecto', 2000);
         }
         await cardOf(viewer, TITLE_B).locator('button.cap-kanban-card__menu').click();

@@ -10,6 +10,7 @@ use App\Services\Business\QuoteService;
 use App\Services\Documents\DocumentService;
 use App\Support\SafeCell;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -80,7 +81,8 @@ class QuoteDocumentService
 
     public function listPdf(iterable $quotes): string
     {
-        $quotes = collect($quotes)->loadMissing(['company', 'institution']);
+        // collect() daría una colección base, sin loadMissing: se conserva la de Eloquent.
+        $quotes = (new EloquentCollection($quotes))->loadMissing(['company', 'institution']);
 
         return Pdf::loadView('pdf.quotes-list', ['quotes' => $quotes])->setPaper('a4')->output();
     }

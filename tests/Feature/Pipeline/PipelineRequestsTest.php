@@ -4,6 +4,7 @@ namespace Tests\Feature\Pipeline;
 
 use App\Models\AuditLog;
 use App\Models\Company;
+use App\Models\Document;
 use App\Models\Institution;
 use App\Models\Opportunity;
 use App\Models\Quote;
@@ -103,7 +104,7 @@ class PipelineRequestsTest extends TestCase
         $this->travel(1)->minutes();
         $audit->record('cotizacion.emitida', $quote);
         $this->travel(1)->minutes();
-        $document = $this->inCompany($this->company, fn () => \App\Models\Document::factory()->for($this->company)->create());
+        $document = $this->inCompany($this->company, fn () => Document::factory()->for($this->company)->create());
         $log = $audit->record('documento.subido', $document, ['nombre' => 'Pliego', 'adjunto_a' => "Opportunity #{$opportunity->id}"]);
         $audit->record('documento.subido', $document, ['adjunto_a' => "Opportunity #{$other->id}"]);
         $this->travelBack();

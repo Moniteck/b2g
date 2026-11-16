@@ -4,15 +4,16 @@ use App\Http\Middleware\ApplyMcpConnection;
 use App\Http\Middleware\AuditExport;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\PrivateResponses;
+use App\Http\Middleware\ResolveCompanyContext;
 use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\TrustHosts;
-use App\Http\Middleware\ResolveCompanyContext;
 use App\Services\Tenancy\CompanyContext;
+use App\Support\ErrorPage;
 use App\Support\TooManyRequests;
-use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 
@@ -55,5 +56,5 @@ return Application::configure(basePath: dirname(__DIR__))
             $exception->getHeaders(),
         ));
         // Páginas de error propias en español (403, 404, 419, 429, 500, 503); el JSON no cambia.
-        $exceptions->respond(fn ($response, \Throwable $exception, Request $request) => \App\Support\ErrorPage::respond($response, $request));
+        $exceptions->respond(fn ($response, Throwable $exception, Request $request) => ErrorPage::respond($response, $request));
     })->create();

@@ -67,6 +67,7 @@ class QuoteController extends Controller
             'stats' => $this->stats(),
             'filters' => $filters,
             'filterOptions' => $this->filterOptions($filters),
+            'newQuote' => $request->boolean('nueva') ? $this->newQuotePrefill($filters['tender_id']) : null,
             'statuses' => Quote::STATUSES,
             'issuerCompanies' => $this->issuerCompanies($user),
             'taxRules' => TaxRules::forCompany(Company::query()->find(app(CompanyContext::class)->currentCompanyId()))->toArray(),
@@ -390,6 +391,28 @@ class QuoteController extends Controller
                 ->map(fn (Tender $tender) => ['id' => $tender->id, 'name' => $tender->reference, 'description' => $tender->title])->values(),
             'opportunities' => Opportunity::query()->whereIn('stage', Opportunity::ACTIVE_STAGES)->latest('id')->limit(200)->get(['id', 'title', 'institution_id', 'tender_id'])
                 ->map(fn (Opportunity $opportunity) => ['id' => $opportunity->id, 'name' => $opportunity->title, 'institution_id' => $opportunity->institution_id, 'tender_id' => $opportunity->tender_id])->values(),
+        ];
+    }
+
+    /**
+     * Datos iniciales de «Nueva cotización» abierta desde una licitación (`?nueva=1&tender_id=X`):
+     * la licitación, su institución y la oportunidad activa enlazada, si la hay.
+     *
+     * @return array<string, mixed>
+     */
+    protected function newQuotePrefill(?int $tenderId): array
+    {
+        $tender = $tenderId ? Tender::query()->with('institution:id,name')->whereKey($tenderId)->first(['id', 'institution_id', 'reference', 'title']) : null;
+        if (! $tender) {
+            return [];
+        }
+
+        return [
+            'tender_id' => $tender->id,
+            'tender_option' => ['id' => $tender->id, 'name' => $tender->reference, 'description' => $tender->title],
+            'institution_id' => $tender->institution_id,
+            'institution' => $tender->institution ? ['id' => $tender->institution->id, 'name' => $tender->institution->name] : null,
+            'opportunity_id' => Opportunity::query()->where('tender_id', $tender->id)->whereIn('stage', Opportunity::ACTIVE_STAGES)->latest('id')->value('id'),
         ];
     }
 

@@ -10,11 +10,15 @@ use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Queue\SerializesModels;
 
-/** Cotización en PDF adjunto, con mensaje opcional de quien la envía. */
+/**
+ * Cotización en PDF adjunto, con mensaje opcional de quien la envía.
+ * Va en cola: la cotización viaja como referencia y el PDF se genera con los datos del momento del envío.
+ */
 class QuoteMail extends Mailable
 {
-    use Queueable;
+    use Queueable, SerializesModels;
 
     public function __construct(
         public Quote $quote,

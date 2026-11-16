@@ -4,7 +4,6 @@ namespace Tests\Feature\Auth;
 
 use App\Mail\PasswordResetMail;
 use App\Models\AuditLog;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;

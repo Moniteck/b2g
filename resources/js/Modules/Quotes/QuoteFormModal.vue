@@ -34,6 +34,8 @@ const props = defineProps({
     tenders: { type: Array, default: () => [] },
     opportunities: { type: Array, default: () => [] },
     canSeeCost: { type: Boolean, default: false },
+    // Alta precargada (p. ej. desde una licitación): { tender_id, tender_option, institution_id, institution, opportunity_id }.
+    initial: { type: Object, default: null },
 });
 
 const emit = defineEmits(['update:open', 'saved']);
@@ -74,7 +76,14 @@ async function load() {
     form.clearErrors();
     if (!editing.value) {
         detail.value = null;
-        const values = { ...blank(), items: props.prefill.map((line) => ({ ...line })) };
+        const start = props.initial ?? {};
+        const values = {
+            ...blank(),
+            tender_id: start.tender_id ?? null,
+            institution_id: start.institution_id ?? null,
+            opportunity_id: start.opportunity_id ?? null,
+            items: props.prefill.map((line) => ({ ...line })),
+        };
         form.defaults(values);
         form.reset();
         return;
@@ -115,7 +124,8 @@ function onInstitution(option) {
 }
 
 const tenderOptions = computed(() => {
-    const extra = detail.value?.tender_option && !props.tenders.some((t) => t.id === detail.value.tender_option.id) ? [detail.value.tender_option] : [];
+    const own = detail.value?.tender_option ?? (editing.value ? null : props.initial?.tender_option);
+    const extra = own && !props.tenders.some((t) => t.id === own.id) ? [own] : [];
     return [...extra, ...props.tenders];
 });
 const opportunityChoices = computed(() => {
@@ -169,7 +179,7 @@ function submit() {
                         <TextInput v-else :model-value="editing ? detail?.company?.name : companyOptions[0]?.label" readonly />
                     </FormField>
                     <FormField label="Institución" required :error="form.errors.institution_id">
-                        <SearchSelect v-model="form.institution_id" url="/instituciones/buscar" option-value="id" option-label="name" :selected="detail?.institution ?? null" placeholder="Buscar institución…" :disabled="readonly" @select="onInstitution" />
+                        <SearchSelect v-model="form.institution_id" url="/instituciones/buscar" option-value="id" option-label="name" :selected="detail?.institution ?? (editing ? null : initial?.institution) ?? null" placeholder="Buscar institución…" :disabled="readonly" @select="onInstitution" />
                     </FormField>
                     <FormField label="Contacto" optional :error="form.errors.contact_id" :help="form.institution_id ? '' : 'Elige primero la institución.'">
                         <SearchSelect :key="contactKey" v-model="form.contact_id" url="/contactos/buscar" :params="{ institution_id: form.institution_id }" :min-chars="0" option-value="id" option-label="name" option-description="position" :selected="detail?.contact_option ?? null" placeholder="Buscar contacto…" :disabled="readonly || !form.institution_id" />

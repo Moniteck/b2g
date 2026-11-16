@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Security;
 
+use App\Http\Controllers\McpConsentController;
+use App\Jobs\ReadTenderCapture;
 use App\Models\AuditLog;
 use App\Models\Company;
 use App\Rules\SafeExternalUrl;
@@ -16,6 +18,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Passport\Client;
 use Mockery;
 use RuntimeException;
 use Tests\TestCase;
@@ -177,7 +180,7 @@ class HardeningTest extends TestCase
 
         $response = $this->actingInCompany($admin, $company)->post('/licitaciones/importar', ['file' => UploadedFile::fake()->image('captura.png', 800, 600)]);
         $token = basename(parse_url($response->headers->get('Location'), PHP_URL_PATH));
-        Queue::assertPushed(\App\Jobs\ReadTenderCapture::class, fn ($job) => $job->token === $token);
+        Queue::assertPushed(ReadTenderCapture::class, fn ($job) => $job->token === $token);
 
         $this->actingInCompany($admin, $company)->getJson("/licitaciones/importar/{$token}/estado")->assertOk()->assertJson(['pending' => true]);
         $this->actingInCompany($admin, $company)->get("/licitaciones/importar/{$token}")
@@ -216,9 +219,9 @@ class HardeningTest extends TestCase
 
     public function test_mcp_consent_marks_dynamically_registered_clients_as_unverified(): void
     {
-        $client = new \Laravel\Passport\Client(['name' => 'Cliente X']);
+        $client = new Client(['name' => 'Cliente X']);
         [$user] = $this->memberOf();
 
-        $this->assertTrue(\App\Http\Controllers\McpConsentController::screen($user, $client, 'https://x.test/cb')['unverified']);
+        $this->assertTrue(McpConsentController::screen($user, $client, 'https://x.test/cb')['unverified']);
     }
 }

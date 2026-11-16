@@ -28,7 +28,7 @@ if (app()->isLocal()) {
 Route::any('{fallbackPlaceholder}', function (Request $request) {
     // La URL existe con otro método (p. ej. POST a una ruta solo GET): 405, como sin esta ruta.
     $otherMethod = collect(Route::getRoutes()->getRoutes())
-        ->contains(fn (\Illuminate\Routing\Route $route) => ! $route->isFallback && $route->matches($request, false));
+        ->contains(fn (Illuminate\Routing\Route $route) => ! $route->isFallback && $route->matches($request, false));
 
     abort($otherMethod ? 405 : 404);
 })->where('fallbackPlaceholder', '(?!api/|mcp|oauth|\.well-known).*')->fallback()->name('fallback');

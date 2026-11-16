@@ -4,8 +4,8 @@ namespace App\Services\Admin;
 
 use App\Models\Company;
 use App\Models\User;
-use App\Services\Auth\SessionTerminator;
 use App\Services\AuditLogger;
+use App\Services\Auth\SessionTerminator;
 use App\Support\Permissions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;

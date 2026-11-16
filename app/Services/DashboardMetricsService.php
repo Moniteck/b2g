@@ -586,7 +586,7 @@ class DashboardMetricsService
         return match ($type) {
             'Tender' => "/licitaciones/{$id}",
             'Opportunity' => "/pipeline/{$id}",
-            'Quote' => "/cotizaciones?cotizacion={$id}",
+            'Quote' => "/cotizaciones?ver={$id}",
             'Contract' => "/post-adjudicacion?contrato={$id}",
             'Document' => "/directorio?documento={$id}",
             'CollectionInvoice' => '/cobros',

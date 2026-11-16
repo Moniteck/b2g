@@ -89,7 +89,7 @@ final class TenderFlow
 
                 return $fromBid
                     ? ['label' => 'Crear cotización', 'icon' => 'file-document-plus-outline', 'action' => 'post', 'href' => route('tenders.bid.quote', [$tender, $analysis]), 'hint' => 'Borrador con los productos del pliego, con precio en cero para completar.']
-                    : ['label' => 'Crear cotización', 'icon' => 'file-document-plus-outline', 'action' => 'href', 'href' => '/cotizaciones?tender_id='.$tender->id, 'hint' => 'Arma la oferta en Cotizaciones y vincúlala a esta licitación.'];
+                    : ['label' => 'Crear cotización', 'icon' => 'file-document-plus-outline', 'action' => 'href', 'href' => '/cotizaciones?nueva=1&tender_id='.$tender->id, 'hint' => 'Arma la oferta en Cotizaciones y vincúlala a esta licitación.'];
             }
             if ($quotes > 0) {
                 return ['label' => 'Ver cotizaciones', 'icon' => 'file-document-outline', 'action' => 'href', 'href' => '/cotizaciones?tender_id='.$tender->id, 'hint' => 'Al presentar la cotización, la licitación pasa a «Presentada».'];

@@ -2,8 +2,8 @@
  * Lici (Mascot.vue): estilos propios del búho, para usarlo fuera de la pantalla de acceso
  * (Agente Legal). Mascot.vue importa este archivo, así que basta con importar el componente.
  *
- * Reúne el estado final de las reglas `.lici*` de auth.css (que sigue teniendo las mismas, con
- * los mismos valores, para la pantalla de acceso) y añade los estados de asistente:
+ * Es la única fuente de las reglas `.lici*` (auth.css solo agrega lo propio del acceso, como la
+ * respiración en `.auth__perch`) e incluye los estados de asistente:
  *   reading   lee un libro de leyes (los ojos recorren la página)
  *   writing   escribe con una pluma sobre una hoja
  *   searching busca con una lupa (espera la respuesta)

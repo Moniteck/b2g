@@ -10,7 +10,7 @@
 // (salta y celebra) y wave (saluda). Estados de asistente (Agente Legal): reading (lee un libro de
 // leyes), writing (escribe con pluma) y searching (busca con una lupa). Las alas, los ojos y la cabeza pasan de un estado a otro con
 // transiciones. Los estilos viven en mascot.css (no son `scoped`, para que la cortina de salida y la
-// intro puedan clonar el SVG fuera de Vue); auth.css repite los de acceso con los mismos valores.
+// intro puedan clonar el SVG fuera de Vue); auth.css solo agrega lo propio de la pantalla de acceso.
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import './mascot.css';
 import { prefersReducedMotion } from './motion.js';

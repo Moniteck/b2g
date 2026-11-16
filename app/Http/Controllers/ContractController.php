@@ -449,15 +449,19 @@ class ContractController extends Controller
      */
     private function history(Contract $contract): array
     {
-        return AuditLog::query()
-            ->where('company_id', $contract->company_id)
-            ->where(fn (Builder $query) => $query
-                ->where(fn (Builder $own) => $own->where('resource_type', 'Contract')->where('resource_id', $contract->id))
-                ->orWhere(fn (Builder $docs) => $docs->where('resource_type', 'Document')->where('changes->adjunto_a', "Contract #{$contract->id}")))
-            ->latest('created_at')
-            ->latest('id')
-            ->limit(200)
-            ->get(['id', 'action', 'actor_name', 'changes', 'created_at'])
+        // Dos partes con índice (`resource_type, resource_id` y `company_id, parent_type, parent_id,
+        // created_at`) unidas con UNION ALL, en vez de un `OR` sobre el JSON `changes`.
+        $limit = 200;
+        $base = fn () => AuditLog::query()
+            ->select(['id', 'action', 'actor_name', 'changes', 'created_at'])
+            ->where('company_id', $contract->company_id);
+
+        return $base()->where('resource_type', 'Contract')->where('resource_id', $contract->id)
+            ->unionAll($base()->where('parent_type', 'Contract')->where('parent_id', $contract->id)->orderByDesc('created_at')->orderByDesc('id')->limit($limit))
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get()
             ->map(fn (AuditLog $log) => [
                 'id' => $log->id,
                 'action' => $log->action,
