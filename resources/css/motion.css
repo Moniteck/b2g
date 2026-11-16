@@ -76,11 +76,8 @@
 .m-page > .grid > :nth-child(6) { animation-delay: 250ms; }
 .m-page > .grid > :nth-child(n + 7) { animation-delay: 280ms; }
 
-/* Salida: mientras llega la página nueva el contenido actual se atenúa y sube un poco. */
-.cap-shell__content[data-m-leaving] > .m-page {
-    opacity: 0.35;
-    transform: translateY(-6px);
-}
+/* Durante una visita lenta la página anterior no se atenúa ni se congela: el marco persistente
+   muestra la barra de progreso y, pasados 300 ms, un esqueleto (Layouts/Partials/PageSkeleton.vue). */
 
 /* Barra de progreso de Inertia con el degradado de la marca y un brillo que la recorre. */
 html #nprogress .bar {
@@ -587,9 +584,6 @@ html[data-motion="reduced"] .m-modal-enter-active .m-modal-panel {
 }
 html[data-motion="reduced"] :is(.m-menu-enter-from, .m-modal-enter-from .m-modal-panel, .m-slide-left-enter-from, .m-slide-right-enter-from, .m-rise-enter-from, .m-pop-enter-from) {
     transform: none !important;
-}
-html[data-motion="reduced"] .cap-shell__content[data-m-leaving] > .m-page {
-    transform: none;
 }
 html[data-motion="reduced"] .m-nav-ghost,
 html[data-motion="reduced"] .m-confetti {
