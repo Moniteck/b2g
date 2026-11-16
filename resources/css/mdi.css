@@ -1,8 +1,8 @@
-/* Material Design Icons 7.4.47: subconjunto con los 492 íconos que usa el sistema.
+/* Material Design Icons 7.4.47: subconjunto con los 497 íconos que usa el sistema.
    ARCHIVO GENERADO por scripts/mdi-subset.mjs: no se edita a mano; tras usar un ícono nuevo, vuelve a ejecutarlo. */
 @font-face {
   font-family: "Material Design Icons";
-  src: url("../fonts/mdi/mdi-subset.woff?v=7.4.47-492") format("woff");
+  src: url("../fonts/mdi/mdi-subset.woff?v=7.4.47-497") format("woff");
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -150,6 +150,7 @@
 .mdi-account-group-outline::before { content: "\F0B58"; }
 .mdi-account-multiple-plus::before { content: "\F0010"; }
 .mdi-account-multiple-plus-outline::before { content: "\F0800"; }
+.mdi-account-outline::before { content: "\F0013"; }
 .mdi-account-plus::before { content: "\F0014"; }
 .mdi-account-plus-outline::before { content: "\F0801"; }
 .mdi-account-remove::before { content: "\F0015"; }
@@ -301,6 +302,7 @@
 .mdi-cross::before { content: "\F0953"; }
 .mdi-cursor-default::before { content: "\F01C0"; }
 .mdi-database::before { content: "\F01BC"; }
+.mdi-debug-step-over::before { content: "\F01B7"; }
 .mdi-decimal::before { content: "\F10A1"; }
 .mdi-delete::before { content: "\F01B4"; }
 .mdi-delta::before { content: "\F01C2"; }
@@ -431,6 +433,8 @@
 .mdi-home::before { content: "\F02DC"; }
 .mdi-home-outline::before { content: "\F06A1"; }
 .mdi-image::before { content: "\F02E9"; }
+.mdi-image-off::before { content: "\F082B"; }
+.mdi-image-off-outline::before { content: "\F11D1"; }
 .mdi-image-outline::before { content: "\F0976"; }
 .mdi-image-plus::before { content: "\F087C"; }
 .mdi-image-plus-outline::before { content: "\F1B46"; }
@@ -582,6 +586,7 @@
 .mdi-text-search::before { content: "\F13B8"; }
 .mdi-theme-light-dark::before { content: "\F050E"; }
 .mdi-timeline::before { content: "\F0BD1"; }
+.mdi-timer::before { content: "\F13AB"; }
 .mdi-timer-off::before { content: "\F13AC"; }
 .mdi-timer-off-outline::before { content: "\F051E"; }
 .mdi-timer-sand::before { content: "\F051F"; }

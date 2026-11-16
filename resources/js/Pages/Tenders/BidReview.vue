@@ -3,7 +3,7 @@
 // verificación. Lo «sin evidencia» nunca se marca solo; si un dato difiere del que ya tiene la
 // licitación (p. ej. de la captura), se muestran los dos y la persona elige.
 import { router, useForm } from '@inertiajs/vue3';
-import { computed, nextTick, reactive, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import CapAlert from '../../../design/vue/CapAlert.vue';
 import CapSegmented from '../../../design/vue/CapSegmented.vue';
 import AppButton from '../../Components/AppButton.vue';
@@ -31,8 +31,25 @@ const props = defineProps({
     pdfUrl: { type: String, required: true },
     matrixId: { type: Number, default: null },
     quoteId: { type: Number, default: null },
+    maxPages: { type: Number, default: 300 },
     can: { type: Object, default: () => ({}) },
 });
+
+// En escritorio el PDF queda fijo a la derecha y cada cita lo lleva a su página; en móvil se abre en
+// una modal a pantalla completa.
+const desktopQuery = typeof window !== 'undefined' ? window.matchMedia('(min-width: 1280px)') : null;
+const isDesktop = ref(desktopQuery?.matches ?? true);
+const onMedia = (event) => (isDesktop.value = event.matches);
+onMounted(() => desktopQuery?.addEventListener('change', onMedia));
+onBeforeUnmount(() => desktopQuery?.removeEventListener('change', onMedia));
+const sideViewer = ref(null);
+const activeRow = ref(null);
+const counts = computed(() => ({
+    verified: props.rows.filter((row) => row.found && row.status === 'verified').length,
+    doubtful: props.rows.filter((row) => row.found && row.status === 'doubtful').length,
+    unverified: props.rows.filter((row) => row.found && row.status === 'unverified').length,
+    missing: props.rows.filter((row) => !row.found).length,
+}));
 
 const confirmed = computed(() => props.analysis.status === 'confirmed');
 const editable = computed(() => props.can.confirm && !confirmed.value);
@@ -100,6 +117,10 @@ const pdfTitle = ref('');
 function openPage(page, title = '') {
     targetPage.value = page || 1;
     pdfTitle.value = title;
+    if (isDesktop.value) {
+        sideViewer.value?.goToPage(targetPage.value);
+        return;
+    }
     if (pdfOpen.value) viewer.value?.goToPage(targetPage.value);
     pdfOpen.value = true;
 }
@@ -127,15 +148,24 @@ const LIST_SECTIONS = [
         <CapAlert v-if="confirmed" status="ok" title="Revisión confirmada" :detail="`Los datos marcados se aplicaron a la licitación el ${dateTime(analysis.reviewedAt)}.`" />
         <CapAlert v-else status="info" title="Revisa cada dato con su cita antes de aplicarlo" detail="La IA propuso estos datos y el sistema comprobó que cada cita exista en la página indicada del PDF. Lo «sin evidencia» no se marca solo. Nada cambia en la licitación hasta que confirmes." />
 
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm" data-evidence-summary>
+            <span class="inline-flex items-center gap-1 text-cap-status-ok-ink"><i class="mdi mdi-check-decagram-outline text-base leading-none" aria-hidden="true" />{{ counts.verified }} verificados</span>
+            <span class="inline-flex items-center gap-1 text-cap-status-warning-ink"><i class="mdi mdi-alert-outline text-base leading-none" aria-hidden="true" />{{ counts.doubtful }} dudosos</span>
+            <span class="inline-flex items-center gap-1 text-cap-status-error-ink"><i class="mdi mdi-close-octagon-outline text-base leading-none" aria-hidden="true" />{{ counts.unverified }} sin evidencia</span>
+            <span class="inline-flex items-center gap-1 text-cap-text-soft"><i class="mdi mdi-help-circle-outline text-base leading-none" aria-hidden="true" />{{ counts.missing }} no encontrados</span>
+        </div>
+        <CapAlert v-if="analysis.pages && analysis.pages >= maxPages" status="warning" title="Se analizó solo una parte del pliego" :detail="`El análisis lee hasta ${maxPages} páginas. Revisa a mano los datos que estén después de la página ${maxPages}.`" />
+
         <p class="text-xs text-cap-text-soft">
             {{ tender.reference }} · Análisis #{{ analysis.id }}<span v-if="analysis.pages"> · {{ analysis.pages }} páginas</span><span v-if="analysis.tokens"> · {{ number(analysis.tokens) }} tokens</span><span v-if="analysis.seconds"> · {{ analysis.seconds }} s</span> · El texto del pliego se envió a OpenAI.
         </p>
 
-        <form class="flex flex-col gap-6" data-bid-review novalidate @submit.prevent="submit">
+        <div class="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+        <form class="flex min-w-0 flex-col gap-6" data-bid-review novalidate @submit.prevent="submit">
             <section :class="card" class="p-5">
                 <h3 class="font-display text-base font-semibold text-gray-900 dark:text-gray-100">Datos del proceso</h3>
                 <ol v-stagger class="mt-4 flex flex-col divide-y divide-cap-divider">
-                    <li v-for="row in rows" :key="row.key" class="flex flex-col gap-3 py-4 first:pt-0 last:pb-0" :data-row="row.key" :data-evidence="row.found ? row.status : 'missing'">
+                    <li v-for="row in rows" :key="row.key" class="-mx-2 flex flex-col gap-3 rounded-cap-control px-2 py-4 transition-colors duration-cap-fast ease-cap first:pt-2 last:pb-2" :class="activeRow === row.key ? 'bg-cap-status-info-tint' : ''" :data-row="row.key" :data-evidence="row.found ? row.status : 'missing'" @focusin="activeRow = row.key">
                         <div class="flex flex-wrap items-center justify-between gap-2">
                             <p class="text-sm font-semibold text-gray-900 dark:text-gray-100">{{ row.label }}</p>
                             <StatusBadge :status="evidence(row).status" :label="evidence(row).label" />
@@ -145,7 +175,7 @@ const LIST_SECTIONS = [
                             <figure v-if="row.quote" class="rounded-cap-control bg-cap-card-2 p-3">
                                 <blockquote class="text-sm italic text-gray-800 dark:text-gray-200">«{{ row.quote }}»</blockquote>
                                 <figcaption class="mt-2 flex flex-wrap items-center gap-3 text-xs text-cap-text-soft">
-                                    <button v-if="row.page" type="button" :class="textLink" class="inline-flex items-center gap-1" @click="openPage(row.page, row.label)"><i class="mdi mdi-file-eye-outline text-base" aria-hidden="true" />Ver en el PDF, página {{ row.page }}</button>
+                                    <button v-if="row.page" type="button" :class="textLink" class="inline-flex items-center gap-1" @click="(activeRow = row.key), openPage(row.page, row.label)"><i class="mdi mdi-file-eye-outline text-base" aria-hidden="true" />Ver en el PDF, página {{ row.page }}</button>
                                     <span v-if="row.note">{{ row.note }}</span>
                                 </figcaption>
                             </figure>
@@ -219,7 +249,13 @@ const LIST_SECTIONS = [
             </div>
         </form>
 
-        <BaseModal v-model:open="pdfOpen" size="xl" flush :title="pdfTitle ? `Pliego · ${pdfTitle}` : 'Pliego'" :description="`Página ${targetPage}`">
+        <aside v-if="isDesktop" class="sticky top-cap-below-header self-start overflow-hidden rounded-cap-card border border-cap-divider bg-cap-card" aria-label="Pliego en PDF" data-bid-pdf>
+            <p class="border-b border-cap-divider px-4 py-2 text-xs text-cap-text-soft">{{ pdfTitle ? `${pdfTitle} · página ${targetPage}` : 'Pliego de condiciones: usa «Ver en el PDF» de cada dato para ir a su página.' }}</p>
+            <PdfViewer ref="sideViewer" :src="pdfUrl" name="Pliego de condiciones" height="h-[calc(100vh-12rem)]" />
+        </aside>
+        </div>
+
+        <BaseModal v-if="!isDesktop" v-model:open="pdfOpen" size="xl" flush :title="pdfTitle ? `Pliego · ${pdfTitle}` : 'Pliego'" :description="`Página ${targetPage}`">
             <PdfViewer ref="viewer" :src="pdfUrl" name="Pliego de condiciones" height="h-[75vh]" @loaded="onLoaded" />
         </BaseModal>
     </AppLayout>
