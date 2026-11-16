@@ -1,8 +1,8 @@
-/* Material Design Icons 7.4.47: subconjunto con los 482 íconos que usa el sistema.
+/* Material Design Icons 7.4.47: subconjunto con los 486 íconos que usa el sistema.
    ARCHIVO GENERADO por scripts/mdi-subset.mjs: no se edita a mano; tras usar un ícono nuevo, vuelve a ejecutarlo. */
 @font-face {
   font-family: "Material Design Icons";
-  src: url("../fonts/mdi/mdi-subset.woff?v=7.4.47-482") format("woff");
+  src: url("../fonts/mdi/mdi-subset.woff?v=7.4.47-486") format("woff");
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -461,6 +461,7 @@
 .mdi-magnify-minus-outline::before { content: "\F06EC"; }
 .mdi-magnify-plus::before { content: "\F034B"; }
 .mdi-magnify-plus-outline::before { content: "\F06ED"; }
+.mdi-magnify-scan::before { content: "\F1276"; }
 .mdi-mail::before { content: "\F0EBB"; }
 .mdi-map::before { content: "\F034D"; }
 .mdi-map-marker::before { content: "\F034E"; }
@@ -515,6 +516,7 @@
 .mdi-presentation::before { content: "\F0428"; }
 .mdi-progress-check::before { content: "\F0995"; }
 .mdi-progress-clock::before { content: "\F0996"; }
+.mdi-progress-pencil::before { content: "\F1787"; }
 .mdi-radio::before { content: "\F0439"; }
 .mdi-radius::before { content: "\F0CC0"; }
 .mdi-raw::before { content: "\F1A0F"; }
@@ -574,6 +576,8 @@
 .mdi-text-search::before { content: "\F13B8"; }
 .mdi-theme-light-dark::before { content: "\F050E"; }
 .mdi-timeline::before { content: "\F0BD1"; }
+.mdi-timer-off::before { content: "\F13AC"; }
+.mdi-timer-off-outline::before { content: "\F051E"; }
 .mdi-timer-sand::before { content: "\F051F"; }
 .mdi-timer-sand-complete::before { content: "\F199F"; }
 .mdi-toolbox::before { content: "\F09AC"; }

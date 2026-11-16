@@ -21,5 +21,6 @@ if (app()->isLocal()) {
     Route::get('/errores/{status}', fn (int $status) => abort($status))->whereIn('status', ['403', '404', '419', '429', '500', '503'])->name('errors.preview');
 }
 
-// Ruta inexistente: 404 propio con la sesión activa (con el marco). Laravel evalúa `fallback` al final.
-Route::fallback(fn () => abort(404))->where('fallbackPlaceholder', '(?!api/|mcp|oauth|.well-known).*')->name('fallback');
+// Ruta inexistente (cualquier método): 404 propio con la sesión activa (con el marco). Laravel evalúa
+// `fallback` al final; con `any` un POST a una URL inexistente da 404 y no 405.
+Route::any('{fallbackPlaceholder}', fn () => abort(404))->where('fallbackPlaceholder', '(?!api/|mcp|oauth|\.well-known).*')->fallback()->name('fallback');
