@@ -812,3 +812,9 @@
 .app-calendar__link:hover:not(:disabled) {
     background: var(--cap-card-2);
 }
+
+/* Kanban: mientras se arrastra una tarjeta, los avisos de la esquina no tapan las columnas
+   (soltar sobre un aviso no movía la tarjeta). */
+body:has([data-cap-kanban-card][data-dragging]) .cap-toast {
+    pointer-events: none;
+}
