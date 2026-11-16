@@ -862,3 +862,84 @@ class Invoice extends Model
     }
 }
 ```
+
+## 17. Esquema actual de CRM B2G
+
+Una migración `create` por tabla en `database/migrations/0001_01_01_DDNN00_create_<tabla>_table.php`
+(`DD` = dominio, `NN` = orden por dependencias). Las llaves cruzadas cotizaciones ↔ oportunidades
+↔ clientes se agregan en `0001_01_01_990000_add_cross_table_foreign_keys.php`. Los cambios nuevos van
+en migraciones nuevas con fecha (no se editan las consolidadas). Las llaves foráneas usan el nombre
+por defecto de Laravel (`<tabla>_<columna>_foreign`). Multiempresa: toda tabla operativa lleva
+`company_id` y el modelo usa `BelongsToCompany`.
+
+**01 Núcleo: empresas, usuarios y acceso**
+- `users`: personas con acceso; `is_root` = raíz del grupo (el rol vive en `company_user.role`).
+- `companies`: empresas del grupo; impuesto (`tax_rate`, `prices_include_tax`), Blessing y `settings` (datos de membrete).
+- `company_user`: membresía usuario ↔ empresa con `role` (viewer, operator, admin) e `is_default`.
+- `access_requests`: solicitudes de cuenta desde el login, con verificación de correo y revisión.
+- `push_subscriptions`: suscripciones Web Push (PWA) por usuario.
+- `training_progress`: avance de cada usuario en los tutoriales.
+- `holidays`: feriados por empresa para calcular plazos en días hábiles.
+- `password_reset_tokens`, `sessions`: del framework.
+
+**02 MCP y auditoría**
+- `mcp_connections`: conexiones de clientes MCP (OAuth) por usuario.
+- `mcp_authorizations`: confirmaciones en dos pasos de acciones MCP de escritura.
+- `audit_logs`: bitácora inmutable (solo `created_at`), con canal web/MCP y registro padre.
+
+**03 Directorio**
+- `institutions`: catálogo de instituciones compartido por el grupo.
+- `contacts`: personas de contacto de cada institución.
+- `competitors`: competidores conocidos.
+
+**04 Licitaciones**
+- `tenders`: procesos de HonduCompras con fechas clave (aclaraciones, presentación, apertura).
+- `process_histories`: historial de procesos de HonduCompras y su resultado.
+- `compliance_matrices`: matriz de cumplimiento de requisitos de una licitación.
+
+**05 Inventario (Blessing)**
+- `inventory_items`: productos sincronizados de Blessing (`cost`, `suggested_price`, impuesto, existencia).
+- `inventory_price_histories`: historial de costo y precio sugerido por producto.
+- `inventory_sync_runs`: cada sincronización (`error` = resumen, `errors` = detalle por producto).
+
+**06 Comercial: pipeline, cotizaciones y clientes**
+- `opportunities`: tarjetas del kanban (Prospecto → Adjudicado / No adjudicado).
+- `quotes`: cotizaciones, con resultado (Ganada/Perdida), monto adjudicado y ganador.
+- `clients`: clientes; nacen solo de una cotización ganada (`source_quote_id`).
+- `quote_participants`: oferentes del proceso y sus montos.
+- `quote_items`: líneas de la cotización (precio × cantidad + ISV; `inventory_item_id` opcional).
+
+**07 Documentos y firmas**
+- `documents`: ficha del documento (directorio institucional o de proceso), vigencia y responsable de renovar.
+- `document_versions`: cada archivo subido (ruta, tipo, tamaño, hash, firma); la vigente es la de mayor `version`.
+- `document_links`: enlaza un documento a cotizaciones, licitaciones o contratos.
+- `document_extractions`: lecturas OCR/IA (capturas de HonduCompras y análisis de pliegos).
+- `signing_assets`: firma y sello personales de cada usuario (dibujados, escritos o subidos).
+- `signature_applications`: cada firma o sello aplicado a un PDF.
+- `compliance_items`: requisitos de una matriz de cumplimiento con su documento de respaldo.
+
+**08 Contratos**
+- `contracts`: contratos post-adjudicación (monto, plazo, oficial de seguimiento `manager_id`, estados, `closed_at`).
+- `contract_deliveries`: entregas pactadas y su acta.
+- `contract_follow_ups`: seguimientos con próxima acción.
+
+**09 Calendario y recordatorios**
+- `events`: plazos y eventos del calendario (derivados de su origen o manuales; `completed_at`, `attended_at`).
+- `reminder_rules`: reglas de aviso por tipo de plazo (días antes, `send_time`, canales).
+- `reminder_deliveries`: cada aviso enviado o programado (correo, campana, push).
+
+**10 Finanzas**
+- `collection_invoices`: facturas por cobrar.
+- `revolving_budgets`, `budget_movements`: fondo rotatorio y sus movimientos.
+- `manual_cash_incomes`: ingresos de caja registrados a mano.
+- `kpi_goals`: metas de KPI por periodo.
+- `poa_entries`: partidas del POA de las instituciones (`budget_line` = partida presupuestaria).
+
+**11 Herramientas**
+- `consortia`, `consortium_members`: consorcios para licitar en conjunto.
+- `institutional_relations`, `relation_interactions`: relaciones con instituciones y su bitácora.
+- `generated_documents`: documentos redactados con IA.
+- `notification_templates`: plantillas de correo por empresa.
+- `legal_conversations`, `legal_messages`: conversaciones con el Agente Legal.
+
+**Del framework**: `cache`, `cache_locks`, `jobs`, `job_batches`, `failed_jobs`, `oauth_*`, `migrations`.
