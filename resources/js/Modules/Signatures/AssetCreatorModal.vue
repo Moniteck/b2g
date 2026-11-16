@@ -313,7 +313,7 @@ const rangeClass = 'h-2 w-full cursor-pointer accent-cap-brand';
                                 :data-font="font.value"
                                 @click="typed.font = font.value"
                             >
-                                <span class="block w-full truncate text-3xl leading-tight" :style="{ fontFamily: `'${font.family}', cursive`, color: inkColor(typed.ink), fontSize: `${1.9 * font.scale}rem` }">{{ typed.text || 'Tu firma' }}</span>
+                                <span class="block w-full truncate text-3xl leading-tight" :style="{ fontFamily: `'${font.family}', cursive`, color: inkColor(typed.ink), fontSize: `${1.6 * font.scale}rem` }">{{ typed.text || 'Tu firma' }}</span>
                                 <span class="text-xs text-gray-600 dark:text-gray-600">{{ font.label }}</span>
                             </button>
                         </div>
@@ -376,13 +376,11 @@ const rangeClass = 'h-2 w-full cursor-pointer accent-cap-brand';
                 </div>
                 <CapSegmented v-model="previewMode" :items="previewModes" label="Fondo de la vista previa" />
 
-                <div v-if="previewMode === 'paper'" class="flex h-48 items-center justify-center rounded-cap-control border border-cap-divider bg-white p-4 shadow-sm dark:bg-white" data-preview="paper">
-                    <div class="relative flex h-full w-full flex-col items-center justify-end">
-                        <img v-if="previewUrl" :src="previewUrl" :alt="`Vista previa de tu ${noun}`" class="relative z-10 max-h-[78%] max-w-full object-contain" :class="isSeal ? '' : '-mb-3'" draggable="false">
-                        <span v-else class="mb-auto mt-auto text-sm text-gray-500 dark:text-gray-500">Aquí verás tu {{ noun }}</span>
-                        <span class="w-4/5 border-t border-gray-400 dark:border-gray-400" aria-hidden="true" />
-                        <span class="mt-1 text-xs text-gray-600 dark:text-gray-600">{{ isSeal ? 'Sello de la empresa' : (page.props.auth?.user?.name ?? 'Firma') }}</span>
-                    </div>
+                <div v-if="previewMode === 'paper'" class="relative h-48 overflow-hidden rounded-cap-control border border-cap-divider bg-white shadow-sm dark:bg-white" data-preview="paper">
+                    <img v-if="previewUrl" :src="previewUrl" :alt="`Vista previa de tu ${noun}`" class="absolute inset-x-5 top-4 z-10 h-[calc(100%-3rem)] w-[calc(100%-2.5rem)] object-contain" :class="isSeal ? '' : 'object-bottom'" draggable="false">
+                    <span v-else class="absolute inset-x-0 top-[38%] text-center text-sm text-gray-500 dark:text-gray-500">Aquí verás tu {{ noun }}</span>
+                    <span class="absolute inset-x-[10%] bottom-9 border-t border-gray-400 dark:border-gray-400" aria-hidden="true" />
+                    <span class="absolute inset-x-0 bottom-3 truncate px-4 text-center text-xs text-gray-600 dark:text-gray-600">{{ isSeal ? 'Sello de la empresa' : (page.props.auth?.user?.name ?? 'Firma') }}</span>
                 </div>
 
                 <!-- Hoja de ejemplo: muestra el tamaño relativo de la firma sobre un documento. -->
