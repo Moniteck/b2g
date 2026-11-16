@@ -45,7 +45,9 @@ class UpdateQuoteTool extends BaseTool
             ...$quote->only(['institution_id', 'contact_id', 'opportunity_id', 'tender_id', 'validity_days', 'purchase_type', 'conditions', 'notes']),
             'quoted_at' => $quote->quoted_at?->format('Y-m-d'),
             'tax_included' => (bool) $quote->tax_included,
+            // Con el `id` de cada línea, QuoteService conserva su costo y margen.
             'items' => $quote->items->map(fn ($item) => array_filter([
+                'id' => $item->id,
                 'description' => $item->description,
                 'quantity' => (float) $item->quantity,
                 'unit' => $item->unit ?: 'Unidad',

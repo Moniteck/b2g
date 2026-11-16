@@ -74,6 +74,7 @@ class QuoteController extends Controller
                 'create' => $user->can('create', Quote::class),
                 'export' => $user->can('viewAny', Quote::class),
                 'sign' => $user->hasPermission(Permissions::SIGN_DOCUMENTS),
+                'viewCost' => $user->can('viewCost', InventoryItem::class),
             ],
         ]);
     }

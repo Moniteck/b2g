@@ -33,6 +33,7 @@ const props = defineProps({
     taxRules: { type: Object, default: () => ({ rate: 15, prices_include_tax: false }) },
     tenders: { type: Array, default: () => [] },
     opportunities: { type: Array, default: () => [] },
+    canSeeCost: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['update:open', 'saved']);
@@ -64,6 +65,8 @@ const companyOptions = computed(() => props.issuerCompanies.map((company) => ({ 
 const validUntil = computed(() => addDays(form.quoted_at, form.validity_days));
 const totals = computed(() => quoteTotals(form.items, form.tax_included));
 const opportunityOptions = computed(() => props.opportunities.filter((option) => !form.institution_id || !option.institution_id || option.institution_id === form.institution_id));
+// Costo y margen por línea: solo operador y administrador (el detalle los trae si se pueden ver).
+const showCost = computed(() => (editing.value ? Boolean(detail.value?.can_see_cost) : props.canSeeCost));
 const readonly = computed(() => editing.value && detail.value && !detail.value.can?.update);
 
 async function load() {
@@ -140,7 +143,7 @@ function submit() {
         },
         onError: () => nextTick(() => focusFirstError(document.querySelector('[data-quote-form]'))),
     };
-    const payload = form.transform((data) => ({ ...data, items: data.items.map(linePayload) }));
+    const payload = form.transform((data) => ({ ...data, items: data.items.map((line) => linePayload(line, showCost.value)) }));
     if (editing.value) payload.put(`/cotizaciones/${props.quoteId}`, options);
     else payload.post('/cotizaciones', options);
 }
@@ -194,7 +197,7 @@ function submit() {
                     <h3 class="font-display text-base font-semibold text-gray-900 dark:text-gray-100">Líneas</h3>
                     <Toggle v-model="form.tax_included" label="Los precios escritos a mano incluyen ISV" :disabled="readonly" />
                 </div>
-                <QuoteLinesEditor v-model="form.items" :tax-included="form.tax_included" :default-rate="Number(taxRules?.rate ?? 15)" :errors="form.errors" :disabled="readonly" />
+                <QuoteLinesEditor v-model="form.items" :tax-included="form.tax_included" :default-rate="Number(taxRules?.rate ?? 15)" :errors="form.errors" :disabled="readonly" :show-cost="showCost" />
 
                 <dl class="ml-auto grid w-full max-w-sm grid-cols-[1fr_auto] gap-x-6 gap-y-1.5 rounded-cap-control bg-cap-card-2 p-4 text-sm" aria-live="polite">
                     <template v-if="totals.discount > 0">

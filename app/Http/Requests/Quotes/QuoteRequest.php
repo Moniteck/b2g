@@ -58,6 +58,7 @@ class QuoteRequest extends FormRequest
             'conditions' => ['nullable', 'string', 'max:5000'],
             'notes' => ['nullable', 'string', 'max:5000'],
             'items' => ['required', 'array', 'min:1', 'max:200'],
+            'items.*.id' => ['nullable', 'integer'],
             'items.*.description' => ['required', 'string', 'max:255'],
             'items.*.quantity' => ['required', 'numeric', 'gt:0', 'max:9999999'],
             'items.*.unit' => ['required', 'string', 'max:50'],

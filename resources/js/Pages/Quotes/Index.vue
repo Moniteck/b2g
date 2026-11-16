@@ -358,7 +358,7 @@ onBeforeUnmount(() => stopListener());
             <Pagination :paginator="quotes" :only="['quotes', 'filters']" />
         </div>
 
-        <QuoteFormModal v-model:open="modal.form" :quote-id="editingId" :prefill="prefill" :issuer-companies="issuerCompanies" :active-company-id="activeCompanyId" :tax-rules="taxRules" :tenders="filterOptions.tenders ?? []" :opportunities="filterOptions.opportunities ?? []" @saved="refresh" />
+        <QuoteFormModal v-model:open="modal.form" :quote-id="editingId" :prefill="prefill" :issuer-companies="issuerCompanies" :active-company-id="activeCompanyId" :tax-rules="taxRules" :tenders="filterOptions.tenders ?? []" :opportunities="filterOptions.opportunities ?? []" :can-see-cost="Boolean(can.viewCost)" @saved="refresh" />
         <QuoteViewerModal v-model:open="modal.viewer" :quote="selected" :start-with-upload="uploadOnOpen" @changed="refresh" />
         <ParticipantsModal v-model:open="modal.participants" :subject="subject" :title="`Participantes · ${selected?.number ?? ''}`" @saved="refresh" />
         <WonModal v-model:open="modal.won" :subject="subject" @done="onWon" />

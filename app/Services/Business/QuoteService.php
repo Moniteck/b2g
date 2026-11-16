@@ -105,7 +105,7 @@ class QuoteService
                 ? (bool) $data['tax_included']
                 : (bool) $locked->tax_included;
 
-            $items = array_key_exists('items', $data) ? $this->normalizeItems($data['items'], $taxIncluded, $rules) : null;
+            $items = array_key_exists('items', $data) ? $this->normalizeItems($this->keepCosts($locked, (array) $data['items']), $taxIncluded, $rules) : null;
 
             foreach (['institution_id', 'contact_id', 'opportunity_id', 'tender_id', 'purchase_type', 'validity_days', 'quoted_at', 'conditions', 'notes'] as $field) {
                 $required = in_array($field, ['quoted_at', 'purchase_type', 'validity_days'], true);
@@ -283,6 +283,47 @@ class QuoteService
         }
 
         return $normalized;
+    }
+
+    /**
+     * Al editar, una línea existente que no trae `unit_cost` o `margin` conserva los suyos (el lector
+     * no los recibe, y el formulario o MCP pueden omitirlos): sin esto se perdería un costo escrito a mano.
+     * La línea se reconoce por su `id` y, si no lo trae, por producto de inventario, SKU o descripción.
+     *
+     * @param  array<int, array<string, mixed>>  $items
+     * @return array<int, array<string, mixed>>
+     */
+    protected function keepCosts(Quote $quote, array $items): array
+    {
+        $existing = $quote->items()->get(['id', 'description', 'inventory_item_id', 'sku', 'unit_cost', 'margin'])->keyBy('id');
+        $missing = fn (array $item, string $key) => ! array_key_exists($key, $item) || $item[$key] === null || $item[$key] === '';
+
+        $result = [];
+        foreach (array_values($items) as $index => $item) {
+            $id = isset($item['id']) && is_numeric($item['id']) ? (int) $item['id'] : null;
+            $match = $id !== null ? $existing->get($id) : null;
+
+            if ($match === null && ($missing($item, 'unit_cost') || $missing($item, 'margin'))) {
+                $description = mb_strtolower(trim((string) ($item['description'] ?? '')));
+                $match = $existing->first(fn (QuoteItem $line) => (! empty($item['inventory_item_id']) && (int) $line->inventory_item_id === (int) $item['inventory_item_id'])
+                    || (! empty($item['sku']) && $line->sku === $item['sku'])
+                    || ($description !== '' && mb_strtolower(trim((string) $line->description)) === $description));
+            }
+
+            if ($match !== null) {
+                $existing->forget($match->id);
+                if ($missing($item, 'unit_cost')) {
+                    $item['unit_cost'] = (float) $match->unit_cost;
+                }
+                if ($missing($item, 'margin')) {
+                    $item['margin'] = (float) $match->margin;
+                }
+            }
+
+            $result[$index] = $item;
+        }
+
+        return $result;
     }
 
     /**
