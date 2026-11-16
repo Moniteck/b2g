@@ -119,6 +119,7 @@ class AppServiceProvider extends ServiceProvider
         }
 
         CalendarSourceObserver::register(); // Fase 6: plazos al calendario.
+        \App\Services\Metrics\BusinessMetrics::watch(); // Dashboard y métricas: la caché de cifras se renueva al guardar.
 
         Passport::authorizationView(function ($parameters) {
             return view('mcp.authorize', $parameters);
