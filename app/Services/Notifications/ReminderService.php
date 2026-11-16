@@ -39,6 +39,9 @@ class ReminderService
     /** @var array<string, array{days_before: array<int>, send_time: string, channels: array<int, string>, recipients: array<int, string>}> */
     protected array $ruleCache = [];
 
+    /** @var array<int, Collection<string, ReminderRule>> Reglas guardadas por empresa (una consulta por empresa). */
+    protected array $storedRules = [];
+
     /**
      * Regla efectiva de una empresa para un tipo de plazo.
      *
@@ -53,10 +56,7 @@ class ReminderService
         }
 
         $default = ReminderRule::defaults()[$eventType] ?? ReminderRule::defaults()['Manual'];
-        $rule = $companyId === null ? null : ReminderRule::query()->withoutGlobalScopes()
-            ->where('company_id', $companyId)
-            ->where('event_type', $eventType)
-            ->first();
+        $rule = $companyId === null ? null : $this->storedRules($companyId)->get($eventType);
 
         $resolved = $rule === null ? [
             'days_before' => $default['days_before'],
@@ -75,9 +75,24 @@ class ReminderService
         return $this->ruleCache[$cacheKey] = $resolved;
     }
 
+    /**
+     * Reglas guardadas de la empresa por tipo de plazo: todas en una sola consulta (antes una por tipo,
+     * 11 en el Calendario y otras 11 para `is_active`).
+     *
+     * @return Collection<string, ReminderRule>
+     */
+    public function storedRules(int $companyId): Collection
+    {
+        return $this->storedRules[$companyId] ??= ReminderRule::query()->withoutGlobalScopes()
+            ->where('company_id', $companyId)
+            ->get()
+            ->keyBy('event_type');
+    }
+
     public function forgetRules(): void
     {
         $this->ruleCache = [];
+        $this->storedRules = [];
     }
 
     /**

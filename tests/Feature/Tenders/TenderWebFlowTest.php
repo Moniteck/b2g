@@ -113,8 +113,9 @@ class TenderWebFlowTest extends TestCase
         $this->actingInCompany($this->viewer, $this->company)->get('/licitaciones')
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page->component('Tenders/Index')
-                ->where('stats', ['open' => 2, 'week' => 1, 'clarifications' => 1])
-                ->where('tenders.total', 4)
+                ->where('stats.open', 2)->where('stats.week', 1)->where('stats.clarifications', 1)->where('stats.expired', 1)
+                // La vencida sin oferta (LPN-3) se oculta por defecto (B-19).
+                ->where('tenders.total', 3)
                 ->where('can.create', false)
                 ->where('can.delete', false));
 
@@ -123,6 +124,9 @@ class TenderWebFlowTest extends TestCase
 
         $this->actingInCompany($this->admin, $this->company)->get('/licitaciones?status=Cancelada&search=LPN')
             ->assertInertia(fn (Assert $page) => $page->where('tenders.total', 1)->where('tenders.data.0.reference', 'LPN-4'));
+
+        $this->actingInCompany($this->admin, $this->company)->get('/licitaciones?vencidas=1')
+            ->assertInertia(fn (Assert $page) => $page->where('tenders.total', 4));
 
         $this->actingInCompany($this->admin, $this->company)->get('/licitaciones/export/xlsx')->assertOk();
         $this->actingInCompany($this->admin, $this->company)->get('/licitaciones/export/pdf')->assertOk();

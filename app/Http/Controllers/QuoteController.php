@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Quotes\QuoteRequest;
 use App\Http\Requests\Quotes\QuoteStatusRequest;
 use App\Models\Company;
+use App\Models\InventoryItem;
 use App\Models\Opportunity;
 use App\Models\Quote;
 use App\Models\Tender;
@@ -73,6 +74,7 @@ class QuoteController extends Controller
                 'create' => $user->can('create', Quote::class),
                 'export' => $user->can('viewAny', Quote::class),
                 'sign' => $user->hasPermission(Permissions::SIGN_DOCUMENTS),
+                'viewCost' => $user->can('viewCost', InventoryItem::class),
             ],
         ]);
     }
@@ -282,6 +284,8 @@ class QuoteController extends Controller
     protected function detail(Quote $quote, User $user): array
     {
         $document = app(QuoteService::class)->document($quote->items);
+        // Costo y margen de cada línea: solo para quien puede ver costos (operador y administrador), como en Inventario.
+        $canSeeCost = $user->can('viewCost', InventoryItem::class);
 
         return $this->row($quote->loadCount(['participants', 'documents']), $user) + [
             'company' => $quote->company ? ['id' => $quote->company->id, 'name' => $quote->company->name] : null,
@@ -301,6 +305,7 @@ class QuoteController extends Controller
             'pdf_url' => route('quotes.pdf.show', $quote),
             'pdf_download_url' => route('quotes.pdf.show', [$quote, 'descargar' => 1]),
             'taxes' => $document->taxes,
+            'can_see_cost' => $canSeeCost,
             'items' => $quote->items->map(fn ($item) => [
                 'id' => $item->id,
                 'description' => $item->description,
@@ -313,8 +318,7 @@ class QuoteController extends Controller
                 'subtotal' => (float) $item->subtotal,
                 'tax' => (float) $item->tax,
                 'total' => (float) $item->total,
-                'unit_cost' => (float) $item->unit_cost,
-                'margin' => (float) $item->margin,
+                ...($canSeeCost ? ['unit_cost' => (float) $item->unit_cost, 'margin' => (float) $item->margin] : []),
                 'inventory_item_id' => $item->inventory_item_id !== null ? (int) $item->inventory_item_id : null,
                 'sku' => $item->sku,
                 'pricing_source' => $item->pricing_source,

@@ -176,11 +176,11 @@ async function openConversation(conversation) {
     try {
         const response = await getJson(`/agente-legal/conversaciones/${conversation.id}`);
         messages.value = response.messages;
-        scrollToEnd(false);
     } catch (problem) {
         conversationError.value = problem.message;
     } finally {
         loadingConversation.value = false;
+        scrollToEnd(false);
     }
 }
 
@@ -419,7 +419,7 @@ onBeforeUnmount(() => {
                                 rows="1"
                                 :maxlength="MAX_LENGTH"
                                 class="max-h-52 min-h-[2.25rem] flex-1 resize-none bg-transparent py-1.5 text-sm text-gray-900 placeholder:text-gray-500 focus:outline-none dark:text-gray-100 dark:placeholder:text-gray-400"
-                                placeholder="Describe tu caso: proceso, fechas y lo que necesitas saber…"
+                                :placeholder="coarse ? 'Escribe tu consulta…' : 'Describe tu caso: proceso, fechas y lo que necesitas saber…'"
                                 :disabled="sending"
                                 enterkeyhint="send"
                                 @keydown="onKeydown"

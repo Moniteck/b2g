@@ -2,7 +2,8 @@
 // Líneas de la cotización: buscador de inventario o texto libre, con subtotal, ISV y total en vivo
 // (mismo cálculo que el servidor, `Modules/Inventory/pricing.js`).
 // Props: modelValue (v-model: líneas de `quotes.js › emptyLine`), taxIncluded (base de las líneas
-//        escritas a mano), defaultRate, errors (errores del formulario: `items.0.quantity`…), disabled.
+//        escritas a mano), defaultRate, errors (errores del formulario: `items.0.quantity`…), disabled,
+//        showCost (muestra costo unitario y margen por línea; solo operador y administrador).
 import { computed, ref } from 'vue';
 import AppButton from '../../Components/AppButton.vue';
 import EmptyState from '../../Components/EmptyState.vue';
@@ -18,6 +19,7 @@ const props = defineProps({
     defaultRate: { type: Number, default: 15 },
     errors: { type: Object, default: () => ({}) },
     disabled: { type: Boolean, default: false },
+    showCost: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['update:modelValue']);
@@ -136,6 +138,19 @@ const numberClass = 'text-right tabular-nums';
                     <span class="text-xs font-semibold text-cap-text-soft lg:sr-only">Total</span>
                     <span class="text-sm font-semibold tabular-nums text-gray-900 dark:text-gray-100">{{ money(calc.total) }}</span>
                     <span class="text-xs tabular-nums text-cap-text-soft">ISV {{ money(calc.tax) }}</span>
+                </div>
+                <div v-if="showCost" class="order-last col-span-2 flex flex-wrap items-start gap-3 lg:col-span-8" :data-line-cost="index">
+                    <div class="w-full sm:w-40">
+                        <label :for="`line-${line.key}-cost`" class="mb-1 block text-xs font-semibold text-gray-900 dark:text-gray-100">Costo unitario (interno)</label>
+                        <TextInput :id="`line-${line.key}-cost`" :model-value="line.unit_cost" type="number" min="0" step="0.01" inputmode="decimal" :class="numberClass" :invalid="Boolean(error(index, 'unit_cost'))" :disabled="disabled" @update:model-value="update(index, { unit_cost: $event })" />
+                        <p v-if="error(index, 'unit_cost')" class="mt-1 text-xs text-cap-status-error dark:text-cap-status-dark-error">{{ error(index, 'unit_cost') }}</p>
+                    </div>
+                    <div class="w-full sm:w-32">
+                        <label :for="`line-${line.key}-margin`" class="mb-1 block text-xs font-semibold text-gray-900 dark:text-gray-100">Margen %</label>
+                        <TextInput :id="`line-${line.key}-margin`" :model-value="line.margin" type="number" min="0" max="95" step="0.01" inputmode="decimal" :class="numberClass" :invalid="Boolean(error(index, 'margin'))" :disabled="disabled" @update:model-value="update(index, { margin: $event })" />
+                        <p v-if="error(index, 'margin')" class="mt-1 text-xs text-cap-status-error dark:text-cap-status-dark-error">{{ error(index, 'margin') }}</p>
+                    </div>
+                    <p class="text-xs text-cap-text-soft sm:pt-7">No aparecen en el PDF ni los ve el rol de solo lectura.</p>
                 </div>
                 <div class="col-span-2 flex justify-end lg:col-span-1">
                     <IconButton icon="trash-can-outline" :label="`Quitar la línea ${index + 1}`" :disabled="disabled" @click="remove(index)" />

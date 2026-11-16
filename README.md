@@ -160,6 +160,79 @@ Si alguno de los dos se detiene, el diagnóstico lo muestra: «Tareas programada
 cuando el scheduler lleva más de 5 minutos sin correr, y «Cola de trabajos» avisa de trabajos
 fallidos o acumulados.
 
+## Producción: rendimiento
+
+Lo que no es código y decide cuánto aguanta el servidor. Medición actual (k6 contra una copia
+de producción en un portátil, 8 procesos PHP): el servidor se satura en ~90 peticiones/s con
+0 % de errores hasta 200 usuarios virtuales. Con PHP-FPM, Redis y OPcache bien ajustados el
+techo sube; los scripts para volver a medir están en `tests/perf/README.md`.
+
+### Sesiones y caché
+
+- `SESSION_DRIVER=redis` y `CACHE_STORE=redis` (o `file` en un solo servidor). Con `database`,
+  cada petición lee y escribe la sesión en MySQL y cada lectura de caché es otra consulta.
+- `QUEUE_CONNECTION=redis` si hay Redis; si no, `database`.
+
+### PHP-FPM
+
+- `pm = dynamic` (o `static` en un servidor dedicado), `pm.max_children` ≈ núcleos × 2–3
+  (8 núcleos → 16–24), comprobando que `max_children × memoria por proceso` (~60–80 MB) cabe
+  en la RAM libre. `pm.max_requests = 500` para reciclar procesos.
+- OPcache:
+
+```ini
+opcache.enable=1
+opcache.validate_timestamps=0      ; tras desplegar: reiniciar php-fpm (o opcache_reset)
+opcache.memory_consumption=256
+opcache.interned_strings_buffer=32
+opcache.max_accelerated_files=40000
+realpath_cache_size=4096K
+realpath_cache_ttl=600
+```
+
+- **No activar el JIT** (`opcache.jit`) en PHP 8.5 NTS de Windows: tumba el proceso
+  (0xC0000005). En Linux es opcional y aporta poco a una aplicación de E/S como esta.
+
+### Laravel y Composer
+
+```bash
+composer install -o --no-dev       # autoload optimizado (classmap)
+php artisan optimize               # config, rutas, eventos y vistas en caché
+```
+
+### MySQL
+
+- Conexión por socket Unix (`DB_SOCKET=/run/mysqld/mysqld.sock`) si MySQL está en la misma
+  máquina, o conexiones persistentes (`PDO::ATTR_PERSISTENT` en `config/database.php`) si está
+  en otra.
+- `innodb_buffer_pool_size` ≈ 50–70 % de la RAM de un servidor dedicado a MySQL (al menos el
+  tamaño de los datos e índices), `innodb_log_file_size` 256 MB o más.
+
+### Nginx
+
+- HTTP/2 (`listen 443 ssl http2;`), compresión brotli (módulo `ngx_brotli`) o gzip para HTML,
+  JSON, CSS, JS y SVG.
+- Recursos de Vite con nombre versionado: caché de un año e inmutables.
+
+```nginx
+gzip on;
+gzip_types text/css application/javascript application/json image/svg+xml;
+# brotli on; brotli_types text/css application/javascript application/json image/svg+xml;
+
+location /build/assets/ {
+    add_header Cache-Control "public, max-age=31536000, immutable";
+    access_log off;
+    try_files $uri =404;
+}
+```
+
+### Colas
+
+Los correos (cotizaciones, resumen diario, recordatorios), el análisis de pliegos y la lectura
+de capturas van a la cola: sin un worker permanente no salen. Supervisor con
+`php artisan queue:work --sleep=3 --tries=3 --max-time=3600` (dos procesos bastan para empezar)
+y `php artisan queue:restart` en cada despliegue (ver «Cola y scheduler»).
+
 ## Producción segura
 
 Lo que el código ya hace (cabeceras con CSP y nonce, límites de IA/OCR/exportes, sesiones que se

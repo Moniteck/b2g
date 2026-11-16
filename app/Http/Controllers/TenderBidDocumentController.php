@@ -94,6 +94,7 @@ class TenderBidDocumentController extends Controller
             'pdfUrl' => route('tenders.bid.file', [$tender, $extraction]),
             'matrixId' => $extraction->evidence['matrix_id'] ?? null,
             'quoteId' => $extraction->evidence['quote_id'] ?? null,
+            'maxPages' => BidDocumentAnalyzer::MAX_PAGES,
             'can' => [
                 'confirm' => $user->can('update', $tender) && $extraction->status === DocumentExtraction::REVIEW,
                 'createMatrix' => $user->can('create', ComplianceMatrix::class),
@@ -125,8 +126,9 @@ class TenderBidDocumentController extends Controller
 
         $done = $this->reviews->confirm($extraction, $tender, $request->validated('fields', []), $request->validated('lists', []), $request->user());
 
-        return redirect()->route('tenders.show', ['tender' => $tender, 'tab' => 'fechas'])
-            ->with($done ? 'success' : 'warning', $done ? 'Datos del pliego aplicados a la licitación.' : 'Este análisis ya se había confirmado.');
+        // La ficha muestra el siguiente paso (normalmente «Crear cotización») en su cabecera.
+        return redirect()->route('tenders.show', ['tender' => $tender, 'tab' => 'resumen'])
+            ->with($done ? 'success' : 'warning', $done ? 'Datos del pliego aplicados. El siguiente paso está en la cabecera de la ficha: crear la cotización.' : 'Este análisis ya se había confirmado.');
     }
 
     public function matrix(Request $request, Tender $tender, DocumentExtraction $extraction): RedirectResponse

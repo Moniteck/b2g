@@ -121,13 +121,14 @@ class ParticipantsAndDocumentsTest extends QuotesTestCase
         $this->as($this->operator)->post("/cotizaciones/{$quote->id}/email", ['recipients' => array_map(fn ($i) => "c{$i}@salud.hn", range(1, 6))])->assertSessionHasErrors('recipients');
         $this->as($this->viewer)->post("/cotizaciones/{$quote->id}/email", ['recipients' => ['compras@salud.hn']])->assertForbidden();
         Mail::assertNothingSent();
+        Mail::assertNothingQueued();
 
         $this->as($this->operator)->post("/cotizaciones/{$quote->id}/email", [
             'recipients' => 'compras@salud.hn, jefe@salud.hn',
             'message' => 'Adjuntamos nuestra oferta.',
         ])->assertSessionHasNoErrors()->assertSessionHas('success');
 
-        Mail::assertSent(QuoteMail::class, fn (QuoteMail $mail) => $mail->hasTo('compras@salud.hn') && $mail->hasTo('jefe@salud.hn') && $mail->body === 'Adjuntamos nuestra oferta.');
+        Mail::assertQueued(QuoteMail::class, fn (QuoteMail $mail) => $mail->hasTo('compras@salud.hn') && $mail->hasTo('jefe@salud.hn') && $mail->body === 'Adjuntamos nuestra oferta.');
         $this->assertDatabaseHas('audit_logs', ['action' => 'cotizacion.enviada']);
     }
 

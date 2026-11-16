@@ -24,6 +24,7 @@ use Illuminate\Support\Collection;
  *   POST  .../revertir   { reason }                                                 → { message, result }
  *   GET   .../participantes                                                         → { data, summary, can, outcome }
  *   PUT   .../participantes { participants: [...] }                                 → ídem, con message
+ *   GET   /oportunidades/{id}/cotizaciones-vivas                                   → { data: [{ id, number, status, total }] }
  * Errores de negocio: 422 con `errors` bajo el campo (p. ej. `outcome`, `winner_name`).
  */
 class AdjudicationController extends Controller
@@ -75,9 +76,29 @@ class AdjudicationController extends Controller
     {
         $subject = $this->subject($request);
 
-        $this->adjudication->saveParticipants($subject, $request->validated('participants'), $request->user());
+        // El servicio ya devuelve las filas guardadas: no se vuelven a leer (ni el sujeto, que no cambia).
+        $participants = $this->adjudication->saveParticipants($subject, $request->validated('participants'), $request->user());
 
-        return response()->json(['message' => 'Participantes guardados.'] + $this->participantsPayload($subject->fresh(), $request));
+        return response()->json(['message' => 'Participantes guardados.'] + $this->participantsPayload($subject, $request, $participants));
+    }
+
+    /**
+     * Cotizaciones vivas (sin resultado, ni Sustituidas ni Anuladas) de una oportunidad: «Registrar
+     * como Ganada» pide cuál se ganó cuando hay varias. Endpoint ligero: una consulta.
+     */
+    public function liveQuotes(Request $request): JsonResponse
+    {
+        $subject = $this->subject($request);
+        $this->authorize('view', $subject);
+
+        $quotes = Quote::query()
+            ->where('opportunity_id', $subject->getKey())
+            ->whereNotIn('status', Quote::CLOSED_STATUSES)
+            ->where(fn ($query) => $query->whereNull('outcome')->orWhere('outcome', 'Pendiente'))
+            ->orderByDesc('id')
+            ->get(['id', 'number', 'status', 'total']);
+
+        return response()->json(['data' => $quotes->map(fn (Quote $quote) => ['id' => $quote->id, 'number' => $quote->number, 'status' => $quote->status, 'total' => (float) $quote->total])->values()]);
     }
 
     /** Cotización u oportunidad de la ruta (ya resuelta con el scope de empresa: 404 si es de otra). */
@@ -108,9 +129,9 @@ class AdjudicationController extends Controller
     /**
      * @return array<string, mixed>
      */
-    protected function participantsPayload(Quote|Opportunity $subject, Request $request): array
+    protected function participantsPayload(Quote|Opportunity $subject, Request $request, ?Collection $participants = null): array
     {
-        $participants = $this->adjudication->participantsOf($subject);
+        $participants ??= $this->adjudication->participantsOf($subject);
         $user = $request->user();
         $canEdit = $subject instanceof Quote ? $user->can('manageParticipants', $subject) : $user->can('update', $subject);
         $outcome = $subject instanceof Quote

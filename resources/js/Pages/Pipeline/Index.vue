@@ -6,7 +6,7 @@
 // - Salir de un resultado solo con «Revertir resultado» (administrador).
 // Si el servidor rechaza el movimiento o el usuario cancela la modal, la tarjeta vuelve a su columna.
 import { router, usePage } from '@inertiajs/vue3';
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
 import { formatCount } from '../../../design/shell/js/count-up.js';
 import CapKanban from '../../../design/vue/CapKanban.vue';
 import CapSkeleton from '../../../design/vue/CapSkeleton.vue';
@@ -35,6 +35,7 @@ import RevertModal from '../../Modules/Quotes/RevertModal.vue';
 import WonModal from '../../Modules/Quotes/WonModal.vue';
 import { firstError } from '../../Modules/Quotes/api.js';
 import { celebrate } from '../../lib/motion/index.js';
+import { isReducedMotion } from '../../lib/motion/preference.js';
 
 const props = defineProps({
     opportunities: { type: Array, default: () => [] },
@@ -45,6 +46,8 @@ const props = defineProps({
     filterOptions: { type: Object, default: () => ({}) },
     recentDays: { type: Number, default: 90 },
     focus: { type: Number, default: null },
+    focusDetail: { type: Object, default: null },
+    focusStage: { type: String, default: null },
     can: { type: Object, default: () => ({}) },
 });
 
@@ -76,6 +79,8 @@ const detailTab = ref('datos');
 const editing = ref(null);
 const createStage = ref('prospecto');
 const detailModal = ref(null);
+// Detalle que trae el enlace directo /pipeline/{id}: la modal lo usa una vez sin volver a pedirlo.
+const focusDetail = ref(props.focusDetail);
 
 const query = computed(() => Object.fromEntries(Object.entries(state).filter(([key, value]) => value !== null && value !== '' && value !== false).map(([key, value]) => [key, key === 'cerradas' ? 1 : value])));
 const exportQuery = computed(() => new URLSearchParams(Object.fromEntries(Object.entries(query.value).filter(([key]) => key !== 'cerradas'))).toString());
@@ -103,7 +108,7 @@ const hiddenTotal = computed(() => hiddenClosed.value.adjudicado + hiddenClosed.
 
 const subject = computed(() =>
     selected.value
-        ? { type: 'opportunity', id: selected.value.id, label: selected.value.title, amount: selected.value.amount, outcome: selected.value.stage === 'adjudicado' ? 'Ganada' : 'Perdida' }
+        ? { type: 'opportunity', id: selected.value.id, label: selected.value.title, amount: selected.value.amount, quotesCount: selected.value.quotesCount, outcome: selected.value.stage === 'adjudicado' ? 'Ganada' : 'Perdida' }
         : null,
 );
 
@@ -184,7 +189,13 @@ async function requestMove(card, to) {
 function onPresented(response) {
     replaceCard(response.card);
     toasts.show({ status: 'ok', title: response.message });
-    refresh();
+    refresh(['summary']);
+}
+
+/** Participantes guardados (modal o detalle): la tarjeta se actualiza con el PUT, sin recargar el tablero. */
+function onParticipantsSaved(id, count) {
+    const card = findCard(id);
+    if (card) replaceCard({ ...card, participantsCount: count });
 }
 
 // Ganada: celebración con confeti de la marca (con animaciones reducidas solo queda el toast).
@@ -222,7 +233,9 @@ function openDetail(card, tab = 'datos') {
 watch(
     () => modal.detail,
     (isOpen) => {
-        if (!isOpen && window.location.pathname !== '/pipeline') setUrl('/pipeline');
+        if (isOpen) return;
+        focusDetail.value = null;
+        if (window.location.pathname !== '/pipeline') setUrl('/pipeline');
     },
 );
 
@@ -239,7 +252,8 @@ function editFromDetail(detail) {
 
 async function edit(card) {
     try {
-        editFromDetail(await getJson(`/pipeline/${card.id}`));
+        // Endpoint ligero del formulario (sin participantes, cotizaciones ni historial).
+        editFromDetail(await getJson(`/pipeline/${card.id}/formulario`));
     } catch (failure) {
         toasts.show({ status: 'error', title: 'No se pudo abrir la oportunidad', detail: failure.message });
     }
@@ -287,8 +301,37 @@ function onColumnAdd(stage) {
     if (props.can.create && CREATABLE_STAGES.includes(stage)) create(stage);
 }
 
+/**
+ * `?etapa=<clave>` (enlace «Pipeline por etapa» del Dashboard): en móvil elige esa columna en el
+ * segmentado; en escritorio desplaza el tablero hasta ella. En ambos la resalta un momento.
+ * CapKanban no expone la columna activa: se usa su propio segmentado (botón con `value`).
+ */
+const boardRoot = ref(null);
+function revealStage(stage) {
+    const root = boardRoot.value;
+    const column = root?.querySelector(`[data-cap-kanban-column="${CSS.escape(stage)}"]`);
+    if (!column) return;
+    const pickerButton = root.querySelector(`[data-cap-kanban-picker] button[value="${CSS.escape(stage)}"]`);
+    pickerButton?.click();
+    const behavior = isReducedMotion() ? 'auto' : 'smooth';
+    // Escritorio: solo desplazamiento horizontal del tablero, con la columna al centro (sin mover la
+    // página en vertical: la columna es más alta que la ventana). Móvil: el tablero arriba.
+    if (window.matchMedia('(min-width: 1024px)').matches) {
+        const scroller = column.closest('.cap-kanban');
+        if (scroller && scroller.scrollWidth > scroller.clientWidth) scroller.scrollTo({ left: column.offsetLeft - scroller.offsetLeft - (scroller.clientWidth - column.clientWidth) / 2, behavior });
+    } else {
+        // Debajo de la cabecera flotante, y con la etapa elegida visible en el segmentado.
+        const picker = pickerButton?.closest('[data-cap-kanban-picker]');
+        if (picker && pickerButton) picker.scrollTo({ left: pickerButton.offsetLeft - (picker.clientWidth - pickerButton.clientWidth) / 2, behavior });
+        window.scrollTo({ top: root.getBoundingClientRect().top + window.scrollY - 88, behavior });
+    }
+    column.setAttribute('data-stage-focus', 'true');
+    window.setTimeout(() => column.removeAttribute('data-stage-focus'), 1800);
+}
+
 onMounted(() => {
     if (props.focus) openDetail(findCard(props.focus) ?? { id: props.focus });
+    else if (props.focusStage) nextTick(() => revealStage(props.focusStage));
 });
 
 const activeUserId = computed(() => page.props.auth?.user?.id ?? null);
@@ -342,7 +385,7 @@ const activeUserId = computed(() => page.props.auth?.user?.id ?? null);
 
         <EmptyState v-else-if="totalCount === 0" variant="no-results" @clear="clearFilters" />
 
-        <div v-else v-settle class="pipeline-board min-w-0" :data-readonly="can.create ? undefined : 'true'">
+        <div v-else ref="boardRoot" v-settle class="pipeline-board min-w-0" :data-readonly="can.create ? undefined : 'true'">
             <CapKanban :columns="columns" :cards="boardCards" label="Pipeline de oportunidades" picker-label="Etapa" @move="onBoardMove" @add="onColumnAdd">
                 <template #card="{ card }">
                     <OpportunityCard :card="findCard(card.id) ?? card" :menu="menuOf(findCard(card.id) ?? card)" :show-participants="PARTICIPANT_STAGES.includes(card.column)" @open="openDetail(findCard(card.id))" @participants="open('participants', findCard(card.id))" />
@@ -360,10 +403,10 @@ const activeUserId = computed(() => page.props.auth?.user?.id ?? null);
             </p>
         </div>
 
-        <OpportunityFormModal v-model:open="modal.form" :opportunity="editing" :stage="createStage" :owners="filterOptions.owners ?? []" :tenders="filterOptions.tenders ?? []" :user-id="activeUserId" @saved="() => { refresh(); detailModal?.reload(); }" />
-        <OpportunityDetailModal ref="detailModal" v-model:open="modal.detail" :opportunity-id="detailId" :tab="detailTab" :stages="stages" @edit="editFromDetail" @revert="revertFromDetail" @remove="(detail) => remove(detail.data)" @changed="refresh()" />
+        <OpportunityFormModal v-model:open="modal.form" :opportunity="editing" :stage="createStage" :owners="filterOptions.owners ?? []" :tenders="filterOptions.tenders ?? []" :user-id="activeUserId" @saved="detailModal?.reload()" />
+        <OpportunityDetailModal ref="detailModal" v-model:open="modal.detail" :opportunity-id="detailId" :tab="detailTab" :stages="stages" :preview="selected" :initial-detail="focusDetail" @edit="editFromDetail" @revert="revertFromDetail" @remove="(detail) => remove(detail.data)" @participants="({ id, count }) => onParticipantsSaved(id, count)" />
         <PresentOfferModal v-model:open="modal.present" :card="selected" @moved="onPresented" />
-        <ParticipantsModal v-model:open="modal.participants" :subject="subject" :title="`Participantes · ${selected?.title ?? ''}`" @saved="refresh()" />
+        <ParticipantsModal v-model:open="modal.participants" :subject="subject" :title="`Participantes · ${selected?.title ?? ''}`" @saved="(response) => onParticipantsSaved(selected?.id, response.data.length)" />
         <WonModal v-model:open="modal.won" :subject="subject" @done="onWon" />
         <LostModal v-model:open="modal.lost" :subject="subject" @done="onOutcome" />
         <RevertModal v-model:open="modal.revert" :subject="subject" @done="onOutcome" />
@@ -379,6 +422,17 @@ const activeUserId = computed(() => page.props.auth?.user?.id ?? null);
 .pipeline-board :deep([data-cap-kanban-column='no_adjudicado'] .cap-kanban__action),
 .pipeline-board[data-readonly='true'] :deep(.cap-kanban__action) {
     display: none;
+}
+
+/* Columna pedida con ?etapa= (Dashboard): contorno de marca que se desvanece. */
+.pipeline-board :deep(.cap-kanban__column) {
+    transition: outline-color 600ms ease;
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+}
+
+.pipeline-board :deep(.cap-kanban__column[data-stage-focus='true']) {
+    outline-color: var(--cap-brand);
 }
 
 .pipeline-board :deep(.cap-kanban__count) {

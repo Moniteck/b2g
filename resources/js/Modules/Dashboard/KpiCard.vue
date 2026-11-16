@@ -14,6 +14,9 @@ const props = defineProps({
     palette: { type: Object, required: true },
 });
 
+// En móvil la minigráfica es más baja (rejilla 2×2 sin scroll de más).
+const compact = typeof window !== 'undefined' && window.matchMedia?.('(max-width: 639px)').matches;
+
 const variant = computed(() => (props.kpi.featured ? 'featured' : props.kpi.alert ? 'alert' : 'normal'));
 const empty = computed(() => props.kpi.value === null || props.kpi.value === undefined);
 const shown = useCountUp(() => (empty.value ? 0 : Number(props.kpi.value)), { format: (value) => kpiText(value, props.kpi.format) });
@@ -61,7 +64,7 @@ const accessible = computed(() => [props.kpi.label, kpiFull(props.kpi.value, pro
             <span class="hidden truncate text-xs sm:inline" :class="look.hint">vs. período anterior</span>
         </div>
         <div class="mt-2 sm:mt-3" :class="variant === 'featured' ? 'text-white' : ''">
-            <Sparkline :values="kpi.spark" :color="sparkColor" />
+            <Sparkline :values="kpi.spark" :color="sparkColor" :height="compact ? 24 : 36" />
         </div>
         <p class="mt-2 truncate text-xs" :class="look.hint" :title="kpi.hint" aria-hidden="true">{{ kpi.hint }}</p>
     </component>

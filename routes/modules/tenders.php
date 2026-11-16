@@ -27,6 +27,8 @@ Route::post('/licitaciones/importar/{token}', [TenderCaptureImportController::cl
 Route::get('/licitaciones/{tender}', [TenderController::class, 'show'])->whereNumber('tender')->name('tenders.show');
 Route::put('/licitaciones/{tender}', [TenderController::class, 'update'])->whereNumber('tender')->name('tenders.update');
 Route::delete('/licitaciones/{tender}', [TenderController::class, 'destroy'])->whereNumber('tender')->name('tenders.destroy');
+Route::patch('/licitaciones/{tender}/etapa', [TenderController::class, 'stage'])->whereNumber('tender')->middleware('throttle:60,1')->name('tenders.stage');
+Route::post('/licitaciones/{tender}/oportunidad', [TenderController::class, 'opportunity'])->whereNumber('tender')->name('tenders.opportunity');
 
 /* Pliego: análisis con IA, revisión y acciones */
 

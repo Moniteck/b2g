@@ -28,6 +28,8 @@ export function emptyLine(overrides = {}) {
         discount_percent: 0,
         tax_included: null,
         pricing_source: 'manual',
+        unit_cost: null,
+        margin: null,
         ...overrides,
     };
 }
@@ -94,9 +96,16 @@ export function quoteTotals(lines, quoteTaxIncluded) {
     return { ...documentTotals(computed), discount: discount / 100, taxes, lines: computed };
 }
 
-/** Datos que se envían al servidor por línea. */
-export function linePayload(line) {
+const optionalNumber = (value) => (value === '' || value === null || value === undefined ? null : value);
+
+/**
+ * Datos que se envían al servidor por línea. Costo y margen solo si el usuario puede verlos (`withCost`);
+ * si no se envían, el servidor conserva los de la línea existente (se reconoce por `id`).
+ */
+export function linePayload(line, withCost = false) {
     return {
+        id: line.id || null,
+        ...(withCost ? { unit_cost: optionalNumber(line.unit_cost), margin: optionalNumber(line.margin) } : {}),
         description: line.description,
         quantity: line.quantity,
         unit: line.unit,

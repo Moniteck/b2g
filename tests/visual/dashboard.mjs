@@ -107,11 +107,12 @@ async function dashboard(browser) {
             if (theme === 'claro') {
                 await page.setViewportSize({ width: 1440, height: 900 });
                 await openDashboard(page);
-                for (const label of ['Este trimestre', 'Este año']) {
+                for (const [label, value] of [['Este trimestre', 'trimestre'], ['Este año', 'anio']]) {
                     await page.getByRole('button', { name: label }).click();
+                    await page.waitForURL((url) => url.search.includes(`periodo=${value}`), { timeout: 30000 }).catch(() => {});
                     await page.waitForFunction(() => !document.querySelector('[aria-busy="true"]'), null, { timeout: 20000 }).catch(() => problems.push(`[${role}] el período «${label}» no terminó`));
                     await page.waitForTimeout(1200);
-                    await page.screenshot({ path: `${OUTPUT}/${role}-1440-periodo-${label.split(' ')[1].toLowerCase()}.png`, fullPage: true, animations: 'disabled' });
+                    await page.screenshot({ path: `${OUTPUT}/${role}-1440-periodo-${value}.png`, fullPage: true, animations: 'disabled' });
                 }
                 if (!page.url().includes('periodo=anio')) problems.push(`[${role}] la URL no refleja el período (${page.url()})`);
                 // Móvil: «Ver más del tablero».
@@ -138,8 +139,15 @@ async function reportes(browser) {
     page.on('requestfailed', (request) => request.url().includes('/reportes') && requests.push({ url: request.url().replace(BASE_URL, ''), failed: request.failure()?.errorText }));
 
     await openDashboard(page);
+    // «Reportes» puede ser un subítem plegado del menú: se despliega su grupo si hace falta.
+    let link = page.locator('a[href$="/reportes"]:visible').first();
+    if (!(await link.count())) {
+        await page.locator('.cap-shell-sidebar').getByRole('button', { name: /Reportes/ }).first().click().catch(() => {});
+        await page.waitForTimeout(400);
+        link = page.locator('a[href$="/reportes"]:visible').first();
+    }
     const start = Date.now();
-    await page.locator('a[href$="/reportes"]').first().click();
+    await link.click();
     const shots = [];
     for (const at of [150, 600, 1500, 3000]) {
         const wait = at - (Date.now() - start);

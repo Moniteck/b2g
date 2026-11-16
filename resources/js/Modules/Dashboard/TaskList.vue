@@ -21,7 +21,7 @@ function label(item) {
 <template>
     <EmptyState v-if="!items.length" compact icon="checkbox-marked-circle-outline" title="No tienes tareas pendientes" description="Los plazos que te asignen como responsable aparecerán aquí." />
     <ul v-else v-stagger class="flex flex-col gap-2">
-        <li v-for="item in items" :key="item.id">
+        <li v-for="(item, index) in items" :key="item.id" :class="{ 'max-sm:hidden': index >= 3 }">
             <Link :href="item.href" class="flex min-h-14 items-center gap-3 rounded-cap-control border px-3 py-2 transition-colors duration-cap-fast ease-cap hover:bg-cap-card-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-cap-chrome dark:focus-visible:ring-gray-100" :class="item.overdue ? 'border-cap-status-error-tint-border' : 'border-cap-divider'">
                 <i class="mdi text-xl leading-none" :class="item.overdue ? 'mdi-alert-circle-outline text-cap-status-error-ink' : 'mdi-checkbox-blank-circle-outline text-cap-text-soft'" aria-hidden="true" />
                 <span class="min-w-0 flex-1">

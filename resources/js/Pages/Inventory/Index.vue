@@ -18,7 +18,7 @@ import StatusBadge from '../../Components/StatusBadge.vue';
 import Toolbar from '../../Components/Toolbar.vue';
 import AppLayout from '../../Layouts/AppLayout.vue';
 import { dateTime, money, number, percent, quantity as formatQuantity, relativeTime } from '../../lib/format.js';
-import { postJson } from '../../lib/http.js';
+import { getJson, postJson } from '../../lib/http.js';
 import { tableLink } from '../../lib/ui.js';
 import { documentTotals, itemLine } from '../../Modules/Inventory/pricing.js';
 import ProductDetailModal from '../../Modules/Inventory/ProductDetailModal.vue';
@@ -223,6 +223,52 @@ function openDetail(row) {
 }
 
 const exceedsStock = (row) => (quantityOf(row) ?? 0) > Number(row.stock ?? 0);
+
+/* ── Enlaces directos ────────────────────────────────────────────────────── */
+
+/** Quita parámetros de la URL sin recargar, para que «Atrás» no vuelva a abrir la modal. */
+function dropParams(...names) {
+    const params = new URLSearchParams(window.location.search);
+    if (!names.some((name) => params.has(name))) return;
+    names.forEach((name) => params.delete(name));
+    router.replace({ url: `/inventario${params.toString() ? `?${params}` : ''}`, preserveState: true, preserveScroll: true });
+}
+
+/**
+ * `?ver={id}` abre el detalle del producto (también llega aquí `/inventario/{id}` abierto en el
+ * navegador) y `?panel=sincronizaciones` el historial (desde `/inventario/sincronizaciones`).
+ */
+async function takeDirectLink() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('panel') === 'sincronizaciones') {
+        historyOpen.value = true;
+        return;
+    }
+    if (!params.has('ver')) return;
+    const id = Number(params.get('ver'));
+    const row = Number.isInteger(id) && id > 0 ? props.items.data?.find((item) => item.id === id) : null;
+    if (row) {
+        openDetail(row);
+        return;
+    }
+    try {
+        if (!Number.isInteger(id) || id <= 0) throw new Error('id');
+        const { item } = await getJson(`/inventario/${id}`);
+        openDetail(item);
+    } catch {
+        dropParams('ver');
+        toasts.show({ status: 'error', title: 'No se encontró el producto', detail: 'No existe o pertenece a otra empresa.' });
+    }
+}
+
+watch(detailOpen, (open) => {
+    if (!open) dropParams('ver');
+});
+watch(historyOpen, (open) => {
+    if (!open) dropParams('panel');
+});
+
+onMounted(takeDirectLink);
 </script>
 
 <template>

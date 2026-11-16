@@ -163,7 +163,9 @@ async function createOpportunity(page, { title, amount, fromColumn = null }) {
     await dialog.getByPlaceholder('Suministro de equipo médico').fill(title);
     await chooseInstitution(dialog, page);
     await dialog.locator('input[inputmode="decimal"]').first().fill(String(amount));
-    await dialog.locator('input[type="date"]').first().fill('2026-12-20');
+    const closeDate = dialog.getByPlaceholder('dd/mm/aaaa').first(); // DateInput: texto dd/mm/aaaa con calendario propio
+    await closeDate.fill('20/12/2026');
+    await closeDate.press('Tab');
     await dialog.getByPlaceholder('Visitar a la unidad de compras').fill('Reunión con compras');
     await dialog.getByRole('button', { name: 'Crear oportunidad' }).click();
     await dialog.waitFor({ state: 'detached', timeout: 15000 });

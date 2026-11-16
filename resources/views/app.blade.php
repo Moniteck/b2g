@@ -12,6 +12,8 @@
     {{-- Fuentes alojadas en el sistema (resources/css/fonts.css); se precarga la del texto. --}}
     <link rel="preload" href="{{ \Illuminate\Support\Facades\Vite::asset('resources/fonts/inter/inter-latin-400.woff2') }}" as="font" type="font/woff2" crossorigin>
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="CRM B2G Honduras: licitaciones, pipeline, cotizaciones y contratos con el sector público.">
     @include('partials.pwa-head')
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>CRM B2G Honduras</title>

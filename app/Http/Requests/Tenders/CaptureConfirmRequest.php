@@ -7,6 +7,7 @@ use App\Models\Institution;
 use App\Models\Tender;
 use App\Rules\BelongsToActiveCompany;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 /**
@@ -43,6 +44,7 @@ class CaptureConfirmRequest extends FormRequest
             'create_opportunity' => ['boolean'],
             'update_existing' => ['boolean'],
             'update_tender_id' => ['nullable', 'integer', new BelongsToActiveCompany(Tender::class)],
+            'status' => ['nullable', 'string', Rule::in(Tender::STATUSES)],
         ];
     }
 

@@ -18,6 +18,7 @@ import BaseModal from '../../Components/BaseModal.vue';
 import Checkbox from '../../Components/Checkbox.vue';
 import FileDropzone from '../../Components/FileDropzone.vue';
 import FormField from '../../Components/FormField.vue';
+import IconButton from '../../Components/IconButton.vue';
 import Tabs from '../../Components/Tabs.vue';
 import TextInput from '../../Components/TextInput.vue';
 import { useUpload } from '../../composables/useUpload.js';
@@ -57,6 +58,7 @@ const stamp = reactive({ shape: 'circle', company: '', taxId: '', text: '', ink:
 const upload = reactive({ files: [], removeBackground: true, image: null });
 
 const isSeal = computed(() => props.type === 'sello');
+const compactDraw = computed(() => landscape.value && active.value === 'draw' && !isSeal.value);
 const noun = computed(() => (isSeal.value ? 'sello' : 'firma'));
 const tabs = computed(() =>
     isSeal.value
@@ -249,41 +251,52 @@ const rangeClass = 'h-2 w-full cursor-pointer accent-cap-brand';
         :size="landscape ? 'full' : 'xl'"
         :persistent="saving"
         :title="isSeal ? 'Crear mi sello' : 'Crear mi firma'"
-        :description="isSeal ? 'Genera un sello con los datos de la empresa o sube la imagen del tuyo.' : 'Dibújala, escríbela con un estilo manuscrito o sube una foto.'"
+        :description="compactDraw ? '' : isSeal ? 'Genera un sello con los datos de la empresa o sube la imagen del tuyo.' : 'Dibújala, escríbela con un estilo manuscrito o sube una foto.'"
         @update:open="(value) => (value ? null : close())"
     >
         <div class="grid min-w-0 grid-cols-1 gap-6" :class="landscape ? '' : 'lg:grid-cols-[minmax(0,1fr)_300px]'">
             <div class="flex min-w-0 flex-col gap-4">
-                <Tabs v-model="active" :tabs="tabs" :label="`Forma de crear ${noun === 'firma' ? 'la firma' : 'el sello'}`" />
+                <!-- Teléfono en horizontal dibujando: sin pestañas, el lienzo usa todo el alto disponible. -->
+                <Tabs v-if="!compactDraw" v-model="active" :tabs="tabs" :label="`Forma de crear ${noun === 'firma' ? 'la firma' : 'el sello'}`" />
 
                 <!-- Dibujar: se usa v-show para no perder el trazo al cambiar de pestaña. -->
-                <section v-if="!isSeal" v-show="active === 'draw'" class="flex flex-col gap-3" aria-label="Dibujar la firma" data-panel="draw">
-                    <div :style="landscape ? { width: 'min(100%, calc((100dvh - 190px) * 2.5))' } : null" class="mx-auto w-full">
+                <section v-if="!isSeal" v-show="active === 'draw'" class="flex gap-3" :class="compactDraw ? 'flex-row items-start' : 'flex-col'" aria-label="Dibujar la firma" data-panel="draw">
+                    <div :style="compactDraw ? { width: 'min(100%, calc((100dvh - 228px) * 2.5))' } : null" class="mx-auto w-full min-w-0">
                         <SignaturePad ref="pad" :color="inkColor(draw.ink)" :weight="draw.weight" @change="onStrokes" />
                     </div>
-                    <div class="flex flex-wrap items-center gap-x-4 gap-y-3">
-                        <div class="flex items-center gap-2" role="radiogroup" aria-label="Color de la tinta">
-                            <button
-                                v-for="ink in INKS"
-                                :key="ink.value"
-                                type="button"
-                                role="radio"
-                                :aria-checked="draw.ink === ink.value"
-                                :aria-label="ink.label"
-                                :title="ink.label"
-                                :class="[swatch, draw.ink === ink.value ? 'scale-110 border-cap-chrome dark:border-gray-100' : 'border-cap-divider']"
-                                @click="draw.ink = ink.value"
-                            >
-                                <span class="h-6 w-6 rounded-full" :style="{ background: ink.color }" />
-                            </button>
+                    <div class="flex gap-x-4 gap-y-2" :class="compactDraw ? 'w-56 shrink-0 flex-col' : 'flex-wrap items-center'">
+                        <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2" role="radiogroup" aria-label="Color de la tinta">
+                                <button
+                                    v-for="ink in INKS"
+                                    :key="ink.value"
+                                    type="button"
+                                    role="radio"
+                                    :aria-checked="draw.ink === ink.value"
+                                    :aria-label="ink.label"
+                                    :title="ink.label"
+                                    :class="[swatch, draw.ink === ink.value ? 'scale-110 border-cap-chrome dark:border-gray-100' : 'border-cap-divider']"
+                                    @click="draw.ink = ink.value"
+                                >
+                                    <span class="h-6 w-6 rounded-full" :style="{ background: ink.color }" />
+                                </button>
+                            </div>
+                            <template v-if="compactDraw">
+                                <IconButton icon="undo" label="Deshacer" :disabled="!strokeCount" @click="pad?.undo()" />
+                                <IconButton icon="eraser" label="Limpiar" :disabled="!strokeCount" @click="pad?.clear()" />
+                            </template>
                         </div>
                         <CapSegmented v-model="draw.weight" :items="weights" label="Grosor del trazo" />
-                        <div class="ml-auto flex items-center gap-2">
+                        <div v-if="!compactDraw" class="ml-auto flex items-center gap-2">
                             <AppButton icon="undo" :disabled="!strokeCount" @click="pad?.undo()">Deshacer</AppButton>
                             <AppButton icon="eraser" :disabled="!strokeCount" @click="pad?.clear()">Limpiar</AppButton>
                         </div>
+                        <p v-else class="flex flex-wrap gap-x-3 text-xs">
+                            <button type="button" class="underline underline-offset-2 text-cap-text-soft" @click="active = 'type'">Escribirla</button>
+                            <button type="button" class="underline underline-offset-2 text-cap-text-soft" @click="active = 'upload'">Subir imagen</button>
+                        </p>
                     </div>
-                    <p class="text-xs text-cap-text-soft">
+                    <p v-if="!compactDraw" class="text-xs text-cap-text-soft">
                         Usa el ratón, el lápiz o el dedo. El trazo se adelgaza cuando vas rápido, como con tinta.
                         <span class="sm:hidden">Gira el teléfono para tener más espacio.</span>
                         Si prefieres no dibujar, usa «Escribir».

@@ -60,7 +60,8 @@ class QuoteExportController extends Controller
         $quote->loadMissing(['company', 'institution', 'contact', 'items']);
 
         try {
-            Mail::to($data['recipients'])->send(new QuoteMail(
+            // En cola: el PDF se genera y se envía en segundo plano; la petición no espera al SMTP.
+            Mail::to($data['recipients'])->queue(new QuoteMail(
                 $quote,
                 $data['message'] ?? null,
                 $data['subject'] ?? null,
@@ -68,9 +69,9 @@ class QuoteExportController extends Controller
                 $user->email,
             ));
         } catch (Throwable $exception) {
-            Log::warning('No se pudo enviar la cotización por correo.', ['quote' => $quote->id, 'error' => $exception->getMessage()]);
+            Log::warning('No se pudo poner en cola la cotización por correo.', ['quote' => $quote->id, 'error' => $exception->getMessage()]);
 
-            return back()->withErrors(['recipients' => 'El servidor de correo no respondió. Vuelva a intentarlo en unos minutos.']);
+            return back()->withErrors(['recipients' => 'No se pudo preparar el envío. Vuelva a intentarlo en unos minutos.']);
         }
 
         $audit->record('cotizacion.enviada', $quote, [

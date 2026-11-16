@@ -1,8 +1,8 @@
-/* Material Design Icons 7.4.47: subconjunto con los 482 íconos que usa el sistema.
+/* Material Design Icons 7.4.47: subconjunto con los 497 íconos que usa el sistema.
    ARCHIVO GENERADO por scripts/mdi-subset.mjs: no se edita a mano; tras usar un ícono nuevo, vuelve a ejecutarlo. */
 @font-face {
   font-family: "Material Design Icons";
-  src: url("../fonts/mdi/mdi-subset.woff?v=7.4.47-482") format("woff");
+  src: url("../fonts/mdi/mdi-subset.woff?v=7.4.47-497") format("woff");
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -150,6 +150,7 @@
 .mdi-account-group-outline::before { content: "\F0B58"; }
 .mdi-account-multiple-plus::before { content: "\F0010"; }
 .mdi-account-multiple-plus-outline::before { content: "\F0800"; }
+.mdi-account-outline::before { content: "\F0013"; }
 .mdi-account-plus::before { content: "\F0014"; }
 .mdi-account-plus-outline::before { content: "\F0801"; }
 .mdi-account-remove::before { content: "\F0015"; }
@@ -204,6 +205,8 @@
 .mdi-box::before { content: "\F00D4"; }
 .mdi-briefcase::before { content: "\F00D6"; }
 .mdi-briefcase-outline::before { content: "\F0814"; }
+.mdi-briefcase-plus::before { content: "\F0A2B"; }
+.mdi-briefcase-plus-outline::before { content: "\F0C40"; }
 .mdi-bucket::before { content: "\F1415"; }
 .mdi-bullseye-arrow::before { content: "\F08C9"; }
 .mdi-calendar::before { content: "\F00ED"; }
@@ -223,6 +226,8 @@
 .mdi-calendar-remove::before { content: "\F00F4"; }
 .mdi-calendar-remove-outline::before { content: "\F0C45"; }
 .mdi-calendar-star::before { content: "\F09D3"; }
+.mdi-camera::before { content: "\F0100"; }
+.mdi-camera-outline::before { content: "\F0D5D"; }
 .mdi-cancel::before { content: "\F073A"; }
 .mdi-card::before { content: "\F0B6F"; }
 .mdi-card-account-details::before { content: "\F05D2"; }
@@ -297,6 +302,7 @@
 .mdi-cross::before { content: "\F0953"; }
 .mdi-cursor-default::before { content: "\F01C0"; }
 .mdi-database::before { content: "\F01BC"; }
+.mdi-debug-step-over::before { content: "\F01B7"; }
 .mdi-decimal::before { content: "\F10A1"; }
 .mdi-delete::before { content: "\F01B4"; }
 .mdi-delta::before { content: "\F01C2"; }
@@ -394,12 +400,14 @@
 .mdi-fit-to-page::before { content: "\F0EF5"; }
 .mdi-fit-to-page-outline::before { content: "\F0EF6"; }
 .mdi-flag::before { content: "\F023B"; }
+.mdi-flag-checkered::before { content: "\F023C"; }
 .mdi-flag-outline::before { content: "\F023D"; }
 .mdi-flash::before { content: "\F0241"; }
 .mdi-folder-account::before { content: "\F024C"; }
 .mdi-folder-account-outline::before { content: "\F0B9C"; }
 .mdi-folder-check::before { content: "\F197E"; }
 .mdi-folder-check-outline::before { content: "\F197F"; }
+.mdi-folder-image::before { content: "\F024F"; }
 .mdi-folder-upload::before { content: "\F0259"; }
 .mdi-folder-upload-outline::before { content: "\F10ED"; }
 .mdi-folder-zip::before { content: "\F06EB"; }
@@ -425,6 +433,8 @@
 .mdi-home::before { content: "\F02DC"; }
 .mdi-home-outline::before { content: "\F06A1"; }
 .mdi-image::before { content: "\F02E9"; }
+.mdi-image-off::before { content: "\F082B"; }
+.mdi-image-off-outline::before { content: "\F11D1"; }
 .mdi-image-outline::before { content: "\F0976"; }
 .mdi-image-plus::before { content: "\F087C"; }
 .mdi-image-plus-outline::before { content: "\F1B46"; }
@@ -461,6 +471,7 @@
 .mdi-magnify-minus-outline::before { content: "\F06EC"; }
 .mdi-magnify-plus::before { content: "\F034B"; }
 .mdi-magnify-plus-outline::before { content: "\F06ED"; }
+.mdi-magnify-scan::before { content: "\F1276"; }
 .mdi-mail::before { content: "\F0EBB"; }
 .mdi-map::before { content: "\F034D"; }
 .mdi-map-marker::before { content: "\F034E"; }
@@ -515,6 +526,7 @@
 .mdi-presentation::before { content: "\F0428"; }
 .mdi-progress-check::before { content: "\F0995"; }
 .mdi-progress-clock::before { content: "\F0996"; }
+.mdi-progress-pencil::before { content: "\F1787"; }
 .mdi-radio::before { content: "\F0439"; }
 .mdi-radius::before { content: "\F0CC0"; }
 .mdi-raw::before { content: "\F1A0F"; }
@@ -574,6 +586,9 @@
 .mdi-text-search::before { content: "\F13B8"; }
 .mdi-theme-light-dark::before { content: "\F050E"; }
 .mdi-timeline::before { content: "\F0BD1"; }
+.mdi-timer::before { content: "\F13AB"; }
+.mdi-timer-off::before { content: "\F13AC"; }
+.mdi-timer-off-outline::before { content: "\F051E"; }
 .mdi-timer-sand::before { content: "\F051F"; }
 .mdi-timer-sand-complete::before { content: "\F199F"; }
 .mdi-toolbox::before { content: "\F09AC"; }

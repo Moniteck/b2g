@@ -1,7 +1,9 @@
 <script setup>
-// Pestaña «Análisis del pliego» de la ficha: subir el PDF, seguir el estado del análisis en cola
-// (sondeo ligero cada 4 s mientras está En cola o Procesando), reintentar si falló, abrir la
-// revisión y pedir una recomendación a la IA.
+// Pestaña «Análisis del pliego» de la ficha: subir el PDF, seguir el estado del análisis en cola,
+// reintentar si falló, abrir la revisión y pedir una recomendación a la IA.
+// El sondeo del estado espera cada vez más (2 s → 20 s) y se pausa con la pestaña oculta
+// (hallazgo de rendimiento); al volver a la pestaña consulta enseguida.
+// `uploadSignal` (número): cada vez que cambia, abre la subida (botón «Importar pliego» de la ficha).
 import { router } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
 import CapAlert from '../../../design/vue/CapAlert.vue';
@@ -16,17 +18,17 @@ import { useUpload } from '../../composables/useUpload.js';
 import { dateTime, number } from '../../lib/format.js';
 import { getJson, postJson, visit } from '../../lib/http.js';
 import { card } from '../../lib/ui.js';
-import { ANALYSIS_STATUS } from './tenders.js';
+import { ANALYSIS_STATUS, createPoller } from './tenders.js';
 
 const props = defineProps({
     tender: { type: Object, required: true },
     analyses: { type: Array, default: () => [] },
     ai: { type: Object, default: () => ({ configured: false }) },
     maxPdfMb: { type: Number, default: 40 },
+    maxPdfPages: { type: Number, default: 300 },
     can: { type: Object, default: () => ({}) },
+    uploadSignal: { type: Number, default: 0 },
 });
-
-const POLL_MS = 4000;
 
 const uploadOpen = ref(false);
 const files = ref([]);
@@ -37,7 +39,6 @@ const recommendation = ref('');
 const recommendationError = ref('');
 const recommending = ref(false);
 const context = ref('');
-let timer = null;
 
 const items = computed(() => props.analyses.map((analysis) => ({ ...analysis, ...(live.value[analysis.id] ?? {}) })));
 const pending = computed(() => items.value.filter((analysis) => analysis.pending));
@@ -55,7 +56,6 @@ async function send() {
 }
 
 async function poll() {
-    timer = null;
     let changed = false;
     for (const analysis of pending.value) {
         try {
@@ -66,21 +66,24 @@ async function poll() {
             // Un fallo de red puntual no detiene el sondeo.
         }
     }
-    if (changed) router.reload({ only: ['analyses', 'tender', 'matrices'] });
-    schedule();
+    // Terminado: se recarga lo que depende del análisis (siguiente paso, stepper, fechas).
+    if (changed) router.reload({ only: ['analyses', 'analysisState', 'flow', 'tender', 'matrices'] });
+    return pending.value.length > 0;
 }
 
-function schedule() {
-    if (timer || pending.value.length === 0) return;
-    timer = setTimeout(poll, POLL_MS);
-}
+const poller = createPoller(poll, { start: 2000, max: 20000, factor: 1.6 });
 
 watch(() => props.analyses, () => {
     live.value = {};
-    schedule();
+    if (pending.value.length) poller.start();
+    else poller.stop();
 }, { immediate: true });
 
-onBeforeUnmount(() => clearTimeout(timer));
+watch(() => props.uploadSignal, (value) => {
+    if (value && props.can.useAi && props.ai.configured) openUpload();
+});
+
+onBeforeUnmount(() => poller.stop());
 
 async function retry(analysis) {
     retrying.value = analysis.id;
@@ -117,7 +120,7 @@ async function recommend() {
             <div class="flex flex-wrap items-start justify-between gap-3">
                 <div>
                     <h3 class="font-display text-base font-semibold text-gray-900 dark:text-gray-100">Pliego de condiciones</h3>
-                    <p class="mt-1 text-sm text-cap-text-soft">PDF de hasta {{ maxPdfMb }} MB. El análisis corre en segundo plano y puede tardar unos minutos.</p>
+                    <p class="mt-1 text-sm text-cap-text-soft">PDF de hasta {{ maxPdfMb }} MB y {{ maxPdfPages }} páginas. El análisis corre en segundo plano y puede tardar unos minutos.</p>
                 </div>
                 <AppButton v-if="can.useAi && ai.configured" :variant="latest ? 'secondary' : 'primary'" icon="file-upload-outline" @click="openUpload">{{ latest ? 'Analizar otro pliego' : 'Subir pliego' }}</AppButton>
             </div>
@@ -141,7 +144,7 @@ async function recommend() {
                         </div>
                         <p v-if="analysis.pending" class="mt-2 flex items-center gap-2 text-xs text-cap-text-soft">
                             <span class="cap-skeleton inline-block h-2 w-24" aria-hidden="true"></span>
-                            {{ analysis.status === 'queued' ? 'Esperando turno en la cola…' : 'Leyendo el PDF y consultando a la IA…' }}
+                            {{ analysis.status === 'queued' ? 'Esperando turno en la cola… Puedes salir de esta pantalla: el análisis sigue.' : 'Leyendo el PDF y consultando a la IA…' }}<span v-if="analysis.attempts > 1"> (intento {{ analysis.attempts }})</span>
                         </p>
                         <p v-if="analysis.status === 'failed'" class="mt-2 text-sm text-cap-status-error-ink" role="alert">{{ analysis.error }}</p>
                         <p v-if="analysis.tokens" class="mt-2 text-xs text-cap-text-soft">
@@ -168,6 +171,7 @@ async function recommend() {
         <BaseModal v-model:open="uploadOpen" size="md" title="Subir pliego de condiciones" :persistent="uploader.uploading.value">
             <div class="flex flex-col gap-4">
                 <FileDropzone v-model="files" :uploader="uploader" accept=".pdf" :max-size-mb="maxPdfMb" title="Arrastra el PDF del pliego o elígelo" />
+                <CapAlert status="info" title="Tope de páginas" :detail="`El análisis con IA lee hasta ${maxPdfPages} páginas. Si el pliego es más largo, sube solo la parte con los datos del proceso (fechas, garantías, documentos y productos).`" />
                 <p class="text-xs text-cap-text-soft">Se guarda como documento de la licitación y se envía a OpenAI para extraer los datos.</p>
             </div>
             <template #footer>

@@ -23,7 +23,7 @@ defineProps({
                 </span>
                 <div class="min-w-0">
                     <h2 :id="id" class="font-display text-base font-semibold text-gray-900 dark:text-gray-100">{{ title }}</h2>
-                    <p v-if="description" class="mt-0.5 text-xs text-cap-text-soft">{{ description }}</p>
+                    <p v-if="description" class="mt-0.5 hidden text-xs text-cap-text-soft sm:block">{{ description }}</p>
                 </div>
             </div>
             <slot name="actions">

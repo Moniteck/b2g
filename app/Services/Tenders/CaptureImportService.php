@@ -60,6 +60,7 @@ class CaptureImportService
         protected InstitutionMatcher $institutions,
         protected DocumentService $documents,
         protected AuditLogger $audit,
+        protected TenderOpportunityLinker $opportunities,
     ) {}
 
     /**
@@ -90,6 +91,7 @@ class CaptureImportService
 
         $token = (string) Str::uuid();
         $extension = strtolower($image->guessExtension() ?: $image->getClientOriginalExtension() ?: 'png');
+        $size = @getimagesize($image->getRealPath()) ?: [0, 0];
         $path = self::DIRECTORY."/{$token}.{$extension}";
         Storage::disk(self::DISK)->putFileAs(self::DIRECTORY, $image, "{$token}.{$extension}");
 
@@ -99,6 +101,7 @@ class CaptureImportService
             'image' => $path,
             'original_name' => $image->getClientOriginalName() ?: "captura.{$extension}",
             'mime' => $image->getMimeType(),
+            'size' => ['width' => (int) $size[0], 'height' => (int) $size[1]],
             'created_at' => now()->toIso8601String(),
             'status' => self::QUEUED,
             'text' => null,
@@ -131,6 +134,7 @@ class CaptureImportService
         try {
             $state['text'] = $this->ocr->read(Storage::disk(self::DISK)->path($state['image']));
             $state['parsed'] = $this->parser->parse($state['text']);
+            $state['parsed']['fields'] = $this->locate($state['parsed']['fields'], $this->layout(), $state['size'] ?? null);
 
             if (! $state['parsed']['useful']) {
                 $state['error'] = 'No se reconocieron los datos de la ficha de HonduCompras en la imagen. Completa el formulario a mano.';
@@ -147,6 +151,68 @@ class CaptureImportService
             'campos_leidos' => $state['parsed'] ? count(array_filter($state['parsed']['fields'], fn ($f) => $f['status'] !== HonduComprasCaptureParser::MISSING)) : 0,
             'error' => $state['error'],
         ], User::query()->find($state['user_id']), (int) $state['company_id']);
+    }
+
+    /**
+     * Disposición de la lectura (cajas por línea), si el lector la ofrece. Es un extra: si falla,
+     * la revisión funciona igual, sin resaltar zonas.
+     *
+     * @return array<int, array{text: string, x: int, y: int, w: int, h: int, conf: float|null}>
+     */
+    private function layout(): array
+    {
+        try {
+            return $this->ocr->lastLayout()['lines'] ?? [];
+        } catch (Throwable) {
+            return [];
+        }
+    }
+
+    /**
+     * Agrega a cada campo `box`: la zona de la captura donde se leyó, en fracciones del ancho y
+     * del alto (0 a 1) para que la pantalla la dibuje a cualquier zoom. Una línea leída con poca
+     * confianza por el OCR marca el campo como dudoso.
+     *
+     * @param  array<string, array<string, mixed>>  $fields
+     * @param  array<int, array{text: string, x: int, y: int, w: int, h: int, conf: float|null}>  $lines
+     * @param  array{width: int, height: int}|null  $size
+     * @return array<string, array<string, mixed>>
+     */
+    public function locate(array $fields, array $lines, ?array $size): array
+    {
+        $width = (int) ($size['width'] ?? 0);
+        $height = (int) ($size['height'] ?? 0);
+
+        foreach ($fields as $key => $field) {
+            $boxes = array_values(array_filter(array_map(fn ($index) => $lines[$index] ?? null, $field['lines'] ?? [])));
+
+            if ($boxes === [] || $width < 1 || $height < 1) {
+                $fields[$key]['box'] = null;
+
+                continue;
+            }
+
+            $x1 = min(array_column($boxes, 'x'));
+            $y1 = min(array_column($boxes, 'y'));
+            $x2 = max(array_map(fn ($b) => $b['x'] + $b['w'], $boxes));
+            $y2 = max(array_map(fn ($b) => $b['y'] + $b['h'], $boxes));
+
+            $fields[$key]['box'] = [
+                'x' => round($x1 / $width, 4), 'y' => round($y1 / $height, 4),
+                'w' => round(($x2 - $x1) / $width, 4), 'h' => round(($y2 - $y1) / $height, 4),
+            ];
+
+            $confidences = array_filter(array_column($boxes, 'conf'), fn ($c) => $c !== null);
+            $confidence = $confidences ? min($confidences) : null;
+            $fields[$key]['confidence'] = $confidence;
+
+            if ($confidence !== null && $confidence < 50 && $field['status'] === HonduComprasCaptureParser::READ) {
+                $fields[$key]['status'] = HonduComprasCaptureParser::DOUBTFUL;
+                $fields[$key]['note'] ??= 'El OCR leyó esta zona con poca seguridad; compárala con la captura.';
+            }
+        }
+
+        return $fields;
     }
 
     /** El trabajo murió (tiempo agotado, reinicio): la revisión se abre para completar a mano. */
@@ -213,6 +279,14 @@ class CaptureImportService
         $reference = $fields['reference']['value'] ?? null;
         $entity = $fields['entity']['value'] ?? null;
         $candidates = $this->institutions->candidates($entity);
+        $duplicate = $this->duplicateOf($reference);
+        $values = array_map(fn ($field) => $field['value'] ?? null, $fields);
+        $opportunity = null;
+
+        if ($duplicate !== null && ($existing = Tender::query()->find($duplicate['id']))) {
+            $found = $this->opportunities->find($existing);
+            $opportunity = $found['opportunity']?->only(['id', 'title', 'stage']);
+        }
 
         return [
             'token' => $token,
@@ -225,7 +299,12 @@ class CaptureImportService
             'ocrText' => $state['text'],
             'institutionCandidates' => $candidates,
             'suggestedInstitutionId' => ($candidates[0]['score'] ?? 0) >= InstitutionMatcher::CLEAR_MATCH ? $candidates[0]['id'] : null,
-            'duplicate' => $this->duplicateOf($reference),
+            'duplicate' => $duplicate,
+            // B-18: la oportunidad que se reutilizará en lugar de crear otra.
+            'existingOpportunity' => $opportunity,
+            'warnings' => $fields ? CaptureConsistency::check($values, $fields) : [],
+            'suggestedStatus' => CaptureConsistency::suggestedStatus($values),
+            'imageSize' => $state['size'] ?? null,
             'confirmedTenderId' => $state['confirmed_tender_id'],
         ];
     }
@@ -250,7 +329,7 @@ class CaptureImportService
 
     /**
      * @param  array<string, mixed>  $data  datos validados por CaptureConfirmRequest
-     * @return array{tender: Tender, created: bool, warning: ?string}
+     * @return array{tender: Tender, created: bool, warning: ?string, opportunity: ?array{created: bool, reused: ?string, title: string}}
      */
     public function confirm(string $token, array $state, array $data, User $user, int $companyId): array
     {
@@ -267,10 +346,17 @@ class CaptureImportService
                 throw ValidationException::withMessages(['token' => 'La captura todavía se está leyendo. Espera unos segundos.']);
             }
             if ($state['confirmed_tender_id'] && ($done = Tender::query()->find($state['confirmed_tender_id']))) {
-                return ['tender' => $done, 'created' => false, 'warning' => null];
+                return ['tender' => $done, 'created' => false, 'warning' => null, 'opportunity' => null];
             }
 
             [$tender, $created] = DB::transaction(fn () => $this->persist($data, $user, $companyId));
+
+            // Una sola oportunidad por licitación: se reutiliza la que exista (B-18).
+            $opportunity = null;
+            if (! empty($data['create_opportunity'])) {
+                $linked = $this->opportunities->ensure($tender, $user);
+                $opportunity = ['created' => $linked['created'], 'reused' => $linked['reused'], 'title' => $linked['opportunity']->title];
+            }
 
             $state['confirmed_tender_id'] = $tender->id;
             $this->save($token, $state);
@@ -282,10 +368,10 @@ class CaptureImportService
 
         $this->audit->record($created ? 'licitacion.importada' : 'licitacion.actualizada_por_captura', $tender, [
             'expediente' => $tender->reference,
-            'oportunidad' => (bool) ($data['create_opportunity'] ?? false),
+            'oportunidad' => $opportunity === null ? 'no' : ($opportunity['created'] ? 'creada' : 'reutilizada'),
         ], $user);
 
-        return ['tender' => $tender, 'created' => $created, 'warning' => $warning];
+        return ['tender' => $tender, 'created' => $created, 'warning' => $warning, 'opportunity' => $opportunity];
     }
 
     /**
@@ -306,6 +392,11 @@ class CaptureImportService
 
         $existing = Tender::query()->where('reference', $attributes['reference'])->lockForUpdate()->first();
 
+        // El mismo expediente escrito con otros guiones o espacios también es la misma licitación.
+        if ($existing === null && ($twin = $this->duplicateOf($attributes['reference']))) {
+            $existing = Tender::query()->whereKey($twin['id'])->lockForUpdate()->first();
+        }
+
         if ($existing === null && ! empty($data['update_tender_id'])) {
             $existing = Tender::query()->whereKey($data['update_tender_id'])->lockForUpdate()->first();
         }
@@ -318,6 +409,8 @@ class CaptureImportService
             abort_unless($user->can('update', $existing), 403);
 
             // Solo se completan o corrigen los campos con valor: lo vacío no borra lo que ya había.
+            // El estado del flujo no lo cambia una captura (lo lleva la licitación).
+            unset($attributes['status']);
             $existing->fill(array_filter($attributes, fn ($value) => $value !== null && $value !== ''))->save();
             $tender = $existing;
             $created = false;
@@ -327,25 +420,10 @@ class CaptureImportService
                 ...$attributes,
                 'company_id' => $companyId,
                 'owner_id' => $user->id,
-                'status' => 'Activa',
+                'status' => in_array($data['status'] ?? null, Tender::STATUSES, true) ? $data['status'] : 'Activa',
                 'estimated_amount' => $attributes['estimated_amount'] ?? 0,
             ]);
             $created = true;
-        }
-
-        if (! empty($data['create_opportunity']) && ! $tender->opportunities()->exists()) {
-            Opportunity::create([
-                'company_id' => $tender->company_id,
-                'tender_id' => $tender->id,
-                'institution_id' => $tender->institution_id,
-                'owner_id' => $user->id,
-                'title' => Str::limit($tender->title, 250, ''),
-                'opportunity_type' => $tender->purchase_type,
-                'amount' => $tender->estimated_amount ?? 0,
-                'probability' => 10,
-                'stage' => 'prospecto',
-                'expected_close_date' => $tender->presentation_deadline?->toDateString(),
-            ]);
         }
 
         return [$tender, $created];

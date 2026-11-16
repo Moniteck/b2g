@@ -42,7 +42,8 @@ const IMPACT = {
 
 const refreshing = ref(false);
 function refresh() {
-    router.reload({ onStart: () => (refreshing.value = true), onFinish: () => (refreshing.value = false) });
+    // El servidor guarda el informe 5 minutos; esta cabecera lo rehace.
+    router.reload({ headers: { 'X-Diagnostics-Fresh': '1' }, onStart: () => (refreshing.value = true), onFinish: () => (refreshing.value = false) });
 }
 
 const ordered = computed(() => {

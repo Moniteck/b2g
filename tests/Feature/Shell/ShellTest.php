@@ -63,6 +63,16 @@ class ShellTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['action' => 'soporte.salida', 'company_id' => $foreign->id]);
     }
 
+    public function test_root_without_memberships_is_never_in_support_mode(): void
+    {
+        $root = User::factory()->create(['is_root' => true]);
+        $company = Company::factory()->create();
+
+        $this->actingInCompany($root, $company)->getJson('/soporte/estado')->assertOk()->assertJson(['support' => false, 'member_ids' => []]);
+        $this->actingInCompany($root, $company)->post('/soporte/entrar', ['company_id' => $company->id])->assertSessionHas('success');
+        $this->assertDatabaseMissing('audit_logs', ['action' => 'soporte.entrada']);
+    }
+
     public function test_only_root_can_enter_support_mode(): void
     {
         [$admin, $company] = $this->memberOf();
@@ -99,6 +109,18 @@ class ShellTest extends TestCase
         $this->actingInCompany($viewer, $company)->get('/configuracion', self::BROWSER)
             ->assertForbidden()
             ->assertInertia(fn (Assert $page) => $page->component('Errors/Show')->where('status', 403));
+    }
+
+    public function test_unknown_urls_give_404_with_the_shell_and_wrong_methods_keep_405(): void
+    {
+        [$user, $company] = $this->memberOf();
+
+        $this->actingInCompany($user, $company)->get('/no-existe-esta-pantalla', self::BROWSER)
+            ->assertNotFound()
+            ->assertInertia(fn (Assert $page) => $page->component('Errors/Show')->where('status', 404)->has('auth.user'));
+        $this->actingInCompany($user, $company)->post('/no-existe-esta-pantalla')->assertNotFound();
+        $this->actingInCompany($user, $company)->delete('/administracion')->assertStatus(405);
+        $this->getJson('/api/no-existe')->assertNotFound();
     }
 
     public function test_inertia_form_errors_go_back_with_a_toast(): void

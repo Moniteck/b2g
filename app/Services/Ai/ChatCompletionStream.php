@@ -156,7 +156,8 @@ class ChatCompletionStream
         return app(CompanyContext::class)->currentCompanyId();
     }
 
-    private function client(int $timeout): Client
+    /** Cliente HTTP (las pruebas lo sustituyen por uno con respuestas simuladas). */
+    protected function client(int $timeout): Client
     {
         $verify = blank(ini_get('curl.cainfo')) && blank(ini_get('openssl.cafile')) ? CaBundle::getBundledCaBundlePath() : true;
 

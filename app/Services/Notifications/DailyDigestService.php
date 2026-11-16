@@ -68,7 +68,8 @@ class DailyDigestService
             }
 
             try {
-                Mail::to($user->email)->send(new DailyDigestMail(
+                // En cola: el programador no espera al SMTP usuario por usuario.
+                Mail::to($user->email)->queue(new DailyDigestMail(
                     userName: $user->name,
                     companyName: $companyName,
                     groups: $this->groups($mine, $today),
