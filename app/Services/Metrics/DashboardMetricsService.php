@@ -462,7 +462,7 @@ class DashboardMetricsService
     private function tasks(User $user): array
     {
         return Event::query()->pending()
-            ->where(fn ($query) => $query->where('owner_id', $user->id)->orWhere(fn ($inner) => $inner->whereNull('owner_id')->where('user_id', $user->id)))
+            ->where(fn ($query) => $query->where('owner_id', $user->id)->orWhere(fn ($inner) => $inner->whereNull('owner_id')->where('created_by', $user->id)))
             ->whereBetween('starts_at', [Carbon::now()->subDays(7)->startOfDay(), Carbon::now()->addDays(self::TIMELINE_DAYS)->endOfDay()])
             ->orderBy('starts_at')
             ->limit(6)

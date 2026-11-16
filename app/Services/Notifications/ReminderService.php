@@ -293,7 +293,7 @@ class ReminderService
 
         $chosen = array_map('intval', array_filter((array) ($event->recipients ?? []), 'is_numeric'));
         $candidates = array_merge(
-            [(int) $event->owner_id, (int) $event->created_by, (int) $event->user_id],
+            [(int) $event->owner_id, (int) $event->created_by],
             $chosen,
             $members->filter(fn ($role) => $role === Permissions::ROLE_ADMIN)->keys()->all(),
         );

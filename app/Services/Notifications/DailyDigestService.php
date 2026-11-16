@@ -96,14 +96,14 @@ class DailyDigestService
             ->pending()
             ->whereBetween('starts_at', [$today, $today->copy()->addDays(self::DAYS)->endOfDay()])
             ->orderBy('starts_at')
-            ->get(['id', 'company_id', 'title', 'label', 'type', 'starts_at', 'all_day', 'owner_id', 'created_by', 'user_id', 'recipients', 'reference_type', 'reference_id', 'contract_id']);
+            ->get(['id', 'company_id', 'title', 'label', 'type', 'starts_at', 'all_day', 'owner_id', 'created_by', 'recipients', 'reference_type', 'reference_id', 'contract_id']);
     }
 
     protected function concerns(Event $event, int $userId): bool
     {
         $chosen = array_map('intval', array_filter((array) ($event->recipients ?? []), 'is_numeric'));
 
-        return in_array($userId, [(int) $event->owner_id, (int) $event->created_by, (int) $event->user_id], true)
+        return in_array($userId, [(int) $event->owner_id, (int) $event->created_by], true)
             || in_array($userId, $chosen, true);
     }
 
