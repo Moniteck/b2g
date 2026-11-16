@@ -10,6 +10,9 @@ import IconButton from '../Components/IconButton.vue';
 import IosInstallSteps from './IosInstallSteps.vue';
 import { applyUpdate, promptInstall, pwa, rememberOffer } from './state.js';
 
+// Ruta pública (no un import de Vite): el ícono vive en public/icons.
+const APP_ICON = '/icons/icon-192.png';
+
 const updating = computed(() => pwa.updateReady);
 const panel = 'pointer-events-auto w-full rounded-cap-card border border-cap-divider bg-cap-card p-4 shadow-lg dark:bg-cap-card-2';
 
@@ -36,7 +39,7 @@ async function install() {
         <Transition name="pwa-prompt">
             <section v-if="pwa.offerVisible && !updating" :class="panel" class="flex max-w-sm flex-col gap-3" aria-labelledby="pwa-offer-title" data-pwa="install-offer">
                 <div class="flex items-start gap-3">
-                    <img src="/icons/icon-192.png" alt="" class="h-11 w-11 shrink-0 rounded-xl" width="44" height="44" />
+                    <img :src="APP_ICON" alt="" class="h-11 w-11 shrink-0 rounded-xl" width="44" height="44" />
                     <div class="min-w-0 flex-1">
                         <h2 id="pwa-offer-title" class="font-display text-sm font-semibold text-gray-900 dark:text-gray-100">Instale CRM B2G en este equipo</h2>
                         <p class="text-sm text-cap-text-soft">Ábralo como una app, a pantalla completa, y reciba los avisos de plazos.</p>

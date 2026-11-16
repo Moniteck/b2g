@@ -12,6 +12,9 @@ import IosInstallSteps from './IosInstallSteps.vue';
 import { disablePush, enablePush, pushStatus, sendTestPush } from './push.js';
 import { detectStandalone, promptInstall, pwa } from './state.js';
 
+// Ruta pública (no un import de Vite): el ícono vive en public/icons.
+const APP_ICON = '/icons/icon-192.png';
+
 const toasts = useToasts();
 const status = ref('loading');
 const busy = ref(false);
@@ -79,7 +82,7 @@ onMounted(refresh);
 
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div class="flex min-w-0 items-start gap-3">
-                <img src="/icons/icon-192.png" alt="" width="40" height="40" class="h-10 w-10 shrink-0 rounded-xl" />
+                <img :src="APP_ICON" alt="" width="40" height="40" class="h-10 w-10 shrink-0 rounded-xl" />
                 <div class="min-w-0">
                     <p class="text-sm font-medium text-gray-900 dark:text-gray-100">Instalar aplicación</p>
                     <p v-if="installState === 'standalone'" class="text-sm text-cap-text-soft">Está usando CRM B2G como aplicación instalada.</p>
