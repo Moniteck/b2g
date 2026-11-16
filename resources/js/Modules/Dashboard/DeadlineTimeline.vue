@@ -80,7 +80,7 @@ function when(item) {
 
         <EmptyState v-if="!items.length" compact icon="calendar-check-outline" title="Sin plazos en los próximos 14 días" description="Los cierres de licitación, entregas y vencimientos aparecerán aquí." />
         <ul v-else :key="selected ?? 'all'" v-stagger class="flex flex-col gap-2">
-            <li v-for="item in shown" :key="item.id">
+            <li v-for="(item, index) in shown" :key="item.id" :class="{ 'max-sm:hidden': index >= 3 }">
                 <Link :href="item.href" class="group flex min-h-14 items-center gap-3 rounded-cap-control bg-cap-card-2 py-2 pl-2 pr-3 transition-colors duration-cap-fast ease-cap hover:bg-cap-divider focus:outline-none focus-visible:ring-2 focus-visible:ring-cap-chrome dark:focus-visible:ring-gray-100">
                     <span class="w-1 self-stretch rounded-full" :style="{ backgroundColor: colorOf(item.category) }" aria-hidden="true" />
                     <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-cap-control bg-cap-card text-cap-text-soft" aria-hidden="true">
@@ -88,12 +88,12 @@ function when(item) {
                     </span>
                     <span class="min-w-0 flex-1">
                         <span class="block text-sm font-semibold text-gray-900 [overflow-wrap:anywhere] line-clamp-2 dark:text-gray-100" :title="item.title">{{ item.title }}</span>
-                        <span class="block truncate text-xs text-cap-text-soft">{{ item.type }}</span>
+                        <span class="block truncate text-xs text-cap-text-soft"><span class="font-medium sm:hidden" :class="String(item.at).slice(0, 10) === today ? 'text-cap-status-error-ink' : 'text-gray-900 dark:text-gray-100'">{{ when(item) }} · </span>{{ item.type }}</span>
                     </span>
-                    <span class="shrink-0 text-right text-xs font-medium tabular-nums" :class="String(item.at).slice(0, 10) === today ? 'text-cap-status-error-ink' : 'text-gray-900 dark:text-gray-100'">{{ when(item) }}</span>
+                    <span class="hidden shrink-0 text-right text-xs font-medium tabular-nums sm:block" :class="String(item.at).slice(0, 10) === today ? 'text-cap-status-error-ink' : 'text-gray-900 dark:text-gray-100'">{{ when(item) }}</span>
                 </Link>
             </li>
         </ul>
-        <p v-if="listed.length > shown.length" class="text-xs text-cap-text-soft">Y {{ listed.length - shown.length }} más en el <Link href="/calendario" class="text-gray-900 underline decoration-gray-400 underline-offset-2 hover:decoration-current dark:text-gray-100">calendario</Link>.</p>
+        <p v-if="listed.length > 3" class="text-xs text-cap-text-soft" :class="{ 'sm:hidden': listed.length <= shown.length }">{{ listed.length }} plazos en total; todos en el <Link href="/calendario" class="text-gray-900 underline decoration-gray-400 underline-offset-2 hover:decoration-current dark:text-gray-100">calendario</Link>.</p>
     </div>
 </template>

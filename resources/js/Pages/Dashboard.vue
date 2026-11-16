@@ -116,7 +116,7 @@ const more = 'max-lg:hidden';
             <KpiCard v-for="kpi in kpis" :key="kpi.key" :kpi="kpi" :palette="palette" />
         </div>
 
-        <div class="grid grid-cols-1 gap-6 lg:grid-cols-2 xl:grid-cols-12">
+        <div class="grid grid-cols-1 items-start gap-6 lg:grid-cols-2 xl:grid-cols-12">
             <BlockCard id="dashboard-deadlines" class="xl:col-span-7" title="Plazos de los próximos 14 días" description="Licitaciones, contratos, documentos y cobros." icon="calendar-clock-outline" href="/calendario" link-label="Calendario">
                 <Deferred data="agenda">
                     <template #fallback><div class="flex flex-col gap-3" aria-busy="true"><span class="cap-skeleton h-16" /><span v-for="row in 3" :key="row" class="cap-skeleton h-14" /></div></template>
@@ -131,7 +131,7 @@ const more = 'max-lg:hidden';
                 </Deferred>
             </BlockCard>
 
-            <BlockCard id="dashboard-pipeline" class="transition-opacity duration-cap-fast ease-cap xl:col-span-5" :class="{ 'opacity-50': switching }" title="Pipeline por etapa" :description="`Oportunidades creadas ${period.label.toLowerCase()}.`" icon="view-column-outline" href="/pipeline" link-label="Kanban">
+            <BlockCard id="dashboard-pipeline" class="transition-opacity duration-cap-fast ease-cap xl:col-span-5" :class="[{ 'opacity-50': switching }, moreOpen ? '' : more]" title="Pipeline por etapa" :description="`Oportunidades creadas ${period.label.toLowerCase()}.`" icon="view-column-outline" href="/pipeline" link-label="Kanban">
                 <Deferred data="charts">
                     <template #fallback><div class="flex flex-col gap-3" aria-busy="true"><span class="cap-skeleton h-12" /><span v-for="row in 5" :key="row" class="cap-skeleton h-8" /></div></template>
                     <PipelineStages :stages="charts?.stages ?? []" :palette="palette" :open-tenders="charts?.open_tenders ?? 0" />

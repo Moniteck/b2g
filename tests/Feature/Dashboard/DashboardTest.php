@@ -86,7 +86,7 @@ class DashboardTest extends TestCase
         $this->assertSame(66.7, $this->kpi($dashboard['kpis'], 'award_rate')['value']);
         $this->assertSame(66.7, $report['metrics']['award_rate']);
         $this->assertSame(66.7, $kpiActual('tasa_adjudicacion'));
-        $this->assertSame('2 ganadas · 1 perdidas · 1 pendientes', $this->kpi($dashboard['kpis'], 'award_rate')['hint']);
+        $this->assertSame('2 ganadas · 1 perdida · 1 pendiente', $this->kpi($dashboard['kpis'], 'award_rate')['hint']);
 
         // Adjudicado = 900 + 500 (sin monto adjudicado cuenta el total).
         $this->assertEquals(1400, $this->kpi($dashboard['kpis'], 'won_amount')['value']);

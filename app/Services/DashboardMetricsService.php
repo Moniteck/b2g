@@ -62,16 +62,16 @@ class DashboardMetricsService
         'KpiGoal' => ['una meta KPI', 'target'],
     ];
 
-    /** Frases de las acciones más comunes; el resto se arma con el verbo final. */
+    /** Verbo de las acciones más comunes (va seguido del registro); el resto sale del verbo final. */
     private const ACTION_PHRASES = [
-        'documento.subido' => 'subió el documento',
-        'documento.firmado' => 'firmó el documento',
-        'oportunidad.etapa' => 'movió de etapa la oportunidad',
-        'cotizacion.estado' => 'cambió el estado de la cotización',
+        'documento.subido' => 'subió',
+        'documento.firmado' => 'firmó',
+        'oportunidad.etapa' => 'movió de etapa',
+        'cotizacion.estado' => 'cambió el estado de',
         'adjudicacion.ganada' => 'registró como ganada',
         'adjudicacion.perdida' => 'registró como perdida',
         'adjudicacion.revertida' => 'revirtió el resultado de',
-        'licitacion.importada' => 'importó la licitación',
+        'licitacion.importada' => 'importó',
         'collection.paid' => 'registró el pago de',
         'collection.note' => 'anotó la gestión de cobro de',
         'poa.executed' => 'registró la ejecución de',
@@ -168,7 +168,7 @@ class DashboardMetricsService
                 'value' => $rate,
                 'format' => 'percent',
                 'previous' => $prevRate,
-                'hint' => "{$won} ganadas · {$lost} perdidas · {$pending} pendientes",
+                'hint' => $this->plural($won, 'ganada', 'ganadas').' · '.$this->plural($lost, 'perdida', 'perdidas').' · '.$this->plural($pending, 'pendiente', 'pendientes'),
                 'spark' => $spark(fn ($m) => $m === null ? null : BusinessMetrics::rate($m['won'], $m['lost'])),
                 'href' => '/cotizaciones',
             ],
@@ -442,7 +442,8 @@ class DashboardMetricsService
                 return [
                     'id' => $log->id,
                     'actor' => $log->actor_name,
-                    'phrase' => $this->phrase($log->action, $noun),
+                    // «creó la cotización COT-1» con nombre; «movió de etapa una oportunidad» sin él.
+                    'phrase' => trim($this->phrase($log->action).' '.($subject ? preg_replace(['/^una /u', '/^un /u'], ['la ', 'el '], $noun) : $noun)),
                     'subject' => $subject,
                     'icon' => $icon,
                     'at' => $log->created_at?->toDateTimeString(),
@@ -571,14 +572,9 @@ class DashboardMetricsService
         return $count === 1 ? "1 {$one}" : number_format($count)." {$many}";
     }
 
-    private function phrase(string $action, string $noun): string
+    private function phrase(string $action): string
     {
-        if (isset(self::ACTION_PHRASES[$action])) {
-            return self::ACTION_PHRASES[$action];
-        }
-        $verb = self::VERBS[substr(strrchr($action, '.') ?: $action, 1)] ?? 'actualizó';
-
-        return "{$verb} {$noun}";
+        return self::ACTION_PHRASES[$action] ?? self::VERBS[substr(strrchr($action, '.') ?: $action, 1)] ?? 'actualizó';
     }
 
     private function resourceHref(string $type, ?int $id, string $action): ?string

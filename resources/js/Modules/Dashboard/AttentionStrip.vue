@@ -38,7 +38,7 @@ function when(item) {
                 </span>
                 Requiere atención hoy
             </h2>
-            <span class="text-xs text-cap-text-soft">{{ items.length }} {{ items.length === 1 ? 'pendiente' : 'pendientes' }}<template v-if="urgent"> · {{ urgent }} {{ urgent === 1 ? 'urgente' : 'urgentes' }}</template></span>
+            <span class="hidden text-xs text-cap-text-soft sm:inline">{{ items.length }} {{ items.length === 1 ? 'pendiente' : 'pendientes' }}<template v-if="urgent"> · {{ urgent }} {{ urgent === 1 ? 'urgente' : 'urgentes' }}</template></span>
         </header>
         <ul v-stagger class="grid grid-cols-1 divide-y divide-cap-divider lg:grid-cols-2 lg:divide-y-0">
             <li v-for="(item, index) in items" :key="item.id" class="relative lg:border-b lg:border-cap-divider lg:odd:border-r" :class="{ 'hidden lg:block': !expanded && index >= MOBILE_LIMIT }">

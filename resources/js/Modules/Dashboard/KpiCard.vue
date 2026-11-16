@@ -60,9 +60,9 @@ const accessible = computed(() => [props.kpi.label, kpiFull(props.kpi.value, pro
             </span>
             <span class="hidden truncate text-xs sm:inline" :class="look.hint">vs. período anterior</span>
         </div>
-        <div class="mt-3" :class="variant === 'featured' ? 'text-white' : ''">
+        <div class="mt-2 sm:mt-3" :class="variant === 'featured' ? 'text-white' : ''">
             <Sparkline :values="kpi.spark" :color="sparkColor" />
         </div>
-        <p class="mt-2 line-clamp-2 text-xs sm:truncate" :class="look.hint" :title="kpi.hint" aria-hidden="true">{{ kpi.hint }}</p>
+        <p class="mt-2 truncate text-xs" :class="look.hint" :title="kpi.hint" aria-hidden="true">{{ kpi.hint }}</p>
     </component>
 </template>
