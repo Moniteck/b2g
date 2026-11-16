@@ -1,6 +1,6 @@
 {{-- Cabecera común de las pantallas OAuth del MCP: tema sin parpadeo, fuentes y estilos CAP. --}}
 <meta charset="utf-8">
-<script>
+<script nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}">
     let storedTheme;
     try { storedTheme = localStorage.theme; } catch { storedTheme = undefined; }
     document.documentElement.classList.toggle('dark', (storedTheme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')) === 'dark');

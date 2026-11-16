@@ -36,6 +36,12 @@
                 <h1 class="cap-login__title">Autorizar a {{ $clientName }}</h1>
                 <p class="cap-login__subtitle">{{ $clientName }} quiere usar el CRM B2G en tu nombre. Revisa qué podrá hacer antes de aprobar.</p>
 
+                @if ($screen['unverified'] ?? false)
+                    <div class="mb-4" data-mcp-unverified>
+                        <x-cap.alert status="warning" icon="shield-alert-outline" title="Cliente no verificado" detail="Este cliente se registró solo: el nombre «{{ $clientName }}» y su sitio los declaró él mismo y nadie los comprobó. Aprueba únicamente si tú iniciaste la conexión desde tu asistente y reconoces la dirección de regreso." />
+                    </div>
+                @endif
+
                 @if ($errors->any())
                     <x-cap.alert status="error" title="Revisa la autorización" :detail="$errors->first()" />
                 @endif
@@ -111,7 +117,7 @@
     <button class="cap-login__theme" type="button" data-mcp-theme aria-label="Alternar modo oscuro"><i class="mdi mdi-weather-night" aria-hidden="true"></i></button>
 </main>
 
-<script>
+<script nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}">
     // Botón ocupado al enviar (evita el doble clic) y conmutador de tema, como en la pantalla de acceso.
     document.querySelectorAll('[data-mcp-consent]').forEach((form) => {
         form.addEventListener('submit', () => {

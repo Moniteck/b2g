@@ -35,12 +35,20 @@ class AttachmentTest extends DocumentsTestCase
         $this->assertStringEndsWith("/documentos/{$list[0]['id']}/vista", $list[0]['previewUrl']);
         $this->assertSame('proceso', Document::query()->find($list[0]['id'])->kind);
 
-        $client->deleteJson("/adjuntos/quote/{$quote->id}/{$list[0]['id']}")->assertOk()->assertJsonPath('deleted', true);
-        $this->assertNull(Document::query()->withoutGlobalScopes()->find($list[0]['id']));
-        $this->assertNotNull(Document::query()->withoutGlobalScopes()->find($list[1]['id']));
+        // Seguridad (B5): el operador no puede eliminar documentos, así que quitar el último enlace
+        // solo lo desvincula; el documento y su archivo siguen en el Directorio.
+        $client->deleteJson("/adjuntos/quote/{$quote->id}/{$list[0]['id']}")->assertOk()->assertJsonPath('deleted', false);
+        $this->assertNotNull(Document::query()->withoutGlobalScopes()->find($list[0]['id']));
         $this->assertSame(1, DocumentLink::query()->count());
-        $this->assertCount(1, $this->storedFiles());
+        $this->assertCount(2, $this->storedFiles());
         $this->assertDatabaseHas('audit_logs', ['action' => 'documento.adjunto_quitado']);
+
+        // Quien sí puede eliminarlo (administrador) borra el documento huérfano con su archivo.
+        $this->actingInCompany($this->admin, $this->company)
+            ->deleteJson("/adjuntos/quote/{$quote->id}/{$list[1]['id']}")->assertOk()->assertJsonPath('deleted', true);
+        $this->assertNull(Document::query()->withoutGlobalScopes()->find($list[1]['id']));
+        $this->assertSame(0, DocumentLink::query()->count());
+        $this->assertCount(1, $this->storedFiles());
     }
 
     public function test_one_bad_file_rejects_the_whole_batch_with_error_under_that_file(): void

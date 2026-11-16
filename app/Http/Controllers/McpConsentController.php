@@ -119,6 +119,9 @@ class McpConsentController extends Controller
             'redirectHost' => $redirectUri ? (parse_url($redirectUri, PHP_URL_HOST) ?: $redirectUri) : null,
             'clientHost' => $client->getAttribute('client_uri') ? parse_url((string) $client->getAttribute('client_uri'), PHP_URL_HOST) : null,
             'days' => (int) config('mcp.crm.connection_days', 90),
+            // Registrado por sí mismo (registro dinámico, sin dueño en el CRM): su nombre y su sitio
+            // los declaró el propio cliente y nadie los verificó.
+            'unverified' => $client->getAttribute('owner_id') === null,
         ];
     }
 

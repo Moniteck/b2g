@@ -88,11 +88,12 @@ class AuditLogger
      */
     private function sanitize(array $changes): array
     {
-        $blocked = ['password', 'password_confirmation', 'token', 'api_key', 'secret', 'remember_token'];
-
         foreach ($changes as $key => $value) {
-            if (in_array(strtolower((string) $key), $blocked, true)) {
+            // Coincidencia parcial: `password_hash`, `access_token`, `client_secret`, `api_key`…
+            if (is_string($key) && preg_match(self::SENSITIVE_KEYS, $key)) {
                 $changes[$key] = '[oculto]';
+
+                continue;
             }
 
             if (is_array($value)) {
@@ -102,4 +103,7 @@ class AuditLogger
 
         return $changes;
     }
+
+    /** Claves cuyo valor nunca se guarda (hallazgo B7). */
+    private const SENSITIVE_KEYS = '/password|token|secret|key/i';
 }

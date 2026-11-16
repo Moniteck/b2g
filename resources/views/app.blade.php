@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <!-- Grupo CAP design system: tema sin parpadeo y fuentes -->
-    <script>
+    <script nonce="{{ \Illuminate\Support\Facades\Vite::cspNonce() }}">
         let storedTheme;
         try { storedTheme = localStorage.theme; } catch { storedTheme = undefined; }
         const theme = storedTheme ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');

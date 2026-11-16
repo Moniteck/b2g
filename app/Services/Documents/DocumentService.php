@@ -246,14 +246,14 @@ class DocumentService
     }
 
     /**
-     * Quita un adjunto de una entidad. Si el documento ya no está enlazado a nada y no es del
-     * Directorio Institucional, se elimina con sus archivos.
+     * Quita un adjunto de una entidad. Si el documento ya no está enlazado a nada, no es del
+     * Directorio Institucional y quien lo quita tiene `delete` sobre él, se elimina con sus archivos.
      *
      * @return bool true si además se eliminó el documento
      */
     public function detach(Document $document, Model $linkable, User $actor): bool
     {
-        $removed = DB::transaction(function () use ($document, $linkable) {
+        $removed = DB::transaction(function () use ($document, $linkable, $actor) {
             $this->lock($document);
 
             DocumentLink::query()
@@ -262,7 +262,9 @@ class DocumentService
                 ->where('linkable_id', $linkable->getKey())
                 ->delete();
 
-            return $document->kind !== 'empresa' && ! $document->links()->exists();
+            // Seguridad (B5): quitar el último enlace solo borra el documento si quien lo quita
+            // puede eliminarlo; si no, el documento queda en el Directorio, solo desvinculado.
+            return $document->kind !== 'empresa' && ! $document->links()->exists() && $actor->can('delete', $document);
         });
 
         $this->audit->record('documento.adjunto_quitado', $document, [
