@@ -24,8 +24,6 @@ class SecurityHeaders
     /** Orígenes del servidor de Vite en desarrollo. */
     private const VITE_DEV_HOSTS = ['localhost:5173', '127.0.0.1:5173'];
 
-    /** Fuentes web del sistema de diseño (resources/views/app.blade.php). */
-    private const FONT_ORIGIN = 'https://fonts.bunny.net';
 
     public function handle(Request $request, Closure $next): Response
     {
@@ -69,9 +67,9 @@ class SecurityHeaders
         $directives = [
             'default-src' => ["'self'"],
             'script-src' => ["'self'", "'nonce-{$nonce}'", ...$devHttp],
-            'style-src' => ["'self'", "'unsafe-inline'", self::FONT_ORIGIN, ...$devHttp],
+            'style-src' => ["'self'", "'unsafe-inline'", ...$devHttp],
             'img-src' => ["'self'", 'data:', 'blob:', ...$devHttp],
-            'font-src' => ["'self'", 'data:', self::FONT_ORIGIN, ...$devHttp],
+            'font-src' => ["'self'", 'data:', ...$devHttp],
             'connect-src' => ["'self'", ...$devHttp, ...$devWs],
             'worker-src' => ["'self'", 'blob:', ...$devHttp],
             'frame-src' => ["'self'", 'blob:'],
