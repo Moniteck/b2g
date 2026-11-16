@@ -86,6 +86,25 @@ class HardeningTest extends TestCase
         $this->assertTrue(AuditLog::query()->where('action', 'sesion.bloqueada')->exists());
     }
 
+    public function test_login_failures_are_limited_per_email_from_any_ip_but_successes_do_not_count(): void
+    {
+        $this->memberOf(attributes: ['email' => 'ana@empresa.test', 'password' => 'ClaveValida123']);
+
+        foreach (range(1, 15) as $attempt) {
+            $this->post('/login', ['email' => 'ana@empresa.test', 'password' => 'ClaveValida123'])->assertRedirect(route('dashboard'));
+            $this->post('/logout');
+        }
+
+        foreach (range(1, 20) as $attempt) {
+            $this->withServerVariables(['REMOTE_ADDR' => "10.0.0.{$attempt}"])->post('/login', ['email' => 'ana@empresa.test', 'password' => 'Incorrecta999']);
+        }
+
+        $this->withServerVariables(['REMOTE_ADDR' => '10.0.1.1'])->post('/login', ['email' => 'ana@empresa.test', 'password' => 'ClaveValida123'])
+            ->assertRedirect('/login')->assertSessionHasErrors('email');
+        $this->assertStringContainsString('Demasiados intentos', session('errors')->first('email'));
+        $this->assertGuest();
+    }
+
     public function test_audit_hides_partially_matching_secret_keys(): void
     {
         [$user] = $this->memberOf();

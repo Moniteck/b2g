@@ -160,7 +160,7 @@ class AppServiceProvider extends ServiceProvider
      * - `ai`      llamadas a OpenAI: 5 por minuto por usuario y 100 al día por empresa.
      * - `ocr`     lecturas con Tesseract: 10 por minuto por usuario.
      * - `exports` PDF, XLSX, CSV y ZIP: 20 por minuto por usuario.
-     * - `login`   20 por minuto por IP y 20 por hora por correo.
+     * - `login`   20 por minuto por IP (y 20 fallos por hora por correo en AuthController).
      * - `password-reset` 5 por minuto por IP y 5 por hora por correo.
      *
      * Al superarlos, `TooManyRequests` responde con un aviso en español (toast o JSON 429).
@@ -193,11 +193,9 @@ class AppServiceProvider extends ServiceProvider
                 ->response($respond('Pediste muchos enlaces para este correo.')),
         ]);
 
-        RateLimiter::for('login', fn (Request $request) => [
-            Limit::perMinute(20)->by('ip:'.$request->ip())
-                ->response($respond('Demasiados intentos de acceso.')),
-            Limit::perHour(20)->by('correo:'.Str::lower(trim((string) $request->input('email'))))
-                ->response($respond('Demasiados intentos de acceso con este correo.')),
-        ]);
+        // El tope por correo (20 intentos fallidos por hora) lo lleva AuthController: así los
+        // ingresos correctos no lo consumen.
+        RateLimiter::for('login', fn (Request $request) => Limit::perMinute(20)->by('ip:'.$request->ip())
+            ->response($respond('Demasiados intentos de acceso.')));
     }
 }

@@ -22,7 +22,7 @@ use Symfony\Component\HttpFoundation\Response;
 class SecurityHeaders
 {
     /** Orígenes del servidor de Vite en desarrollo. */
-    private const VITE_DEV_HOSTS = ['localhost:5173', '127.0.0.1:5173', '[::1]:5173'];
+    private const VITE_DEV_HOSTS = ['localhost:5173', '127.0.0.1:5173'];
 
     /** Fuentes web del sistema de diseño (resources/views/app.blade.php). */
     private const FONT_ORIGIN = 'https://fonts.bunny.net';
@@ -103,21 +103,32 @@ class SecurityHeaders
 
         $hosts = self::VITE_DEV_HOSTS;
         $hot = Vite::hotFile();
+        $ipv6 = false;
 
         if (is_file($hot) && ($url = trim((string) @file_get_contents($hot))) !== '') {
-            $host = parse_url($url, PHP_URL_HOST);
-            $port = parse_url($url, PHP_URL_PORT);
+            $host = trim((string) parse_url($url, PHP_URL_HOST), '[]');
+            $port = parse_url($url, PHP_URL_PORT) ?: 5173;
 
-            if (is_string($host)) {
-                $hosts[] = (str_contains($host, ':') && ! str_starts_with($host, '[') ? "[{$host}]" : $host).($port ? ":{$port}" : '');
+            // La CSP no acepta IPv6 literal (`[::1]`): Chrome descarta esa fuente como inválida.
+            if (filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+                $ipv6 = true;
+                $hosts[] = "localhost:{$port}";
+            } elseif ($host !== '') {
+                $hosts[] = "{$host}:{$port}";
             }
         }
 
         $hosts = array_values(array_unique($hosts));
+        $http = array_map(fn (string $host) => "http://{$host}", $hosts);
+        $ws = array_map(fn (string $host) => "ws://{$host}", $hosts);
 
-        return [
-            array_map(fn (string $host) => "http://{$host}", $hosts),
-            array_map(fn (string $host) => "ws://{$host}", $hosts),
-        ];
+        // Vite publicado en IPv6 (sin `server.host: 'localhost'` en vite.config.js): solo en local
+        // se admite cualquier origen http/ws para no dejar sin íconos ni HMR al desarrollador.
+        if ($ipv6) {
+            $http[] = 'http:';
+            $ws[] = 'ws:';
+        }
+
+        return [$http, $ws];
     }
 }

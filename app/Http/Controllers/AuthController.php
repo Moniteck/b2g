@@ -22,7 +22,8 @@ use Inertia\Response;
  * - Misma cantidad de comparaciones de contraseña exista o no la cuenta (B1): con un correo
  *   inexistente se compara contra un cifrado de relleno, así el tiempo no delata qué correos existen.
  * - Los errores vuelven SIEMPRE a /login, nunca a la cabecera Referer (B2).
- * - Límite por correo e IP aquí, y en la ruta `throttle:login` (por IP y 20 por hora por correo, B4).
+ * - Límites: 5 fallos por minuto por correo e IP, 20 fallos por hora por correo desde cualquier IP
+ *   (B4) y, en la ruta, `throttle:login` (20 peticiones por minuto por IP).
  * - Al entrar se va siempre al Dashboard (el sistema empieza ahí).
  * - Una cuenta nacida de una solicitud cuyo correo nadie confirmó no entra (M4).
  * - Al salir se borra el historial cifrado de Inertia (el botón Atrás no muestra datos).
@@ -32,6 +33,9 @@ class AuthController extends Controller
     private const MAX_ATTEMPTS = 5;
 
     private const DECAY_SECONDS = 60;
+
+    /** Fallos por correo en una hora, desde cualquier IP (B4). */
+    private const MAX_FAILURES_PER_EMAIL_HOUR = 20;
 
     private const ACCESS_MESSAGES = [
         'pending' => 'Tu solicitud de acceso está en revisión. Te avisaremos por correo cuando un administrador la apruebe.',
@@ -60,9 +64,11 @@ class AuthController extends Controller
         $credentials = $validator->safe()->only(['email', 'password']);
         $key = $this->throttleKey($request, $credentials['email']);
 
-        if (RateLimiter::tooManyAttempts($key, self::MAX_ATTEMPTS)) {
+        $emailKey = 'login-email:'.Str::transliterate(Str::lower(trim($credentials['email'])));
+
+        if (RateLimiter::tooManyAttempts($key, self::MAX_ATTEMPTS) || RateLimiter::tooManyAttempts($emailKey, self::MAX_FAILURES_PER_EMAIL_HOUR)) {
             event(new Lockout($request));
-            $seconds = RateLimiter::availableIn($key);
+            $seconds = max(RateLimiter::availableIn($key), RateLimiter::tooManyAttempts($emailKey, self::MAX_FAILURES_PER_EMAIL_HOUR) ? RateLimiter::availableIn($emailKey) : 0);
 
             return $this->failed(['email' => "Demasiados intentos de acceso. Intente nuevamente en {$seconds} segundos."]);
         }
@@ -83,6 +89,7 @@ class AuthController extends Controller
 
         if (! $authenticated) {
             RateLimiter::hit($key, self::DECAY_SECONDS);
+            RateLimiter::hit($emailKey, 3600);
 
             if ($unverified) {
                 return $this->failed(['email' => self::ACCESS_MESSAGES['unverified'], 'access' => 'unverified']);
