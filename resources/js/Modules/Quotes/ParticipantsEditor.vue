@@ -2,7 +2,10 @@
 // Participantes de un proceso (oferentes y sus montos). Reutilizable: cotización o oportunidad (kanban).
 // Ver README.md de esta carpeta.
 // Props: subject ({ type: 'quote' | 'opportunity', id }), showActions (botón «Guardar» propio; con
-//        false, la pantalla llama a `save()` desde su pie), compact.
+//        false, la pantalla llama a `save()` desde su pie), compact, initial (opcional: respuesta ya
+//        conocida de GET …/participantes, p. ej. la que trae el detalle de la oportunidad; con ella
+//        no se pide nada al montar).
+// Solo vuelve a pedir si cambia el sujeto (tipo o id), no si el padre pasa un objeto nuevo igual.
 // Eventos: saved ({ data, summary, message }), loaded ({ data, summary, outcome, can }), dirty (bool).
 // Expone: save(), reload(), saving, dirty, canEdit.
 // Una fila es «nuestra oferta» (única) y, conocido el resultado, una es el ganador (única). Se guarda
@@ -26,6 +29,7 @@ const props = defineProps({
     subject: { type: Object, required: true },
     showActions: { type: Boolean, default: true },
     compact: { type: Boolean, default: false },
+    initial: { type: Object, default: null },
 });
 
 const emit = defineEmits(['saved', 'loaded', 'dirty']);
@@ -50,18 +54,23 @@ const known = computed(() => outcome.value !== 'Pendiente');
 
 watch(dirty, (value) => emit('dirty', value));
 
+function hydrate(response) {
+    rows.value = response.data.map((row) => keyed({ ...row, tax_id: row.tax_id ?? '', notes: row.notes ?? '' }));
+    original.value = serialize(rows.value);
+    outcome.value = response.outcome;
+    referenceAmount.value = response.reference_amount ?? 0;
+    canEdit.value = Boolean(response.can?.edit);
+    errors.value = {};
+    loadError.value = '';
+    loading.value = false;
+    emit('loaded', response);
+}
+
 async function reload() {
     loading.value = true;
     loadError.value = '';
     try {
-        const response = await fetchParticipants(props.subject);
-        rows.value = response.data.map((row) => keyed({ ...row, tax_id: row.tax_id ?? '', notes: row.notes ?? '' }));
-        original.value = serialize(rows.value);
-        outcome.value = response.outcome;
-        referenceAmount.value = response.reference_amount ?? 0;
-        canEdit.value = Boolean(response.can?.edit);
-        errors.value = {};
-        emit('loaded', response);
+        hydrate(await fetchParticipants(props.subject));
     } catch (error) {
         loadError.value = error.message || 'No se pudieron cargar los participantes.';
     } finally {
@@ -69,8 +78,9 @@ async function reload() {
     }
 }
 
-onMounted(reload);
-watch(() => [props.subject?.type, props.subject?.id], reload);
+onMounted(() => (props.initial?.data ? hydrate(props.initial) : reload()));
+// Clave primitiva: un `subject` nuevo con el mismo tipo e id no dispara otra petición.
+watch(() => `${props.subject?.type}:${props.subject?.id}`, reload);
 
 function add() {
     const hasOurs = rows.value.some((row) => row.is_ours);

@@ -1,10 +1,12 @@
 <script setup>
 // Registrar una oferta como Ganada (cotización u oportunidad sin cotización: decisión 13).
-// Props: open (v-model:open), subject ({ type: 'quote' | 'opportunity', id, label, amount, quoteId? }).
+// Props: open (v-model:open), subject ({ type: 'quote' | 'opportunity', id, label, amount, quoteId?,
+//        quotesCount? }).
 // Eventos: done (resultado del servidor: { outcome, already_applied, client, contract, … }).
 // Crea o reutiliza el cliente y abre el contrato en «Pendiente de contrato»; repetir no duplica.
 // Si el sujeto es una oportunidad con varias cotizaciones vivas, pide cuál se ganó (`quote_id`):
-// las lee del detalle de la oportunidad (`GET /pipeline/{id}`).
+// las lee de `GET /oportunidades/{id}/cotizaciones-vivas` (una consulta). Si el sujeto trae
+// `quotesCount` (cotizaciones no cerradas de la tarjeta del tablero) y es 0 o 1, no pide nada.
 import { Link } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import CapAlert from '../../../design/vue/CapAlert.vue';
@@ -27,8 +29,6 @@ const props = defineProps({
 
 const emit = defineEmits(['update:open', 'done']);
 
-// Estados que ya no cuentan como cotización viva (Quote::CLOSED_STATUSES).
-const CLOSED_STATUSES = ['Sustituida', 'Anulada'];
 
 const form = ref({ awarded_amount: null, awarded_at: today(), quote_id: null });
 const liveQuotes = ref([]);
@@ -55,12 +55,14 @@ watch(
 
 async function loadLiveQuotes() {
     if (props.subject?.type !== 'opportunity' || props.subject?.quoteId) return;
+    // Con 0 o 1 cotizaciones abiertas no hay nada que elegir: el servidor usa la única (o ninguna).
+    if (typeof props.subject.quotesCount === 'number' && props.subject.quotesCount <= 1) return;
     const subjectId = props.subject.id;
     loadingQuotes.value = true;
     try {
-        const detail = await getJson(`/pipeline/${subjectId}`);
+        const response = await getJson(`/oportunidades/${subjectId}/cotizaciones-vivas`);
         if (!props.open || props.subject?.id !== subjectId) return;
-        liveQuotes.value = (detail?.quotes ?? []).filter((quote) => !CLOSED_STATUSES.includes(quote.status) && (quote.outcome ?? 'Pendiente') === 'Pendiente');
+        liveQuotes.value = response?.data ?? [];
     } catch {
         // Sin el detalle se intenta igual: el servidor pedirá la cotización si hace falta.
         liveQuotes.value = [];

@@ -3,7 +3,8 @@
 // Props: open (v-model:open), opportunity (null = nueva; si no, `{ id, form, institution, tender }` del
 //        detalle), stage (etapa inicial al crear: prospecto u oportunidad), owners ([{ id, name }]),
 //        tenders ([{ id, name, description }]), userId (responsable por defecto).
-// Eventos: saved. La etapa solo se elige al crear; después se cambia moviendo la tarjeta.
+// Eventos: saved (el tablero ya llega actualizado por la redirección parcial). La etapa solo se elige al
+// crear; después se cambia moviendo la tarjeta.
 import { useForm } from '@inertiajs/vue3';
 import { computed, nextTick, watch } from 'vue';
 import CapSegmented from '../../../design/vue/CapSegmented.vue';
@@ -73,6 +74,8 @@ function submit() {
     const options = {
         preserveScroll: true,
         preserveState: true,
+        // La redirección de vuelta al tablero trae solo lo que cambia (sin otra recarga después).
+        only: ['opportunities', 'summary', 'filterOptions', 'flash'],
         onSuccess: () => {
             emit('saved');
             emit('update:open', false);

@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -31,8 +32,12 @@ use Inertia\Response;
 /**
  * Pipeline de oportunidades (kanban, Fase 8).
  *
- *   GET    /pipeline                 tablero (Inertia `Pipeline/Index`)
- *   GET    /pipeline/{id}            el mismo tablero con el detalle abierto; con Accept JSON, el detalle
+ *   GET    /pipeline                 tablero (Inertia `Pipeline/Index`); `?etapa=<clave>` (enlace del Dashboard)
+ *                                     enfoca esa columna (prop `focusStage`)
+ *   GET    /pipeline/{id}            el mismo tablero con el detalle abierto (prop `focusDetail`: la modal no lo
+ *                                     vuelve a pedir); con Accept JSON, el detalle de la modal
+ *   GET    /pipeline/{id}/historial  historial de la modal (perezoso: solo al abrir su pestaña)
+ *   GET    /pipeline/{id}/formulario datos de «Editar datos» (sin participantes, cotizaciones ni historial)
  *   POST   /pipeline                 crear (Prospecto u Oportunidad)
  *   PUT    /pipeline/{id}            editar datos (no la etapa)
  *   PATCH  /pipeline/{id}/etapa      mover (OpportunityStageService) → JSON { message, card }
@@ -73,7 +78,34 @@ class OpportunityController extends Controller
             return response()->json($this->detail($opportunity, $request->user(), $adjudication));
         }
 
-        return $this->board($request, $opportunity->id);
+        return $this->board($request, $opportunity->id, fn () => $this->detail($opportunity, $request->user(), $adjudication));
+    }
+
+    /** Historial de la modal: se pide solo al abrir su pestaña. */
+    public function history(Opportunity $opportunity): JsonResponse
+    {
+        $this->authorize('view', $opportunity);
+
+        $quoteIds = Quote::query()->where('opportunity_id', $opportunity->id)->pluck('id')->all();
+
+        return response()->json(['data' => $this->historyOf($opportunity, $quoteIds)]);
+    }
+
+    /** «Editar datos» desde el menú de la tarjeta: solo lo que pinta el formulario. */
+    public function form(Opportunity $opportunity): JsonResponse
+    {
+        $this->authorize('update', $opportunity);
+
+        $opportunity->load(['institution:id,name', 'tender:id,reference']);
+
+        return response()->json([
+            'data' => [
+                'id' => $opportunity->id,
+                'institution' => $opportunity->institution ? ['id' => $opportunity->institution->id, 'name' => $opportunity->institution->name] : null,
+                'tender' => $opportunity->tender ? ['id' => $opportunity->tender->id, 'reference' => $opportunity->tender->reference] : null,
+            ],
+            'form' => $this->formValues($opportunity),
+        ]);
     }
 
     public function store(OpportunityRequest $request, CalendarSyncService $calendar, AuditLogger $audit): RedirectResponse
@@ -191,7 +223,7 @@ class OpportunityController extends Controller
 
     // ───────────────────────────── Tablero ─────────────────────────────
 
-    private function board(Request $request, ?int $focus = null): Response
+    private function board(Request $request, ?int $focus = null, ?\Closure $focusDetail = null): Response
     {
         $filters = $this->filters($request);
         $showAllClosed = $request->boolean('cerradas');
@@ -216,6 +248,10 @@ class OpportunityController extends Controller
             ],
             'recentDays' => self::RECENT_CLOSED_DAYS,
             'focus' => $focus,
+            // Detalle de la oportunidad enfocada (enlace directo): la modal lo usa sin pedirlo otra vez.
+            // Perezoso: las recargas parciales del tablero (`only`) no lo recalculan.
+            'focusDetail' => $focusDetail,
+            'focusStage' => array_key_exists((string) $request->query('etapa'), Opportunity::STAGES) ? (string) $request->query('etapa') : null,
             'can' => [
                 'create' => $user->can('create', Opportunity::class),
                 'update' => $user->hasPermission(Permissions::UPDATE),
@@ -394,20 +430,31 @@ class OpportunityController extends Controller
      */
     private function detail(Opportunity $opportunity, User $user, AdjudicationService $adjudication): array
     {
-        $opportunity->load(['contact:id,name,position,email,phone']);
-        $card = $this->card($this->cardQuery()->whereKey($opportunity->id)->firstOrFail());
-        $summary = $adjudication->participantSummary($adjudication->participantsOf($opportunity));
+        $model = $this->cardQuery()->addSelect('opportunities.contact_id')->with('contact:id,name,position,email,phone')->whereKey($opportunity->id)->firstOrFail();
+        $card = $this->card($model);
+        $participants = $adjudication->participantsOf($opportunity);
+        $summary = $adjudication->participantSummary($participants);
         $quotes = Quote::query()->where('opportunity_id', $opportunity->id)->orderByDesc('id')
             ->get(['id', 'number', 'status', 'outcome', 'total', 'quoted_at']);
-        $contract = Contract::query()->where('opportunity_id', $opportunity->id)
-            ->orderByRaw("CASE WHEN status = 'Cancelado' THEN 1 ELSE 0 END")->latest('id')
-            ->with('client:id,name')->first(['id', 'number', 'status', 'client_id', 'awarded_amount']);
+        // El contrato y el cliente solo se pintan en la pestaña «Resultado» (Adjudicado).
+        $contract = $opportunity->stage === 'adjudicado'
+            ? Contract::query()->where('opportunity_id', $opportunity->id)
+                ->orderByRaw("CASE WHEN status = 'Cancelado' THEN 1 ELSE 0 END")->latest('id')
+                ->with('client:id,name')->first(['id', 'number', 'status', 'client_id', 'awarded_amount'])
+            : null;
         $ours = $summary['ours_amount'];
         $winnerAmount = $opportunity->stage === 'no_adjudicado' && $opportunity->awarded_amount !== null ? (float) $opportunity->awarded_amount : null;
+        $can = [
+            'update' => $user->can('update', $opportunity),
+            'move' => $user->can('move', $opportunity),
+            'adjudicate' => $user->can('adjudicate', $opportunity),
+            'revert' => $user->can('revertOutcome', $opportunity),
+            'delete' => $user->can('delete', $opportunity),
+        ];
 
         return [
             'data' => $card + [
-                'contact' => $opportunity->contact ? $opportunity->contact->only(['id', 'name', 'position', 'email', 'phone']) : null,
+                'contact' => $model->contact?->only(['id', 'name', 'position', 'email', 'phone']),
                 'opportunityType' => $opportunity->opportunity_type,
                 'notes' => $opportunity->notes,
                 'lostReason' => $opportunity->lost_reason,
@@ -415,20 +462,20 @@ class OpportunityController extends Controller
                 'createdAt' => $opportunity->created_at?->toIso8601String(),
                 'stageLabel' => $opportunity->stageLabel(),
             ],
-            'form' => [
-                'title' => $opportunity->title,
-                'institution_id' => $opportunity->institution_id,
-                'contact_id' => $opportunity->contact_id,
-                'tender_id' => $opportunity->tender_id,
-                'owner_id' => $opportunity->owner_id,
-                'opportunity_type' => $opportunity->opportunity_type,
-                'amount' => (float) $opportunity->amount,
-                'probability' => $opportunity->probability,
-                'next_action' => $opportunity->next_action,
-                'expected_close_date' => $opportunity->expected_close_date?->toDateString(),
-                'notes' => $opportunity->notes,
-            ],
+            'form' => $this->formValues($opportunity),
             'participants' => $summary,
+            // Misma forma que GET /oportunidades/{id}/participantes: la pestaña no vuelve a pedirlos.
+            'participantsPayload' => [
+                'data' => $this->participantRows($participants),
+                'summary' => $summary,
+                'outcome' => match ($opportunity->stage) {
+                    'adjudicado' => 'Ganada',
+                    'no_adjudicado' => 'Perdida',
+                    default => 'Pendiente',
+                },
+                'reference_amount' => (float) $opportunity->amount,
+                'can' => ['edit' => $can['update']],
+            ],
             'quotes' => $quotes->map(fn (Quote $quote) => [
                 'id' => $quote->id,
                 'number' => $quote->number,
@@ -455,35 +502,78 @@ class OpportunityController extends Controller
                 'client' => $contract?->client ? ['id' => $contract->client->id, 'name' => $contract->client->name, 'url' => "/clientes/{$contract->client->id}"] : null,
                 'revertBlocker' => $opportunity->hasOutcome() ? $adjudication->revertBlocker($opportunity) : null,
             ],
-            'history' => $this->history($opportunity, $quotes->pluck('id')->all()),
-            'can' => [
-                'update' => $user->can('update', $opportunity),
-                'move' => $user->can('move', $opportunity),
-                'adjudicate' => $user->can('adjudicate', $opportunity),
-                'revert' => $user->can('revertOutcome', $opportunity),
-                'delete' => $user->can('delete', $opportunity),
-            ],
+            'can' => $can,
         ];
     }
 
     /**
-     * Auditoría de la oportunidad, de sus cotizaciones y de sus adjuntos.
+     * @return array<string, mixed>
+     */
+    private function formValues(Opportunity $opportunity): array
+    {
+        return [
+            'title' => $opportunity->title,
+            'institution_id' => $opportunity->institution_id,
+            'contact_id' => $opportunity->contact_id,
+            'tender_id' => $opportunity->tender_id,
+            'owner_id' => $opportunity->owner_id,
+            'opportunity_type' => $opportunity->opportunity_type,
+            'amount' => (float) $opportunity->amount,
+            'probability' => $opportunity->probability,
+            'next_action' => $opportunity->next_action,
+            'expected_close_date' => $opportunity->expected_close_date?->toDateString(),
+            'notes' => $opportunity->notes,
+        ];
+    }
+
+    /**
+     * Filas de participantes con la forma de `AdjudicationController::rows()` (mismo contrato JSON).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function participantRows(Collection $participants): array
+    {
+        return $participants->map(fn (QuoteParticipant $participant) => [
+            'id' => $participant->id,
+            'name' => $participant->name,
+            'tax_id' => $participant->tax_id,
+            'amount' => (float) $participant->amount,
+            'currency' => $participant->currency,
+            'includes_tax' => (bool) $participant->includes_tax,
+            'is_ours' => (bool) $participant->is_ours,
+            'is_winner' => (bool) $participant->is_winner,
+            'position' => $participant->position,
+            'notes' => $participant->notes,
+        ])->values()->all();
+    }
+
+    /**
+     * Auditoría de la oportunidad, de sus cotizaciones y de sus adjuntos: tres partes que usan
+     * índices (`resource_type, resource_id` y `company_id, parent_type, parent_id, created_at`)
+     * unidas con UNION ALL, en vez de un `OR` sobre el JSON `changes` (filesort sin índice).
      *
      * @param  array<int, int>  $quoteIds
      * @return array<int, array<string, mixed>>
      */
-    private function history(Opportunity $opportunity, array $quoteIds): array
+    private function historyOf(Opportunity $opportunity, array $quoteIds): array
     {
-        return AuditLog::query()
-            ->where('company_id', $opportunity->company_id)
-            ->where(fn (Builder $query) => $query
-                ->where(fn (Builder $own) => $own->where('resource_type', 'Opportunity')->where('resource_id', $opportunity->id))
-                ->when($quoteIds !== [], fn (Builder $q) => $q->orWhere(fn (Builder $quotes) => $quotes->where('resource_type', 'Quote')->whereIn('resource_id', $quoteIds)))
-                ->orWhere(fn (Builder $docs) => $docs->where('resource_type', 'Document')->where('changes->adjunto_a', "Opportunity #{$opportunity->id}")))
-            ->latest('created_at')
-            ->latest('id')
-            ->limit(100)
-            ->get(['id', 'action', 'actor_name', 'changes', 'created_at'])
+        $limit = 100;
+        $base = fn () => AuditLog::query()
+            ->select(['id', 'action', 'actor_name', 'changes', 'created_at'])
+            ->where('company_id', $opportunity->company_id);
+        // Cada parte acotada a las 100 más recientes; la primera no lleva orden propio porque, con
+        // uniones, `orderBy`/`limit` del constructor pasan a aplicarse al conjunto.
+        $part = fn () => $base()->orderByDesc('created_at')->orderByDesc('id')->limit($limit);
+
+        $query = $base()->where('resource_type', 'Opportunity')->where('resource_id', $opportunity->id)
+            ->unionAll($part()->where('parent_type', 'Opportunity')->where('parent_id', $opportunity->id));
+
+        if ($quoteIds !== []) {
+            $query->unionAll($part()->where('resource_type', 'Quote')->whereIn('resource_id', $quoteIds));
+        }
+
+        return $query->orderByDesc('created_at')->orderByDesc('id')->limit($limit)
+            ->get()
             ->map(fn (AuditLog $log) => [
                 'id' => $log->id,
                 'action' => $log->action,

@@ -57,6 +57,11 @@ class AuditLogger
         $log->action = $action;
         $log->resource_type = $resource !== null ? class_basename($resource) : null;
         $log->resource_id = $resource?->getKey();
+        // Registro padre de una acción sobre un adjunto («Opportunity #7»): columnas indexadas para el
+        // historial de la ficha, en vez de buscar dentro del JSON `changes`.
+        if (is_string($changes['adjunto_a'] ?? null) && preg_match('/^([A-Za-z]+) #(\d+)$/', $changes['adjunto_a'], $parent)) {
+            [$log->parent_type, $log->parent_id] = [$parent[1], (int) $parent[2]];
+        }
         // Dentro de una petición MCP toda acción (también la de los servicios) queda con canal `mcp` y su conexión.
         if (($connection = $request->attributes->get('mcp_connection')) instanceof McpConnection) {
             [$log->channel, $log->mcp_connection_id] = ['mcp', $connection->getKey()];

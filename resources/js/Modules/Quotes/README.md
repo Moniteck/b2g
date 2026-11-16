@@ -11,9 +11,9 @@ se registran igual sobre una cotización o sobre una oportunidad (kanban, decisi
 
 | Componente | Uso |
 |---|---|
-| `ParticipantsEditor.vue` | Lista editable de oferentes. Props `subject`, `showActions` (botón propio de guardar), `compact`. Eventos `saved`, `loaded`, `dirty`. Expone `save()`, `reload()`, `saving`, `dirty`, `canEdit`. |
+| `ParticipantsEditor.vue` | Lista editable de oferentes. Props `subject`, `showActions` (botón propio de guardar), `compact`, `initial` (respuesta ya conocida de `GET …/participantes`: no pide nada al montar). Solo vuelve a pedir si cambia el tipo o el id del sujeto. Eventos `saved`, `loaded`, `dirty`. Expone `save()`, `reload()`, `saving`, `dirty`, `canEdit`. |
 | `ParticipantsModal.vue` | La misma lista dentro de una `BaseModal`: `<ParticipantsModal v-model:open="open" :subject="{ type: 'opportunity', id }" />`. |
-| `WonModal.vue` | Ganada. `subject` lleva además `label`, `amount` (monto por defecto) y `quoteId` (opcional). Si el sujeto es una oportunidad sin `quoteId` y tiene varias cotizaciones vivas, el modal las lee de `GET /pipeline/{id}` y pide elegir una. Emite `done(result)` y muestra los enlaces al cliente y al contrato. |
+| `WonModal.vue` | Ganada. `subject` lleva además `label`, `amount` (monto por defecto) y `quoteId` (opcional). Si el sujeto es una oportunidad sin `quoteId` y tiene varias cotizaciones vivas, el modal las lee de `GET /oportunidades/{id}/cotizaciones-vivas` y pide elegir una (con `quotesCount` 0 o 1 no pide nada). Emite `done(result)` y muestra los enlaces al cliente y al contrato. |
 | `LostModal.vue` | Perdida: quién ganó (participante o escrito), valor de su oferta y motivo. Emite `done(result, message)`. |
 | `RevertModal.vue` | Revertir resultado (solo administrador; `subject.outcome` decide el texto). |
 | `QuoteViewerModal.vue`, `QuoteFormModal.vue`, `StatusModal.vue`, `MailModal.vue` | Propias de la pantalla de cotizaciones. |

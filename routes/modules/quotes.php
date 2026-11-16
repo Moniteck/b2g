@@ -37,6 +37,7 @@ Route::whereNumber('opportunity')->group(function () {
     Route::post('/oportunidades/{opportunity}/ganada', [AdjudicationController::class, 'win'])->name('opportunities.win');
     Route::post('/oportunidades/{opportunity}/perdida', [AdjudicationController::class, 'lose'])->name('opportunities.lose');
     Route::post('/oportunidades/{opportunity}/revertir', [AdjudicationController::class, 'revert'])->name('opportunities.revert');
+    Route::get('/oportunidades/{opportunity}/cotizaciones-vivas', [AdjudicationController::class, 'liveQuotes'])->name('opportunities.live-quotes');
     Route::get('/oportunidades/{opportunity}/participantes', [AdjudicationController::class, 'participants'])->name('opportunities.participants');
     Route::put('/oportunidades/{opportunity}/participantes', [AdjudicationController::class, 'saveParticipants'])->name('opportunities.participants.save');
 });
