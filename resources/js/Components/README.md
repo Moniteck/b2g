@@ -4,6 +4,10 @@ Piezas con las que se arma cada pantalla del CRM B2G sobre el sistema de diseño
 (`resources/design/`, que no se edita). Todas funcionan en claro y oscuro, en móvil y escritorio, y con
 teclado. Ejemplos vivos: `Pages/Dev/Components.vue` (`/dev/componentes`).
 
+Aquí solo va lo que usan varias vistas: lo genérico en la raíz y lo de dominio en subcarpetas
+(`Charts/` para gráficas, `Mascot/` para Lici). Lo que es de una sola vista vive en `Pages/<Vista>/Partials/`.
+Filtros de listas paginadas: `@/composables/useListFilters.js`. Estructura completa: `AGENTS.md`.
+
 ## Reglas
 
 1. **Antes de escribir interfaz**, lee `resources/design/AGENTS.md` y el «Recetario» de

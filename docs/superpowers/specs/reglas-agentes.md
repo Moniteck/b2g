@@ -19,6 +19,7 @@ código, tablas y columnas en inglés, como el resto del proyecto. Sin emojis en
 ## Propiedad de archivos
 
 - Solo editas los archivos de tu módulo, listados en tu encargo.
+- Estructura: ver la sección «Estructura de carpetas» de `AGENTS.md` (vista en `Pages/<Vista>/`, piezas en `Partials/`, imports con `@/`).
 - Rutas: solo tu archivo en `routes/modules/` (se carga solo, ya dentro de `auth`; rutas estáticas antes de las que llevan `{parametro}`).
 - Migraciones: siempre nuevas, con el prefijo que te asignaron. No edites migraciones existentes. Aplícalas con `php artisan migrate`. Nunca `migrate:fresh`, `db:wipe` ni borrado de datos.
 - Archivos compartidos que puedes tocar SOLO con una edición mínima de una línea (nunca reescribirlos):
