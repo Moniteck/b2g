@@ -491,17 +491,17 @@ html #nprogress .peg {
 
 /* Modal (BaseModal): fondo que se desenfoca y panel con escala; en móvil, hoja que sube. */
 .m-modal-enter-active .m-modal-backdrop { transition: opacity 260ms var(--m-ease-enter); }
-.m-modal-leave-active .m-modal-backdrop { transition: opacity 180ms var(--m-ease-exit); }
+.m-modal-leave-active .m-modal-backdrop { transition: opacity 140ms var(--m-ease-exit); }
 .m-modal-enter-from .m-modal-backdrop,
 .m-modal-leave-to .m-modal-backdrop { opacity: 0; }
-.m-modal-enter-active .m-modal-panel { transition: opacity 200ms var(--m-ease-enter), transform 380ms var(--m-ease-expo); }
-.m-modal-leave-active .m-modal-panel { transition: opacity 150ms var(--m-ease-exit), transform 180ms var(--m-ease-exit); }
+.m-modal-enter-active .m-modal-panel { transition: opacity 180ms var(--m-ease-enter), transform 300ms var(--m-ease-expo); }
+.m-modal-leave-active .m-modal-panel { transition: opacity 120ms var(--m-ease-exit), transform 150ms var(--m-ease-exit); }
 .m-modal-enter-from .m-modal-panel { opacity: 0; transform: translateY(16px) scale(0.95); }
 .m-modal-leave-to .m-modal-panel { opacity: 0; transform: scale(0.97); }
 @media (max-width: 767.98px) {
     .m-modal-enter-from .m-modal-panel { opacity: 1; transform: translateY(100%); }
     .m-modal-leave-to .m-modal-panel { opacity: 1; transform: translateY(100%); }
-    .m-modal-leave-active .m-modal-panel { transition: transform 200ms var(--m-ease-exit); }
+    .m-modal-leave-active .m-modal-panel { transition: transform 160ms var(--m-ease-exit); }
 }
 
 /* Contador de páginas, chips y cifras que cambian. */
