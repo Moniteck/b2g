@@ -15,7 +15,8 @@ use Illuminate\Http\Request;
  * `CompanyContext`, `AllowedCompany`); esto solo cambia la empresa activa de la sesión, deja una
  * huella en la auditoría (de la empresa visitada) y le dice al marco que muestre la franja.
  *
- *   GET  /soporte/estado   { support, company, member_ids }  (el marco lo pide solo para la raíz)
+ *   GET  /soporte/estado   { support, company, member_ids }  (el marco lo pide solo para la raíz;
+ *                          una raíz sin membresías nunca está en modo soporte)
  *   POST /soporte/entrar   company_id                          → empresa activa + auditoría
  *   POST /soporte/salir                                        → vuelve a una empresa propia
  */
@@ -30,7 +31,8 @@ class SupportModeController extends Controller
         $current = $this->context->currentCompany();
 
         return response()->json([
-            'support' => $user->isRoot() && $current !== null && ! in_array($current['id'], $memberIds, true),
+            // Una raíz sin membresías opera el grupo directamente: para ella no hay «modo soporte».
+            'support' => $user->isRoot() && $memberIds !== [] && $current !== null && ! in_array($current['id'], $memberIds, true),
             'company' => $current,
             'member_ids' => $user->isRoot() ? $memberIds : null,
         ]);
@@ -46,7 +48,8 @@ class SupportModeController extends Controller
         );
 
         $company = Company::query()->findOrFail($data['company_id'], ['id', 'name']);
-        $member = array_key_exists($company->id, $request->user()->membershipRoles());
+        $memberships = $request->user()->membershipRoles();
+        $member = $memberships === [] || array_key_exists($company->id, $memberships);
 
         $request->session()->put(CompanyContext::SESSION_KEY, $company->id);
         $this->context->setCurrentCompanyId($company->id);

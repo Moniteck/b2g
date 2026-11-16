@@ -26,7 +26,7 @@ const emit = defineEmits(['create']);
 const switching = ref(false);
 const activeName = computed(() => props.active?.name ?? 'Elegir empresa');
 
-const splitBySupport = computed(() => props.isRoot && Array.isArray(props.memberIds));
+const splitBySupport = computed(() => props.isRoot && Array.isArray(props.memberIds) && props.memberIds.length > 0);
 const mine = computed(() => (splitBySupport.value ? props.companies.filter((company) => props.memberIds.includes(company.id)) : props.companies));
 const others = computed(() => (splitBySupport.value ? props.companies.filter((company) => !props.memberIds.includes(company.id)) : []));
 

@@ -63,6 +63,16 @@ class ShellTest extends TestCase
         $this->assertDatabaseHas('audit_logs', ['action' => 'soporte.salida', 'company_id' => $foreign->id]);
     }
 
+    public function test_root_without_memberships_is_never_in_support_mode(): void
+    {
+        $root = User::factory()->create(['is_root' => true]);
+        $company = Company::factory()->create();
+
+        $this->actingInCompany($root, $company)->getJson('/soporte/estado')->assertOk()->assertJson(['support' => false, 'member_ids' => []]);
+        $this->actingInCompany($root, $company)->post('/soporte/entrar', ['company_id' => $company->id])->assertSessionHas('success');
+        $this->assertDatabaseMissing('audit_logs', ['action' => 'soporte.entrada']);
+    }
+
     public function test_only_root_can_enter_support_mode(): void
     {
         [$admin, $company] = $this->memberOf();
