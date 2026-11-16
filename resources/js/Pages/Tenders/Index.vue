@@ -235,13 +235,20 @@ const views = [
     { label: 'Calendario', value: 'calendario' },
 ];
 
-const columns = [
-    { key: 'deadline', label: 'Próximo plazo', sortable: true, width: 'w-52' },
-    { key: 'reference', label: 'Expediente', primary: true, sortable: true, width: 'w-56' },
+// Entre 1024 y 1279 px no caben todas: responsable y resultado se ven en la ficha y el kanban.
+const wideQuery = typeof window !== 'undefined' ? window.matchMedia('(min-width: 1280px)') : null;
+const wide = ref(wideQuery?.matches ?? true);
+const onWide = (event) => (wide.value = event.matches);
+onMounted(() => wideQuery?.addEventListener('change', onWide));
+onBeforeUnmount(() => wideQuery?.removeEventListener('change', onWide));
+const columns = computed(() => (wide.value ? allColumns : allColumns.filter((column) => !['owner', 'result'].includes(column.key))));
+const allColumns = [
+    { key: 'deadline', label: 'Próximo plazo', sortable: true, width: 'w-48', wrap: true },
+    { key: 'reference', label: 'Expediente', primary: true, sortable: true },
     { key: 'institution', label: 'Institución', sortable: true, width: 'w-28' },
     { key: 'stage', label: 'Etapa', sortable: true, width: 'w-44' },
     { key: 'owner', label: 'Responsable', sortable: true, width: 'w-40' },
-    { key: 'amount', label: 'Monto (L)', align: 'right', sortable: true, width: 'w-36' },
+    { key: 'amount', label: 'Monto (L)', align: 'right', sortable: true, width: 'w-36 whitespace-nowrap' },
     { key: 'result', label: 'Resultado', width: 'w-32' },
 ];
 
@@ -445,7 +452,7 @@ const total = computed(() => props.tenders?.total ?? props.board?.columns?.reduc
                         <span class="inline-flex items-center gap-1 text-sm font-semibold" :class="URGENCY_TEXT[left(row).status]">
                             <i class="mdi text-base leading-none" :class="`mdi-${DEADLINE_ICONS[row.next_deadline.key]}`" aria-hidden="true" />{{ left(row).label }}
                         </span>
-                        <span class="whitespace-nowrap text-xs text-cap-text-soft">{{ row.next_deadline.label }} · {{ dateTime(row.next_deadline.at) }}</span>
+                        <span class="text-xs text-cap-text-soft xl:whitespace-nowrap">{{ row.next_deadline.label }} · {{ dateTime(row.next_deadline.at) }}</span>
                     </span>
                     <span v-else class="text-xs text-cap-text-soft">{{ row.presentation_deadline ? `Recepción ${date(row.presentation_deadline)}` : 'Sin fecha' }}</span>
                 </template>
@@ -474,15 +481,15 @@ const total = computed(() => props.tenders?.total ?? props.board?.columns?.reduc
                 </template>
                 <template #card="{ row }">
                     <div class="flex flex-col gap-3" data-tender-card>
-                        <div class="flex items-start justify-between gap-3">
+                        <div class="flex items-start justify-between gap-2">
                             <span class="min-w-0">
-                                <span class="block truncate text-sm font-semibold text-gray-900 dark:text-gray-100">{{ row.reference }}</span>
-                                <span class="block truncate text-xs text-cap-text-soft">{{ row.institution?.acronym || row.institution?.name || 'Sin institución' }}<template v-if="Number(row.estimated_amount) > 0"> · {{ money(row.estimated_amount) }}</template></span>
+                                <span class="block break-all text-sm font-semibold text-gray-900 dark:text-gray-100">{{ row.reference }}</span>
+                                <span class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-cap-text-soft">
+                                    <StatusBadge v-bind="stageBadge(row.stage)" class="whitespace-nowrap" />
+                                    <span class="truncate">{{ row.institution?.acronym || row.institution?.name || 'Sin institución' }}<template v-if="Number(row.estimated_amount) > 0"> · {{ money(row.estimated_amount) }}</template></span>
+                                </span>
                             </span>
-                            <span class="flex shrink-0 items-center gap-1" @click.stop>
-                                <StatusBadge v-bind="stageBadge(row.stage)" class="whitespace-nowrap" />
-                                <DropdownMenu :label="`Acciones de ${row.reference}`" :items="actionsOf(row)" />
-                            </span>
+                            <span class="-mr-2 -mt-2 shrink-0" @click.stop><DropdownMenu :label="`Acciones de ${row.reference}`" :items="actionsOf(row)" /></span>
                         </div>
                         <p class="line-clamp-2 text-sm text-gray-800 dark:text-gray-200">{{ row.title }}</p>
                         <div v-if="left(row)" class="flex items-center gap-3 rounded-cap-control bg-cap-card-2 p-3" :data-urgency="left(row).status">

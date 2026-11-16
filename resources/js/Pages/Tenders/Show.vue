@@ -277,8 +277,8 @@ const HISTORY_ICONS = {
                     </dl>
                 </div>
 
-                <!-- Plazo crítico y siguiente paso -->
-                <div class="flex flex-col gap-3">
+                <!-- Plazo crítico y siguiente paso (lado a lado en tableta) -->
+                <div class="grid grid-cols-1 gap-3 md:grid-cols-2 md:items-start xl:grid-cols-1">
                     <div v-if="left" class="rounded-cap-control border p-4" :class="TILE[left.status] ?? TILE.neutral" role="timer" :aria-label="`${next.label}: ${left.label}`" data-critical-deadline :data-urgency="left.status">
                         <p class="flex items-center gap-1.5 text-xs font-semibold"><i class="mdi text-base leading-none" :class="`mdi-${DEADLINE_ICONS[next.key]}`" aria-hidden="true" />{{ next.label }}</p>
                         <p v-if="remaining" class="mt-1 flex items-baseline gap-3 font-display tabular-nums">
