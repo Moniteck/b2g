@@ -235,11 +235,11 @@ class CalendarHttpTest extends TestCase
         $this->assertSame(0, $service->sendForCompany($company->id), 'No se repite el mismo día.');
         $this->assertSame(0, $service->sendForCompany($other->id), 'Sin plazos en 7 días no se envía nada.');
 
-        Mail::assertSent(DailyDigestMail::class, 2);
-        Mail::assertSent(DailyDigestMail::class, fn (DailyDigestMail $mail) => $mail->hasTo($admin->email) && $mail->total === 4);
-        Mail::assertSent(DailyDigestMail::class, fn (DailyDigestMail $mail) => $mail->hasTo($operator->email) && $mail->total === 3
+        Mail::assertQueued(DailyDigestMail::class, 2);
+        Mail::assertQueued(DailyDigestMail::class, fn (DailyDigestMail $mail) => $mail->hasTo($admin->email) && $mail->total === 4);
+        Mail::assertQueued(DailyDigestMail::class, fn (DailyDigestMail $mail) => $mail->hasTo($operator->email) && $mail->total === 3
             && str_starts_with($mail->subjectLine(), 'Hoy tienes 1 plazo'));
-        Mail::assertNotSent(DailyDigestMail::class, fn (DailyDigestMail $mail) => $mail->hasTo($idle->email) || $mail->hasTo($foreign->email));
+        Mail::assertNotQueued(DailyDigestMail::class, fn (DailyDigestMail $mail) => $mail->hasTo($idle->email) || $mail->hasTo($foreign->email));
     }
 
     public function test_dashboard_lists_this_week_deadlines_of_the_active_company(): void
@@ -250,10 +250,11 @@ class CalendarHttpTest extends TestCase
         Tender::factory()->for($other)->create(['owner_id' => $otherAdmin->id, 'clarification_deadline' => '2026-11-18 17:00:00']);
 
         $this->actingInCompany($admin, $company)->get('/')
-            ->assertInertia(fn (Assert $page) => $page
-                ->has('deadlines', 1)
-                ->where('deadlines.0.kind', 'tender')
-                ->where('deadlines.0.href', "/licitaciones?licitacion={$tender->id}")
-                ->where('deadlines.0.due_at', '2026-11-18 17:00:00'));
+            // Los plazos van en la línea de 14 días del Dashboard (prop diferida `agenda.timeline`).
+            ->assertInertia(fn (Assert $page) => $page->loadDeferredProps('agenda', fn (Assert $reload) => $reload
+                ->has('agenda.timeline', 1)
+                ->where('agenda.timeline.0.category', 'tender')
+                ->where('agenda.timeline.0.href', "/licitaciones?licitacion={$tender->id}")
+                ->where('agenda.timeline.0.at', '2026-11-18 17:00:00')));
     }
 }

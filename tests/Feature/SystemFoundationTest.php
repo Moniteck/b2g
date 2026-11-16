@@ -136,7 +136,7 @@ class SystemFoundationTest extends TestCase
 
         $this->assertFalse($legacyAdmin->isRoot());
         $this->actingAs($legacyAdmin)->get('/licitaciones')->assertForbidden();
-        $this->actingAs($legacyAdmin)->get('/empresas')->assertOk()->assertInertia(fn (Assert $page) => $page->has('records', 0));
+        $this->actingAs($legacyAdmin)->get('/empresas')->assertOk()->assertInertia(fn (Assert $page) => $page->has('companyRecords.data', 0));
     }
 
     public function test_shared_props_follow_the_frontend_contract(): void
