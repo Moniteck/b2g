@@ -3,70 +3,81 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\TenderRequest;
+use App\Models\AuditLog;
 use App\Models\ComplianceMatrix;
 use App\Models\DocumentExtraction;
 use App\Models\DocumentLink;
+use App\Models\Institution;
+use App\Models\Opportunity;
 use App\Models\Quote;
 use App\Models\Tender;
+use App\Models\User;
+use App\Services\Ai\BidDocumentAnalyzer;
 use App\Services\AuditLogger;
+use App\Services\Finance\FinanceExport;
 use App\Services\OpenAIService;
-use App\Services\ProcessExportService;
+use App\Services\Tenancy\CompanyContext;
 use App\Services\Tenders\TenderAttributes;
+use App\Services\Tenders\TenderFlow;
+use App\Services\Tenders\TenderListQuery;
+use App\Services\Tenders\TenderOpportunityLinker;
+use App\Services\Tenders\TenderStage;
+use App\Services\Tenders\TenderText;
 use App\Support\Binaries;
-use Illuminate\Database\Eloquent\Builder;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
 /**
- * Licitaciones: lista con cifras y filtros, ficha con pestañas, alta/edición manual y exportes.
- * La importación de capturas y el análisis del pliego viven en sus propios controladores.
+ * Licitaciones: lista (tabla, kanban por etapa y calendario de plazos) con cifras y filtros, ficha
+ * con el proceso y el siguiente paso, alta/edición manual, cambio de etapa y exportes. La
+ * importación de capturas y el análisis del pliego viven en sus propios controladores.
  */
 class TenderController extends Controller
 {
-    /** Filtros de plazo del segmentado de la lista. */
-    private const WINDOWS = ['all', 'open', 'week', 'clarifications'];
+    public function __construct(protected TenderListQuery $list) {}
 
     public function index(Request $request): Response
     {
         $this->authorize('viewAny', Tender::class);
 
-        $filters = $this->filters($request);
-        $perPage = in_array($request->integer('per_page'), [25, 50, 100], true) ? $request->integer('per_page') : 25;
-
-        $tenders = $this->filtered($filters)
-            ->select(['id', 'institution_id', 'reference', 'title', 'purchase_type', 'status', 'estimated_amount', 'clarification_deadline', 'presentation_deadline', 'opening_at', 'honducompras_stage'])
-            ->with('institution:id,name,acronym')
-            ->paginate($perPage)
-            ->withQueryString()
-            ->through(fn (Tender $tender) => [
-                'id' => $tender->id,
-                'reference' => $tender->reference,
-                'title' => $tender->title,
-                'institution' => $tender->institution?->only(['id', 'name', 'acronym']),
-                'purchase_type' => $tender->purchase_type,
-                'status' => $tender->status,
-                'estimated_amount' => $tender->estimated_amount,
-                'clarification_deadline' => $tender->clarification_deadline?->format('Y-m-d\TH:i:s'),
-                'presentation_deadline' => $tender->presentation_deadline?->format('Y-m-d\TH:i:s'),
-                'opening_at' => $tender->opening_at?->format('Y-m-d\TH:i:s'),
-                'honducompras_stage' => $tender->honducompras_stage,
-            ]);
-
         $user = $request->user();
+        $filters = $this->list->filters($request);
+        $perPage = in_array($request->integer('per_page'), [25, 50, 100], true) ? $request->integer('per_page') : 25;
+        $now = CarbonImmutable::now();
+
+        $view = $filters['view'];
 
         return Inertia::render('Tenders/Index', [
-            'tenders' => $tenders,
-            'stats' => $this->stats(),
-            'filters' => $filters,
+            'tenders' => $view === 'tabla'
+                ? $this->list->sorted($this->list->forRows($this->list->filtered($filters, $user)), $filters)
+                    ->paginate($perPage)->withQueryString()
+                    ->through(fn (Tender $tender) => $this->list->row($tender, $now))
+                : null,
+            'board' => $view === 'kanban' ? $this->list->board($filters, $user) : null,
+            'calendar' => $view === 'calendario' ? $this->list->calendar($filters, $user) : null,
+            'stats' => $this->list->stats(),
+            'filters' => $filters + ['active' => TenderListQuery::activeCount($filters)],
+            'options' => [
+                'stages' => TenderStage::options(),
+                'statuses' => Tender::STATUSES,
+                'modalities' => $this->modalities(),
+                'owners' => $this->members(),
+                'institution' => $filters['institution_id'] ? Institution::query()->whereKey($filters['institution_id'])->first(['id', 'name', 'acronym']) : null,
+            ],
+            // Atajo de la PWA (`?accion=importar`) y del Dashboard (`?importar=1`).
+            'openImport' => $request->query('accion') === 'importar' || $request->boolean('importar'),
             'statuses' => Tender::STATUSES,
             'modalities' => $this->modalities(),
             'maxImageMb' => (int) (Binaries::maxImageKilobytes() / 1024),
             'can' => [
                 'create' => $user->can('create', Tender::class),
+                'update' => $user->can('create', Tender::class),
                 'delete' => $user->hasPermission('delete'),
                 'useAi' => Gate::allows('use-ai'),
             ],
@@ -79,33 +90,49 @@ class TenderController extends Controller
 
         $tender->load(['institution:id,name,acronym', 'owner:id,name']);
         $user = $request->user();
+        $now = CarbonImmutable::now();
+        $stage = TenderStage::of($tender, $now);
 
-        $opportunity = $tender->opportunities()->oldest('id')->first(['id', 'title', 'stage', 'amount', 'probability', 'expected_close_date']);
+        $opportunity = Opportunity::query()->where('tender_id', $tender->id)->oldest('id')
+            ->withCount('participants')
+            ->first(['id', 'title', 'stage', 'amount', 'probability', 'expected_close_date', 'tender_id']);
         $quotes = Quote::query()->where('tender_id', $tender->id)->latest('id')->limit(20)
             ->get(['id', 'number', 'status', 'outcome', 'total', 'quoted_at']);
-        $extractions = DocumentExtraction::query()->where('tender_id', $tender->id)->latest('id')
-            ->get(['id', 'tender_id', 'kind', 'status', 'error', 'confidence', 'usage', 'attempts', 'created_at', 'finished_at', 'reviewed_at', 'reviewed_by', 'document_version_id']);
-        $matrices = ComplianceMatrix::query()->where('tender_id', $tender->id)->withCount(['items', 'items as completed_count' => fn ($q) => $q->where('completed', true)])->get(['id', 'name']);
+        $latestBid = DocumentExtraction::query()->where('tender_id', $tender->id)->where('kind', DocumentExtraction::KIND_BID)->latest('id')
+            ->first(['id', 'tender_id', 'kind', 'status', 'extracted', 'evidence', 'created_at']);
+        $hasCapture = DocumentExtraction::query()->where('tender_id', $tender->id)->where('kind', DocumentExtraction::KIND_CAPTURE)->exists();
+
+        $can = [
+            'update' => $user->can('update', $tender),
+            'delete' => $user->can('delete', $tender),
+            'useAi' => Gate::allows('use-ai') && $user->can('update', $tender),
+            'createQuote' => $user->can('create', Quote::class),
+            'createMatrix' => $user->can('create', ComplianceMatrix::class),
+            'createOpportunity' => $user->can('create', Opportunity::class),
+        ];
+        $ai = ['configured' => $openAI->isConfigured(), 'model' => $openAI->model()];
 
         return Inertia::render('Tenders/Show', [
-            'tender' => $this->present($tender),
-            'opportunity' => $opportunity ? $opportunity->only(['id', 'title', 'stage', 'amount', 'probability']) + ['stage_label' => $opportunity->stageLabel()] : null,
+            'tender' => $this->present($tender, $stage, $now),
+            'flow' => TenderFlow::for($tender, $stage, $latestBid, $quotes->count(), $opportunity, (int) ($opportunity?->participants_count ?? 0), $hasCapture, $can, $ai['configured']),
+            'opportunity' => $opportunity ? $opportunity->only(['id', 'title', 'stage', 'amount', 'probability']) + ['stage_label' => $opportunity->stageLabel(), 'participants' => (int) $opportunity->participants_count] : null,
             'quotes' => $quotes,
+            'analysisState' => $latestBid ? ['id' => $latestBid->id, 'status' => $latestBid->status, 'label' => $latestBid->statusLabel()] : null,
+            'capture' => $hasCapture,
+            // Diferidas: no retrasan la cabecera ni el stepper.
             'documents' => Inertia::defer(fn () => $this->documents($tender)),
-            'analyses' => $extractions->where('kind', DocumentExtraction::KIND_BID)->values()->map(fn ($e) => TenderBidDocumentController::summary($e, $tender)),
-            'capture' => $extractions->firstWhere('kind', DocumentExtraction::KIND_CAPTURE)?->only(['id', 'created_at']),
-            'matrices' => $matrices,
+            'analyses' => Inertia::defer(fn () => DocumentExtraction::query()->where('tender_id', $tender->id)->where('kind', DocumentExtraction::KIND_BID)->latest('id')
+                ->get(['id', 'tender_id', 'kind', 'status', 'error', 'confidence', 'usage', 'attempts', 'created_at', 'finished_at', 'reviewed_at', 'reviewed_by', 'document_version_id'])
+                ->map(fn ($e) => TenderBidDocumentController::summary($e, $tender))->values()->all(), 'detalle'),
+            'matrices' => Inertia::defer(fn () => ComplianceMatrix::query()->where('tender_id', $tender->id)
+                ->withCount(['items', 'items as completed_count' => fn ($q) => $q->where('completed', true)])->get(['id', 'name'])->all(), 'detalle'),
+            'history' => Inertia::defer(fn () => $this->history($tender), 'historial'),
             'statuses' => Tender::STATUSES,
             'modalities' => $this->modalities(),
-            'ai' => ['configured' => $openAI->isConfigured(), 'model' => $openAI->model()],
+            'ai' => $ai,
             'maxPdfMb' => (int) (Binaries::maxPdfKilobytes() / 1024),
-            'can' => [
-                'update' => $user->can('update', $tender),
-                'delete' => $user->can('delete', $tender),
-                'useAi' => Gate::allows('use-ai') && $user->can('update', $tender),
-                'createQuote' => $user->can('create', Quote::class),
-                'createMatrix' => $user->can('create', ComplianceMatrix::class),
-            ],
+            'maxPdfPages' => BidDocumentAnalyzer::MAX_PAGES,
+            'can' => $can,
         ]);
     }
 
@@ -137,6 +164,66 @@ class TenderController extends Controller
         return back()->with('success', 'Licitación actualizada.');
     }
 
+    /**
+     * Mover la licitación de etapa (kanban). El resultado (adjudicada / no adjudicada) se registra
+     * en la oportunidad, que también actualiza la cotización: aquí no se permite.
+     */
+    public function stage(Request $request, Tender $tender, AuditLogger $audit): RedirectResponse
+    {
+        $this->authorize('update', $tender);
+
+        $data = $request->validate(['stage' => ['required', 'string', 'in:'.implode(',', array_keys(TenderStage::STAGES))]], [
+            'stage.in' => 'Elige una etapa válida.',
+        ]);
+        $to = $data['stage'];
+
+        if (in_array($to, ['adjudicada', 'no_adjudicada'], true)) {
+            throw ValidationException::withMessages(['stage' => 'El resultado se registra desde la ficha de la licitación (oportunidad del pipeline), para que la cotización y el pipeline queden iguales.']);
+        }
+
+        $result = DB::transaction(function () use ($tender, $to) {
+            $locked = Tender::query()->whereKey($tender->id)->lockForUpdate()->firstOrFail();
+            $from = TenderStage::of($locked)['key'];
+
+            if ($from === $to) {
+                return null;
+            }
+            if (in_array($from, ['adjudicada', 'no_adjudicada'], true)) {
+                throw ValidationException::withMessages(['stage' => 'Esta licitación ya tiene resultado. Para cambiarlo, revierte el resultado en su oportunidad.']);
+            }
+            if ($to === 'vencida' || ($from === 'vencida' && ! in_array($to, ['presentada', 'desierta'], true))) {
+                throw ValidationException::withMessages(['stage' => 'Una licitación vencida solo puede pasar a «Presentada» (si sí se entregó la oferta) o a «Desierta o cancelada». Para reabrirla, corrige la fecha de recepción en «Editar».']);
+            }
+
+            $locked->status = TenderStage::STATUS_FOR_STAGE[$to];
+            $locked->offer_submitted = $to === 'presentada' ? true : ($to === 'desierta' ? $locked->offer_submitted : false);
+            $locked->save();
+
+            return [$from, $to];
+        });
+
+        if ($result === null) {
+            return back();
+        }
+
+        $audit->record('licitacion.etapa', $tender, ['expediente' => $tender->reference, 'de' => $result[0], 'a' => $result[1]]);
+
+        return back()->with('success', "{$tender->reference} pasó a «".TenderStage::STAGES[$to]['label'].'».');
+    }
+
+    /** Crea (o reutiliza) la oportunidad del pipeline de la licitación (B-18). */
+    public function opportunity(Request $request, Tender $tender, TenderOpportunityLinker $linker): RedirectResponse
+    {
+        $this->authorize('update', $tender);
+        $this->authorize('create', Opportunity::class);
+
+        $result = $linker->ensure($tender, $request->user());
+
+        return redirect("/pipeline/{$result['opportunity']->id}")->with('success', $result['created']
+            ? 'Oportunidad creada en el pipeline. Registra aquí los participantes y el resultado.'
+            : 'La licitación ya tenía oportunidad: se abrió la existente en lugar de crear otra.');
+    }
+
     public function destroy(Request $request, Tender $tender, AuditLogger $audit): RedirectResponse
     {
         $this->authorize('delete', $tender);
@@ -149,86 +236,63 @@ class TenderController extends Controller
         return redirect()->route('tenders.index')->with('success', "Licitación {$reference} eliminada.");
     }
 
-    public function pdf(Request $request, ProcessExportService $exports)
+    public function pdf(Request $request, FinanceExport $export)
     {
         $this->authorize('viewAny', Tender::class);
 
-        return $exports->pdf('Licitaciones', $this->filtered($this->filters($request))->with('institution:id,name')->limit(2000)->get());
+        $filters = $this->list->filters($request);
+
+        return $export->pdf('pdf.tenders-list', [
+            'rows' => $this->list->exportRows($filters, $request->user(), 2000),
+            'filterLabel' => $this->filterLabel($filters),
+            'now' => CarbonImmutable::now(),
+        ], 'Licitaciones', 'licitaciones', landscape: true);
     }
 
-    public function xlsx(Request $request, ProcessExportService $exports)
+    public function xlsx(Request $request, FinanceExport $export)
     {
         $this->authorize('viewAny', Tender::class);
 
-        return $exports->spreadsheet($this->filtered($this->filters($request))->with('institution:id,name')->limit(5000)->get(), 'licitaciones.xlsx');
+        $filters = $this->list->filters($request);
+        $rows = $this->list->exportRows($filters, $request->user(), 5000)->map(fn (array $row) => [
+            $row['reference'],
+            $row['title'],
+            $row['institution']['name'] ?? null,
+            $row['purchase_type'],
+            $row['stage']['status_label'],
+            $row['next_deadline'] ? $row['next_deadline']['label'] : null,
+            $row['next_deadline'] ? CarbonImmutable::parse($row['next_deadline']['at'])->format('d/m/Y H:i') : null,
+            self::excelDate($row['clarification_deadline']),
+            self::excelDate($row['presentation_deadline']),
+            self::excelDate($row['opening_at']),
+            $row['owner']['name'] ?? null,
+            (float) $row['estimated_amount'],
+            $row['result'],
+        ]);
+
+        return $export->xlsx('Licitaciones', [
+            'Expediente', 'Objeto', 'Institución', 'Modalidad', 'Etapa', 'Próximo plazo', 'Fecha del próximo plazo',
+            'Cierre de aclaraciones', 'Recepción de ofertas', 'Apertura', 'Responsable', 'Monto estimado (L)', 'Resultado',
+        ], $rows, 'licitaciones', ['L'], [$this->filterLabel($filters)]);
     }
 
-    /**
-     * @return array{search: string, status: string, modality: string, window: string}
-     */
-    private function filters(Request $request): array
+    private static function excelDate(?string $value): ?string
     {
-        $window = $request->string('window')->value();
-
-        return [
-            'search' => mb_substr($request->string('search')->trim()->value(), 0, 100),
-            'status' => in_array($request->input('status'), Tender::STATUSES, true) ? $request->input('status') : '',
-            'modality' => mb_substr($request->string('modality')->trim()->value(), 0, 120),
-            'window' => in_array($window, self::WINDOWS, true) ? $window : 'all',
-        ];
+        return $value ? CarbonImmutable::parse($value)->format('d/m/Y H:i') : null;
     }
 
-    /**
-     * @param  array{search: string, status: string, modality: string, window: string}  $filters
-     * @return Builder<Tender>
-     */
-    private function filtered(array $filters): Builder
+    private function filterLabel(array $filters): string
     {
-        $now = now();
+        $parts = array_filter([
+            $filters['search'] !== '' ? "Búsqueda «{$filters['search']}»" : null,
+            $filters['stages'] ? 'Etapa: '.implode(', ', array_map(fn ($k) => TenderStage::STAGES[$k]['label'], $filters['stages'])) : null,
+            $filters['modality'] ?: null,
+            $filters['from'] || $filters['to'] ? 'Recepción '.($filters['from'] ?? '…').' – '.($filters['to'] ?? '…') : null,
+            $filters['mine'] ? 'Solo mías' : null,
+            ! $filters['expired'] ? 'Sin vencidas' : null,
+        ]);
 
-        return Tender::query()
-            ->when($filters['search'] !== '', fn (Builder $q) => $q->where(fn (Builder $x) => $x
-                ->where('reference', 'like', "%{$filters['search']}%")
-                ->orWhere('title', 'like', "%{$filters['search']}%")
-                ->orWhereHas('institution', fn (Builder $i) => $i->where('name', 'like', "%{$filters['search']}%")->orWhere('acronym', 'like', "%{$filters['search']}%"))))
-            ->when($filters['status'] !== '', fn (Builder $q) => $q->where('status', $filters['status']))
-            ->when($filters['modality'] !== '', fn (Builder $q) => $q->where('purchase_type', $filters['modality']))
-            ->when($filters['window'] === 'open', fn (Builder $q) => $this->open($q))
-            ->when($filters['window'] === 'week', fn (Builder $q) => $q->whereIn('status', Tender::OPEN_STATUSES)->whereBetween('presentation_deadline', [$now, $now->copy()->addDays(7)]))
-            ->when($filters['window'] === 'clarifications', fn (Builder $q) => $q->whereIn('status', Tender::OPEN_STATUSES)->whereBetween('clarification_deadline', [$now, $now->copy()->addDays(7)]))
-            // Lo que vence antes, primero; lo que no tiene fecha, al final.
-            ->orderByRaw('CASE WHEN presentation_deadline IS NULL THEN 1 ELSE 0 END')
-            ->orderByRaw('CASE WHEN presentation_deadline < ? THEN 1 ELSE 0 END', [$now])
-            ->orderBy('presentation_deadline')
-            ->orderByDesc('id');
-    }
-
-    private function open(Builder $query): Builder
-    {
-        return $query->whereIn('status', Tender::OPEN_STATUSES)
-            ->where(fn (Builder $q) => $q->whereNull('presentation_deadline')->orWhere('presentation_deadline', '>=', now()));
-    }
-
-    /**
-     * @return array{open: int, week: int, clarifications: int}
-     */
-    private function stats(): array
-    {
-        $now = now();
-        $week = $now->copy()->addDays(7);
-
-        $row = Tender::query()->whereIn('status', Tender::OPEN_STATUSES)->selectRaw(
-            'SUM(CASE WHEN presentation_deadline IS NULL OR presentation_deadline >= ? THEN 1 ELSE 0 END) AS open_count,
-             SUM(CASE WHEN presentation_deadline BETWEEN ? AND ? THEN 1 ELSE 0 END) AS week_count,
-             SUM(CASE WHEN clarification_deadline BETWEEN ? AND ? THEN 1 ELSE 0 END) AS clarifications_count',
-            [$now, $now, $week, $now, $week],
-        )->toBase()->first();
-
-        return [
-            'open' => (int) ($row->open_count ?? 0),
-            'week' => (int) ($row->week_count ?? 0),
-            'clarifications' => (int) ($row->clarifications_count ?? 0),
-        ];
+        return $parts ? 'Filtros: '.implode(' · ', $parts) : 'Todas las licitaciones';
     }
 
     /**
@@ -236,19 +300,38 @@ class TenderController extends Controller
      */
     private function modalities(): array
     {
-        $used = Tender::query()->whereNotNull('purchase_type')->distinct()->orderBy('purchase_type')->limit(50)->pluck('purchase_type')->all();
+        return once(function () {
+            $used = Tender::query()->whereNotNull('purchase_type')->distinct()->orderBy('purchase_type')->limit(50)->pluck('purchase_type')->all();
 
-        return array_values(array_unique([...Tender::MODALITIES, ...$used]));
+            return array_values(array_unique([...Tender::MODALITIES, ...$used]));
+        });
+    }
+
+    /**
+     * @return array<int, array{id: int, name: string}>
+     */
+    private function members(): array
+    {
+        $companyId = app(CompanyContext::class)->currentCompanyId();
+
+        return User::query()
+            ->whereExists(fn ($members) => $members->from('company_user')
+                ->whereColumn('company_user.user_id', 'users.id')
+                ->where('company_user.company_id', $companyId))
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (User $user) => ['id' => $user->id, 'name' => $user->name])
+            ->all();
     }
 
     /**
      * @return array<string, mixed>
      */
-    private function present(Tender $tender): array
+    private function present(Tender $tender, array $stage, CarbonImmutable $now): array
     {
         $dates = ['started_at', 'clarification_deadline', 'presentation_deadline', 'opening_at'];
         $data = $tender->only([
-            'id', 'reference', 'process_name', 'title', 'institution_id', 'purchasing_unit', 'purchase_type', 'status',
+            'id', 'reference', 'process_name', 'title', 'institution_id', 'owner_id', 'purchasing_unit', 'purchase_type', 'status',
             'estimated_amount', 'bid_document_fee', 'offer_validity_days', 'funding_source_type', 'funding_source',
             'honducompras_stage', 'acquisition_type', 'offer_reception_place', 'source_url', 'contact_name',
             'contact_phone', 'contact_email', 'requirements', 'delivery_terms', 'payment_terms', 'documents',
@@ -259,14 +342,72 @@ class TenderController extends Controller
             $data[$field] = $tender->{$field}?->format('Y-m-d\TH:i');
         }
 
+        $data['display_title'] = TenderText::display($tender->title);
+        $data['display_unit'] = TenderText::display($tender->purchasing_unit);
+        $data['display_contact'] = TenderText::display($tender->contact_name);
         $data['published_at'] = $tender->published_at?->toDateString();
         $data['closing_date'] = $tender->closing_date?->toDateString();
         $data['institution'] = $tender->institution?->only(['id', 'name', 'acronym']);
         $data['owner'] = $tender->owner?->name;
+        $data['stage'] = $stage;
+        $data['next_deadline'] = in_array($stage['key'], TenderStage::LIVE, true) ? TenderStage::nextDeadline($tender, $now) : null;
         $data['created_at'] = $tender->created_at?->toDateTimeString();
         $data['updated_at'] = $tender->updated_at?->toDateTimeString();
 
         return $data;
+    }
+
+    /**
+     * Historial de la licitación (bitácora), lo más reciente arriba.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    private function history(Tender $tender): array
+    {
+        return AuditLog::query()
+            ->where('resource_type', 'Tender')->where('resource_id', $tender->id)
+            ->latest('created_at')->latest('id')->limit(40)
+            ->get(['id', 'action', 'actor_name', 'channel', 'changes', 'created_at'])
+            ->map(fn (AuditLog $log) => [
+                'id' => $log->id,
+                'action' => $log->action,
+                'title' => self::HISTORY_LABELS[$log->action] ?? ucfirst(str_replace(['licitacion.', '_'], ['', ' '], $log->action)),
+                'actor' => $log->actor_name ?? ($log->channel === 'sistema' ? 'Sistema' : null),
+                'detail' => $this->historyDetail($log),
+                'at' => $log->created_at?->toDateTimeString(),
+            ])
+            ->all();
+    }
+
+    private const HISTORY_LABELS = [
+        'licitacion.creada' => 'Licitación creada',
+        'licitacion.importada' => 'Importada desde una captura de HonduCompras',
+        'licitacion.actualizada' => 'Datos actualizados',
+        'licitacion.actualizada_por_captura' => 'Datos completados con una captura',
+        'licitacion.etapa' => 'Cambio de etapa',
+        'licitacion.vencida' => 'Pasó a «Vencida» (recepción de ofertas sin oferta)',
+        'licitacion.recomendacion_ia' => 'Recomendación de la IA consultada',
+        'licitacion.pliego_subido' => 'Pliego subido para análisis',
+        'licitacion.pliego_reintento' => 'Análisis del pliego reintentado',
+        'licitacion.pliego_confirmado' => 'Datos del pliego aplicados',
+        'licitacion.matriz_desde_pliego' => 'Matriz documental creada desde el pliego',
+    ];
+
+    private function historyDetail(AuditLog $log): ?string
+    {
+        $changes = $log->changes ?? [];
+
+        return match ($log->action) {
+            'licitacion.etapa' => isset($changes['de'], $changes['a'])
+                ? (TenderStage::STAGES[$changes['de']]['label'] ?? $changes['de']).' → '.(TenderStage::STAGES[$changes['a']]['label'] ?? $changes['a'])
+                : null,
+            'licitacion.importada', 'licitacion.actualizada_por_captura' => match ($changes['oportunidad'] ?? null) {
+                'creada', true => 'Con oportunidad nueva en el pipeline',
+                'reutilizada' => 'Se reutilizó la oportunidad existente',
+                default => null,
+            },
+            default => null,
+        };
     }
 
     /**
