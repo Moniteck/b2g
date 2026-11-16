@@ -28,7 +28,7 @@ use Illuminate\Support\Carbon;
 class CalendarSyncService
 {
     /** Estados de licitación que cierran el proceso: ya no hay plazos que vigilar. */
-    public const CLOSED_TENDER_STATUSES = ['Adjudicada', 'No adjudicada', 'Perdida', 'Cancelada', 'Desierta', 'Cerrada'];
+    public const CLOSED_TENDER_STATUSES = ['Adjudicada', 'No adjudicada', 'Perdida', 'Cancelada', 'Desierta', 'Cerrada', 'Vencida'];
 
     /** Estados de licitación en que la oferta ya se presentó. */
     public const SUBMITTED_TENDER_STATUSES = ['Presentada'];
