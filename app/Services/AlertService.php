@@ -70,7 +70,7 @@ class AlertService
         foreach ($documents as $document) {
             $href = "/directorio?documento={$document->id}";
             $alerts[] = $document->expires_at->lt($today)
-                ? ['type' => 'documentos', 'severity' => 'danger', 'message' => "{$document->name} está vencido desde el {$document->expires_at->format('d/m/Y')}", 'href' => $href]
+                ? ['type' => 'documentos', 'severity' => 'danger', 'message' => "{$document->name} está vencido desde el {$document->expires_at->format('d/m/Y')}", 'href' => $href, 'subject' => $document->name, 'date' => $document->expires_at->toDateString()]
                 : ['type' => 'documentos', 'severity' => 'warning', 'message' => "{$document->name} vence el {$document->expires_at->format('d/m/Y')}", 'href' => $href];
         }
 

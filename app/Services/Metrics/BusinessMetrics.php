@@ -71,20 +71,16 @@ class BusinessMetrics
     /** @var array<int, string> Versión ya leída en esta petición, por empresa. */
     private static array $versions = [];
 
-    private static bool $watching = false;
+    /** @var array{outstanding: float, outstanding_count: int, overdue: float, overdue_count: int}|null Cartera de hoy ya leída. */
+    private ?array $receivablesToday = null;
 
     public function __construct(private CompanyContext $context) {}
 
     // ───────────────────────────── Caché ─────────────────────────────
 
-    /** Registro (una vez) en `AppServiceProvider::boot`: cada escritura sube la versión de su empresa. */
+    /** Registro en `AppServiceProvider::boot` (una vez por arranque de la aplicación): cada escritura sube la versión de su empresa. */
     public static function watch(): void
     {
-        if (self::$watching) {
-            return;
-        }
-        self::$watching = true;
-
         foreach (self::WATCHED as $model) {
             foreach (['saved', 'deleted', 'restored'] as $event) {
                 if ($event === 'restored' && ! method_exists($model, 'restore')) {
@@ -268,26 +264,50 @@ class BusinessMetrics
      */
     public function receivables(): array
     {
-        return $this->remember('receivables', [], function () {
-            $today = CarbonImmutable::today()->toDateString();
-            [$condition, $bindings] = self::receivableCondition($today);
-            [$overdue, $overdueBindings] = self::overdueCondition($today);
+        // Si la serie de KPI ya se calculó en esta petición, trae la cartera de hoy: no se repite la consulta.
+        if ($this->receivablesToday !== null) {
+            return $this->receivablesToday;
+        }
 
-            $row = CollectionInvoice::query()->toBase()->selectRaw(
-                "COALESCE(SUM(CASE WHEN {$condition} THEN amount ELSE 0 END), 0) AS outstanding,
-                 COALESCE(SUM(CASE WHEN {$condition} THEN 1 ELSE 0 END), 0) AS outstanding_count,
-                 COALESCE(SUM(CASE WHEN {$overdue} THEN amount ELSE 0 END), 0) AS overdue,
-                 COALESCE(SUM(CASE WHEN {$overdue} THEN 1 ELSE 0 END), 0) AS overdue_count",
-                [...$bindings, ...$bindings, ...$overdueBindings, ...$overdueBindings],
-            )->first();
+        return $this->receivablesToday = $this->remember('receivables', [], function () {
+            [$columns, $bindings] = self::receivableTodayColumns();
 
-            return [
-                'outstanding' => round((float) ($row->outstanding ?? 0), 2),
-                'outstanding_count' => (int) ($row->outstanding_count ?? 0),
-                'overdue' => round((float) ($row->overdue ?? 0), 2),
-                'overdue_count' => (int) ($row->overdue_count ?? 0),
-            ];
+            return self::receivableTodayRow((array) CollectionInvoice::query()->toBase()->selectRaw($columns, $bindings)->first());
         });
+    }
+
+    /**
+     * Columnas de la cartera de hoy (por cobrar y vencida, monto y cantidad).
+     *
+     * @return array{0: string, 1: array<int, string>}
+     */
+    private static function receivableTodayColumns(): array
+    {
+        $today = CarbonImmutable::today()->toDateString();
+        [$condition, $bindings] = self::receivableCondition($today);
+        [$overdue, $overdueBindings] = self::overdueCondition($today);
+
+        return [
+            "COALESCE(SUM(CASE WHEN {$condition} THEN amount ELSE 0 END), 0) AS outstanding,
+             COALESCE(SUM(CASE WHEN {$condition} THEN 1 ELSE 0 END), 0) AS outstanding_count,
+             COALESCE(SUM(CASE WHEN {$overdue} THEN amount ELSE 0 END), 0) AS overdue,
+             COALESCE(SUM(CASE WHEN {$overdue} THEN 1 ELSE 0 END), 0) AS overdue_count",
+            [...$bindings, ...$bindings, ...$overdueBindings, ...$overdueBindings],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     * @return array{outstanding: float, outstanding_count: int, overdue: float, overdue_count: int}
+     */
+    private static function receivableTodayRow(array $row): array
+    {
+        return [
+            'outstanding' => round((float) ($row['outstanding'] ?? 0), 2),
+            'outstanding_count' => (int) ($row['outstanding_count'] ?? 0),
+            'overdue' => round((float) ($row['overdue'] ?? 0), 2),
+            'overdue_count' => (int) ($row['overdue_count'] ?? 0),
+        ];
     }
 
     /**
@@ -327,7 +347,7 @@ class BusinessMetrics
      */
     public function kpiSeries(string $from, string $to): array
     {
-        return $this->remember('kpi-series', [$from, $to], function () use ($from, $to) {
+        $result = $this->remember('kpi-series', [$from, $to], function () use ($from, $to) {
             $start = CarbonImmutable::parse($from)->startOfMonth();
             $end = CarbonImmutable::parse($to)->endOfMonth();
             $range = [$start->toDateTimeString(), $end->endOfDay()->toDateTimeString()];
@@ -365,7 +385,9 @@ class BusinessMetrics
                 $columns[] = "COALESCE(SUM(CASE WHEN {$condition} THEN amount ELSE 0 END), 0) AS m{$index}";
                 array_push($bindings, ...$values);
             }
-            $receivable = (array) CollectionInvoice::query()->toBase()->selectRaw(implode(', ', $columns), $bindings)->first();
+            // En la misma consulta, la cartera de hoy (la que devuelve `receivables()`).
+            [$todayColumns, $todayBindings] = self::receivableTodayColumns();
+            $receivable = (array) CollectionInvoice::query()->toBase()->selectRaw(implode(', ', $columns).', '.$todayColumns, [...$bindings, ...$todayBindings])->first();
 
             $series = [];
             foreach (array_keys($months) as $index => $month) {
@@ -382,8 +404,12 @@ class BusinessMetrics
                 ];
             }
 
-            return $series;
+            return ['months' => $series, 'today' => self::receivableTodayRow($receivable)];
         });
+
+        $this->receivablesToday ??= $result['today'];
+
+        return $result['months'];
     }
 
     // ───────────────────────────── Definiciones (SQL) ─────────────────────────────
