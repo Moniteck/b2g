@@ -14,7 +14,7 @@ class Tender extends Model
     use BelongsToCompany, HasFactory;
 
     /** Estados internos del proceso (no la etapa de HonduCompras). */
-    public const STATUSES = ['Activa', 'En preparación', 'Presentada', 'Adjudicada', 'No adjudicada', 'Perdida', 'Cancelada'];
+    public const STATUSES = ['Activa', 'En preparación', 'Presentada', 'Adjudicada', 'No adjudicada', 'Perdida', 'Desierta', 'Cancelada', 'Vencida'];
 
     /** Estados en los que la licitación sigue viva y sus plazos importan. */
     public const OPEN_STATUSES = ['Activa', 'En preparación'];
@@ -36,6 +36,19 @@ class Tender extends Model
         'honducompras_stage', 'acquisition_type', 'offer_reception_place', 'bid_document_fee',
         'offer_validity_days',
     ];
+
+    /**
+     * Una licitación «Vencida» a la que luego se le registra la oferta (p. ej. al presentar su
+     * cotización) vuelve a «Presentada»: la oferta manda sobre el estado automático (B-19).
+     */
+    protected static function booted(): void
+    {
+        static::saving(function (Tender $tender) {
+            if ($tender->status === 'Vencida' && $tender->offer_submitted) {
+                $tender->status = 'Presentada';
+            }
+        });
+    }
 
     protected function casts(): array
     {

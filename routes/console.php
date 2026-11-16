@@ -100,3 +100,4 @@ Schedule::call(fn () => ReminderDelivery::query()->withoutGlobalScopes()
 Schedule::command('queue:prune-batches --hours=48')->daily();
 Schedule::command('queue:prune-failed --hours=720')->daily();
 Schedule::command('blessing:sync --cola')->hourly()->name('sincronizar-blessing')->withoutOverlapping(); // Inventario Blessing: un trabajo por empresa con conexión
+Schedule::command('licitaciones:actualizar-estados')->dailyAt('00:15')->timezone('America/Tegucigalpa')->name('estados-licitaciones')->withoutOverlapping(30); // Licitaciones vencidas sin oferta (B-19)
