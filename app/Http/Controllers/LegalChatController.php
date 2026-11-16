@@ -65,7 +65,7 @@ class LegalChatController extends Controller
      * Envía una consulta. La pregunta y la respuesta se guardan juntas solo si la
      * IA responde; si falla, no queda nada a medias y el usuario puede reintentar.
      *
-     * Con `Accept: application/x-ndjson` la respuesta llega en streaming, una línea JSON por
+     * Con `Accept: application/json, application/x-ndjson` la respuesta llega en streaming, una línea JSON por
      * evento: `{"type":"delta","text":"…"}` mientras la IA escribe, y al final
      * `{"type":"done","conversation":{…},"messages":[…]}` o `{"type":"error","message":"…"}`.
      * Los errores previos (validación, límite de uso 429, presupuesto, sin clave) siguen siendo
@@ -99,13 +99,17 @@ class LegalChatController extends Controller
             }
 
             return response()->stream(function () use ($stream, $history, $conversation, $data, $userId) {
-                // El servidor de desarrollo y PHP-FPM guardan la salida en búfer: se vacía en cada trozo.
-                while (ob_get_level() > 0) {
+                // El servidor de desarrollo y PHP-FPM guardan la salida en búfer: se vacía en cada trozo
+                // (en las pruebas ese búfer es el que captura la respuesta y no se toca).
+                $live = ! app()->runningUnitTests();
+                while ($live && ob_get_level() > 0) {
                     ob_end_flush();
                 }
-                $emit = function (array $event) {
+                $emit = function (array $event) use ($live) {
                     echo json_encode($event, JSON_UNESCAPED_UNICODE)."\n";
-                    flush();
+                    if ($live) {
+                        flush();
+                    }
                 };
 
                 try {

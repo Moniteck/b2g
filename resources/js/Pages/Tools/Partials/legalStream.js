@@ -19,7 +19,8 @@ export async function streamLegalReply(payload, { onDelta = () => {}, signal } =
         credentials: 'same-origin',
         signal,
         headers: {
-            Accept: 'application/x-ndjson, application/json',
+            // JSON primero: así los errores previos (422, 429) llegan como JSON; el controlador ve «x-ndjson» y transmite.
+            Accept: 'application/json, application/x-ndjson',
             'Content-Type': 'application/json',
             'X-Requested-With': 'XMLHttpRequest',
             'X-XSRF-TOKEN': xsrfToken(),
