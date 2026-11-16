@@ -1,8 +1,8 @@
-/* Material Design Icons 7.4.47: subconjunto con los 486 íconos que usa el sistema.
+/* Material Design Icons 7.4.47: subconjunto con los 489 íconos que usa el sistema.
    ARCHIVO GENERADO por scripts/mdi-subset.mjs: no se edita a mano; tras usar un ícono nuevo, vuelve a ejecutarlo. */
 @font-face {
   font-family: "Material Design Icons";
-  src: url("../fonts/mdi/mdi-subset.woff?v=7.4.47-486") format("woff");
+  src: url("../fonts/mdi/mdi-subset.woff?v=7.4.47-489") format("woff");
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -204,6 +204,8 @@
 .mdi-box::before { content: "\F00D4"; }
 .mdi-briefcase::before { content: "\F00D6"; }
 .mdi-briefcase-outline::before { content: "\F0814"; }
+.mdi-briefcase-plus::before { content: "\F0A2B"; }
+.mdi-briefcase-plus-outline::before { content: "\F0C40"; }
 .mdi-bucket::before { content: "\F1415"; }
 .mdi-bullseye-arrow::before { content: "\F08C9"; }
 .mdi-calendar::before { content: "\F00ED"; }
@@ -394,6 +396,7 @@
 .mdi-fit-to-page::before { content: "\F0EF5"; }
 .mdi-fit-to-page-outline::before { content: "\F0EF6"; }
 .mdi-flag::before { content: "\F023B"; }
+.mdi-flag-checkered::before { content: "\F023C"; }
 .mdi-flag-outline::before { content: "\F023D"; }
 .mdi-flash::before { content: "\F0241"; }
 .mdi-folder-account::before { content: "\F024C"; }

@@ -111,6 +111,18 @@ class ShellTest extends TestCase
             ->assertInertia(fn (Assert $page) => $page->component('Errors/Show')->where('status', 403));
     }
 
+    public function test_unknown_urls_give_404_with_the_shell_and_wrong_methods_keep_405(): void
+    {
+        [$user, $company] = $this->memberOf();
+
+        $this->actingInCompany($user, $company)->get('/no-existe-esta-pantalla', self::BROWSER)
+            ->assertNotFound()
+            ->assertInertia(fn (Assert $page) => $page->component('Errors/Show')->where('status', 404)->has('auth.user'));
+        $this->actingInCompany($user, $company)->post('/no-existe-esta-pantalla')->assertNotFound();
+        $this->actingInCompany($user, $company)->delete('/administracion')->assertStatus(405);
+        $this->getJson('/api/no-existe')->assertNotFound();
+    }
+
     public function test_inertia_form_errors_go_back_with_a_toast(): void
     {
         [$viewer, $company] = $this->memberOf(null, 'viewer');
