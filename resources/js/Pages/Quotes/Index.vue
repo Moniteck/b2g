@@ -29,6 +29,7 @@ import QuoteViewerModal from '../../Modules/Quotes/QuoteViewerModal.vue';
 import RevertModal from '../../Modules/Quotes/RevertModal.vue';
 import StatusModal from '../../Modules/Quotes/StatusModal.vue';
 import WonModal from '../../Modules/Quotes/WonModal.vue';
+import { fetchQuote } from '../../Modules/Quotes/api.js';
 import { lineFromSelection } from '../../Modules/Quotes/quotes.js';
 import { celebrate } from '../../lib/motion/index.js';
 
@@ -198,7 +199,61 @@ function takeInventorySelection() {
     create(selection.items.map(lineFromSelection));
 }
 
-onMounted(takeInventorySelection);
+/** Quita parámetros de la URL sin recargar, para que «Atrás» no vuelva a abrir la modal. */
+function dropParams(...names) {
+    const params = new URLSearchParams(window.location.search);
+    if (!names.some((name) => params.has(name))) return;
+    names.forEach((name) => params.delete(name));
+    router.replace({ url: `/cotizaciones${params.toString() ? `?${params}` : ''}`, preserveState: true, preserveScroll: true });
+}
+
+/**
+ * Enlaces directos: `?ver={id}` abre la modal Ver (también llega aquí `/cotizaciones/{id}` abierto
+ * en el navegador) y `?accion=nueva` abre el formulario de nueva cotización (atajo de la PWA).
+ */
+async function takeDirectLink() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('accion') === 'nueva') {
+        if (props.can.create) create();
+        else dropParams('accion');
+        return;
+    }
+    const id = Number(params.get('ver'));
+    if (!params.has('ver')) return;
+    if (!Number.isInteger(id) || id <= 0) {
+        dropParams('ver');
+        return;
+    }
+    const row = props.quotes.data?.find((item) => item.id === id);
+    if (row) {
+        view(row);
+        return;
+    }
+    try {
+        view(await fetchQuote(id));
+    } catch {
+        dropParams('ver');
+        toasts.show({ status: 'error', title: 'No se encontró la cotización', detail: 'No existe o pertenece a otra empresa.' });
+    }
+}
+
+watch(
+    () => modal.viewer,
+    (open) => {
+        if (!open) dropParams('ver');
+    },
+);
+watch(
+    () => modal.form,
+    (open) => {
+        if (!open) dropParams('accion');
+    },
+);
+
+onMounted(() => {
+    takeInventorySelection();
+    takeDirectLink();
+});
 
 const stopListener = router.on('exception', () => (loadError.value = 'No se pudo cargar la lista de cotizaciones.'));
 onBeforeUnmount(() => stopListener());

@@ -1,7 +1,7 @@
 <script setup>
 // Post-adjudicación: lista de contratos ganados de la empresa activa con sus plazos y entregas.
 import { router } from '@inertiajs/vue3';
-import { computed, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import AppButton from '../../Components/AppButton.vue';
 import DataTable from '../../Components/DataTable.vue';
 import DateInput from '../../Components/DateInput.vue';
@@ -43,6 +43,18 @@ const { filters, loading, error, active, reset, reload } = useListFilters('/post
 
 const createOpen = ref(false);
 const holidaysOpen = ref(false);
+
+// Enlace directo `?panel=feriados` (la consulta es de todo rol que ve la pantalla; editar exige can.manageHolidays; también llega aquí `/post-adjudicacion/feriados` abierto en el navegador).
+// Al cerrar se quita el parámetro sin recargar, para que «Atrás» no vuelva a abrir la modal.
+onMounted(() => {
+    if (new URLSearchParams(window.location.search).get('panel') === 'feriados') holidaysOpen.value = true;
+});
+watch(holidaysOpen, (open) => {
+    const params = new URLSearchParams(window.location.search);
+    if (open || !params.has('panel')) return;
+    params.delete('panel');
+    router.replace({ url: `/post-adjudicacion${params.toString() ? `?${params}` : ''}`, preserveState: true, preserveScroll: true });
+});
 const showFilters = ref(Boolean(props.filters.status || props.filters.manager_id || props.filters.institution_id || props.filters.end_from || props.filters.end_to));
 
 const columns = [
