@@ -13,21 +13,21 @@
 import { interceptors } from '@inertiajs/core';
 import { Head, router } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
-import { company } from '../../../design/company.js';
-import { toggleTheme } from '../../../design/shell/js/theme.js';
-import { SYSTEM_NAME } from '../../config/navigation.js';
-import AuthBackdrop from '../../Modules/Auth/AuthBackdrop.vue';
-import { playLoginExit } from '../../Modules/Auth/exitCurtain.js';
-import IntroSplash from '../../Modules/Auth/IntroSplash.vue';
-import Mascot from '../../Modules/Auth/Mascot.vue';
-import { confetti, prefersReducedMotion, useMedia } from '../../Modules/Auth/motion.js';
-import '../../Modules/Auth/auth.css';
-import AccessConfirmed from './Partials/AccessConfirmed.vue';
-import AuthCard from './Partials/AuthCard.vue';
-import BrandPanel from './Partials/BrandPanel.vue';
-import LoginForm from './Partials/LoginForm.vue';
-import RequestForm from './Partials/RequestForm.vue';
-import ResetForm from './Partials/ResetForm.vue';
+import { company } from '@design/company.js';
+import { toggleTheme } from '@design/shell/js/theme.js';
+import { SYSTEM_NAME } from '@/config/navigation.js';
+import AuthBackdrop from '@/Modules/Auth/AuthBackdrop.vue';
+import { playLoginExit } from '@/Modules/Auth/exitCurtain.js';
+import IntroSplash from '@/Modules/Auth/IntroSplash.vue';
+import Mascot from '@/Modules/Auth/Mascot.vue';
+import { confetti, prefersReducedMotion, useMedia } from '@/Modules/Auth/motion.js';
+import '@/Modules/Auth/auth.css';
+import AccessConfirmed from '@/Pages/Auth/Partials/AccessConfirmed.vue';
+import AuthCard from '@/Pages/Auth/Partials/AuthCard.vue';
+import BrandPanel from '@/Pages/Auth/Partials/BrandPanel.vue';
+import LoginForm from '@/Pages/Auth/Partials/LoginForm.vue';
+import RequestForm from '@/Pages/Auth/Partials/RequestForm.vue';
+import ResetForm from '@/Pages/Auth/Partials/ResetForm.vue';
 
 const props = defineProps({
     mode: { type: String, default: 'login' },

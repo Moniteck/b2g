@@ -4,8 +4,8 @@
 //        placeholder (opción vacía inicial; '' para no mostrarla), invalid, id, required.
 // También acepta <option> en el slot. El resto de atributos pasan al <select>.
 import { computed } from 'vue';
-import { useField } from '../composables/useField.js';
-import { inputClass } from '../lib/ui.js';
+import { useField } from '@/composables/useField.js';
+import { inputClass } from '@/lib/ui.js';
 
 defineOptions({ inheritAttrs: false });
 

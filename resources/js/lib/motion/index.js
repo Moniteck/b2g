@@ -1,7 +1,7 @@
 // Capa central de movimiento del CRM. Un único punto de entrada:
 //
 //   import motion from '@/lib/motion';        app.use(motion)  → directivas globales y transiciones de página
-//   import { useCountUp, celebrate, play, reducedMotion } from '../lib/motion/index.js';
+//   import { useCountUp, celebrate, play, reducedMotion } from '@/lib/lib/motion/index.js';
 //
 // Piezas:
 //   tokens.js       duraciones, curvas, distancias y escalonado (los mismos que `--m-*` en motion.css)
@@ -15,17 +15,17 @@
 //
 // Transiciones con nombre para <Transition name="…"> y <TransitionGroup name="…"> (en motion.css):
 //   m-fade, m-rise, m-pop, m-slide-left, m-slide-right, m-slide-up, m-collapse, m-list
-import { vCount, vDraw, vGrow, vMagnetic, vReveal, vSettle, vShake, vStagger } from './directives.js';
-import { installPageTransitions } from './navigation.js';
-import { applyMotionPreference } from './preference.js';
+import { vCount, vDraw, vGrow, vMagnetic, vReveal, vSettle, vShake, vStagger } from '@/lib/motion/directives.js';
+import { installPageTransitions } from '@/lib/motion/navigation.js';
+import { applyMotionPreference } from '@/lib/motion/preference.js';
 
-export * from './tokens.js';
-export * from './preference.js';
-export * from './animate.js';
-export { celebrate } from './confetti.js';
-export { useCountUp, tween } from './useCountUp.js';
-export { useMagnetic, bindMagnetic } from './useMagnetic.js';
-export { useShellMotion, ringBell, markSuccess, isPageVisit, captureIndicators, slideIndicators } from './navigation.js';
+export * from '@/lib/motion/tokens.js';
+export * from '@/lib/motion/preference.js';
+export * from '@/lib/motion/animate.js';
+export { celebrate } from '@/lib/motion/confetti.js';
+export { useCountUp, tween } from '@/lib/motion/useCountUp.js';
+export { useMagnetic, bindMagnetic } from '@/lib/motion/useMagnetic.js';
+export { useShellMotion, ringBell, markSuccess, isPageVisit, captureIndicators, slideIndicators } from '@/lib/motion/navigation.js';
 export { vCount, vDraw, vGrow, vMagnetic, vReveal, vSettle, vShake, vStagger };
 
 export default {

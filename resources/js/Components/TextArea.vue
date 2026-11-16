@@ -2,8 +2,8 @@
 // Área de texto. Props: modelValue (v-model), rows (4), invalid, readonly, id, required,
 // maxlength (muestra el contador «120 / 500»). El resto de atributos pasan al <textarea>.
 import { computed, ref } from 'vue';
-import { useField } from '../composables/useField.js';
-import { inputClass } from '../lib/ui.js';
+import { useField } from '@/composables/useField.js';
+import { inputClass } from '@/lib/ui.js';
 
 defineOptions({ inheritAttrs: false });
 

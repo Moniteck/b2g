@@ -3,17 +3,17 @@
 // administrador, Blessing e ISV) y administra; un administrador de empresa solo ve las suyas.
 // La prop del paginador es `companyRecords`: `companies` es la prop compartida del selector (B-12).
 import { router } from '@inertiajs/vue3';
-import CapAlert from '../../../../design/vue/CapAlert.vue';
-import AppButton from '../../../Components/AppButton.vue';
-import DataTable from '../../../Components/DataTable.vue';
-import PageHeader from '../../../Components/PageHeader.vue';
-import Pagination from '../../../Components/Pagination.vue';
-import StatusBadge from '../../../Components/StatusBadge.vue';
-import Toolbar from '../../../Components/Toolbar.vue';
-import AppLayout from '../../../Layouts/AppLayout.vue';
-import { useShell } from '../../../Layouts/shell.js';
-import { number } from '../../../lib/format.js';
-import { useListFilters } from '../Partials/useListFilters.js';
+import CapAlert from '@design/vue/CapAlert.vue';
+import AppButton from '@/Components/AppButton.vue';
+import DataTable from '@/Components/DataTable.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import Pagination from '@/Components/Pagination.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import Toolbar from '@/Components/Toolbar.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { useShell } from '@/Layouts/shell.js';
+import { number } from '@/lib/format.js';
+import { useListFilters } from '@/Pages/Admin/Partials/useListFilters.js';
 
 const props = defineProps({
     companyRecords: { type: Object, required: true },

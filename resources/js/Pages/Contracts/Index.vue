@@ -2,25 +2,25 @@
 // Post-adjudicación: lista de contratos ganados de la empresa activa con sus plazos y entregas.
 import { router } from '@inertiajs/vue3';
 import { computed, onMounted, ref, watch } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import DataTable from '../../Components/DataTable.vue';
-import DateInput from '../../Components/DateInput.vue';
-import DropdownMenu from '../../Components/DropdownMenu.vue';
-import FormField from '../../Components/FormField.vue';
-import PageHeader from '../../Components/PageHeader.vue';
-import Pagination from '../../Components/Pagination.vue';
-import SearchSelect from '../../Components/SearchSelect.vue';
-import SelectInput from '../../Components/SelectInput.vue';
-import StatCard from '../../Components/StatCard.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import Toolbar from '../../Components/Toolbar.vue';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { date, money, number } from '../../lib/format.js';
-import { card } from '../../lib/ui.js';
-import ContractFormModal from '../../Modules/Contracts/ContractFormModal.vue';
-import HolidaysModal from '../../Modules/Contracts/HolidaysModal.vue';
-import { percentOf, remaining, tone } from '../../Modules/Contracts/contracts.js';
-import { useListFilters } from '../Admin/Partials/useListFilters.js';
+import AppButton from '@/Components/AppButton.vue';
+import DataTable from '@/Components/DataTable.vue';
+import DateInput from '@/Components/DateInput.vue';
+import DropdownMenu from '@/Components/DropdownMenu.vue';
+import FormField from '@/Components/FormField.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import Pagination from '@/Components/Pagination.vue';
+import SearchSelect from '@/Components/SearchSelect.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import StatCard from '@/Components/StatCard.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import Toolbar from '@/Components/Toolbar.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { date, money, number } from '@/lib/format.js';
+import { card } from '@/lib/ui.js';
+import ContractFormModal from '@/Modules/Contracts/ContractFormModal.vue';
+import HolidaysModal from '@/Modules/Contracts/HolidaysModal.vue';
+import { percentOf, remaining, tone } from '@/Modules/Contracts/contracts.js';
+import { useListFilters } from '@/Pages/Admin/Partials/useListFilters.js';
 
 const props = defineProps({
     contracts: { type: Object, required: true },

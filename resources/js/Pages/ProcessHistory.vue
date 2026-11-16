@@ -2,30 +2,30 @@
 // Historial de procesos de HonduCompras de la empresa activa: participación, montos, resultado y causa.
 import { useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import AppButton from '../Components/AppButton.vue';
-import BaseModal from '../Components/BaseModal.vue';
-import DataTable from '../Components/DataTable.vue';
-import DateInput from '../Components/DateInput.vue';
-import DescriptionList from '../Components/DescriptionList.vue';
-import DropdownMenu from '../Components/DropdownMenu.vue';
-import FormField from '../Components/FormField.vue';
-import MoneyInput from '../Components/MoneyInput.vue';
-import PageHeader from '../Components/PageHeader.vue';
-import Pagination from '../Components/Pagination.vue';
-import SearchSelect from '../Components/SearchSelect.vue';
-import SelectInput from '../Components/SelectInput.vue';
-import StatCard from '../Components/StatCard.vue';
-import StatusBadge from '../Components/StatusBadge.vue';
-import TextArea from '../Components/TextArea.vue';
-import TextInput from '../Components/TextInput.vue';
-import Toggle from '../Components/Toggle.vue';
-import Toolbar from '../Components/Toolbar.vue';
-import { useConfirm } from '../composables/useConfirm.js';
-import AppLayout from '../Layouts/AppLayout.vue';
-import { focusFirstError } from '../lib/errors.js';
-import { EMPTY, date, money, number, percent } from '../lib/format.js';
-import { visit } from '../lib/http.js';
-import { useListFilters } from './Tools/Partials/useListFilters.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import DataTable from '@/Components/DataTable.vue';
+import DateInput from '@/Components/DateInput.vue';
+import DescriptionList from '@/Components/DescriptionList.vue';
+import DropdownMenu from '@/Components/DropdownMenu.vue';
+import FormField from '@/Components/FormField.vue';
+import MoneyInput from '@/Components/MoneyInput.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import Pagination from '@/Components/Pagination.vue';
+import SearchSelect from '@/Components/SearchSelect.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import StatCard from '@/Components/StatCard.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import TextArea from '@/Components/TextArea.vue';
+import TextInput from '@/Components/TextInput.vue';
+import Toggle from '@/Components/Toggle.vue';
+import Toolbar from '@/Components/Toolbar.vue';
+import { useConfirm } from '@/composables/useConfirm.js';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { focusFirstError } from '@/lib/errors.js';
+import { EMPTY, date, money, number, percent } from '@/lib/format.js';
+import { visit } from '@/lib/http.js';
+import { useListFilters } from '@/Pages/Tools/Partials/useListFilters.js';
 
 const props = defineProps({
     records: { type: Object, required: true },

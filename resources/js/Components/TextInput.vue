@@ -6,8 +6,8 @@
 // `type="password"` trae el botón para ver la contraseña. El resto de atributos (placeholder,
 // autocomplete, maxlength, disabled…) pasan al <input>. Expone `focus()`.
 import { computed, ref } from 'vue';
-import { useField } from '../composables/useField.js';
-import { iconButton, inputClass } from '../lib/ui.js';
+import { useField } from '@/composables/useField.js';
+import { iconButton, inputClass } from '@/lib/ui.js';
 
 defineOptions({ inheritAttrs: false });
 

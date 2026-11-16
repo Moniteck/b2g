@@ -5,7 +5,7 @@
 // Inicio / Fin inicio y fin de semana, Enter elige, Esc cierra.
 // Props: modelValue ('AAAA-MM-DD' | null), min, max. Eventos: select (iso), close.
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
-import { addDays, addMonths, fromIso, isoOf, todayIso } from './dates.js';
+import { addDays, addMonths, fromIso, isoOf, todayIso } from '@/Components/dates.js';
 
 const props = defineProps({
     modelValue: { type: String, default: null },

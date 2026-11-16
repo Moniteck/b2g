@@ -10,7 +10,7 @@
 // grosor y al exportar a alta resolución. Mientras se dibuja, la página no se desplaza
 // (`touch-action: none` y captura del puntero).
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { trimCanvas } from './ink.js';
+import { trimCanvas } from '@/Modules/Signatures/ink.js';
 
 const props = defineProps({
     color: { type: String, required: true },

@@ -7,29 +7,29 @@
 // Datos compartidos que consume: auth.user, auth.can, companies, activeCompany, flash, notifications.
 import { router, usePage } from '@inertiajs/vue3';
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue';
-import CapToaster from '../../design/vue/CapToaster.vue';
-import { useToasts } from '../../design/vue/composables/useToasts.js';
-import { company as brand } from '../../design/company.js';
-import ConfirmDialog from '../Components/ConfirmDialog.vue';
-import { SYSTEM_NAME, accountMenu, currentEntry, endpoints, mobileTabs, visibleMenu, visibleTabs } from '../config/navigation.js';
-import { daysUntil, relativeTime } from '../lib/format.js';
-import { getJson, postJson } from '../lib/http.js';
-import { captureIndicators, isPageVisit, slideIndicators, useShellMotion } from '../lib/motion/index.js';
-import CompanySwitcher from './Partials/CompanySwitcher.vue';
-import PageSkeleton from './Partials/PageSkeleton.vue';
-import ShellHeader from './Partials/ShellHeader.vue';
-import ShellMoreSheet from './Partials/ShellMoreSheet.vue';
-import ShellSidebar from './Partials/ShellSidebar.vue';
-import ShellTabBar from './Partials/ShellTabBar.vue';
-import SupportBanner from './Partials/SupportBanner.vue';
-import UserMenu from './Partials/UserMenu.vue';
-import { SHELL_KEY, createShellState } from './shell.js';
+import CapToaster from '@design/vue/CapToaster.vue';
+import { useToasts } from '@design/vue/composables/useToasts.js';
+import { company as brand } from '@design/company.js';
+import ConfirmDialog from '@/Components/ConfirmDialog.vue';
+import { SYSTEM_NAME, accountMenu, currentEntry, endpoints, mobileTabs, visibleMenu, visibleTabs } from '@/config/navigation.js';
+import { daysUntil, relativeTime } from '@/lib/format.js';
+import { getJson, postJson } from '@/lib/http.js';
+import { captureIndicators, isPageVisit, slideIndicators, useShellMotion } from '@/lib/motion/index.js';
+import CompanySwitcher from '@/Layouts/Partials/CompanySwitcher.vue';
+import PageSkeleton from '@/Layouts/Partials/PageSkeleton.vue';
+import ShellHeader from '@/Layouts/Partials/ShellHeader.vue';
+import ShellMoreSheet from '@/Layouts/Partials/ShellMoreSheet.vue';
+import ShellSidebar from '@/Layouts/Partials/ShellSidebar.vue';
+import ShellTabBar from '@/Layouts/Partials/ShellTabBar.vue';
+import SupportBanner from '@/Layouts/Partials/SupportBanner.vue';
+import UserMenu from '@/Layouts/Partials/UserMenu.vue';
+import { SHELL_KEY, createShellState } from '@/Layouts/shell.js';
 
 defineOptions({ inheritAttrs: false });
 
-const CommandPalette = defineAsyncComponent(() => import('./Partials/CommandPalette.vue'));
-const CompanyWizard = defineAsyncComponent(() => import('./Partials/CompanyWizard.vue'));
-const RequestErrorDialog = defineAsyncComponent(() => import('./Partials/RequestErrorDialog.vue'));
+const CommandPalette = defineAsyncComponent(() => import('@/Layouts/Partials/CommandPalette.vue'));
+const CompanyWizard = defineAsyncComponent(() => import('@/Layouts/Partials/CompanyWizard.vue'));
+const RequestErrorDialog = defineAsyncComponent(() => import('@/Layouts/Partials/RequestErrorDialog.vue'));
 
 const shell = createShellState();
 provide(SHELL_KEY, shell);

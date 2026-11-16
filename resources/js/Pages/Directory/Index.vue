@@ -3,27 +3,27 @@
 // vigencia. Subir, ver, reemplazar, renovar, historial, editar, eliminar y «Descargar para oferta».
 import { router } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue';
-import { useToasts } from '../../../design/vue/composables/useToasts.js';
-import AppButton from '../../Components/AppButton.vue';
-import Checkbox from '../../Components/Checkbox.vue';
-import DataTable from '../../Components/DataTable.vue';
-import DropdownMenu from '../../Components/DropdownMenu.vue';
-import PageHeader from '../../Components/PageHeader.vue';
-import Pagination from '../../Components/Pagination.vue';
-import SelectInput from '../../Components/SelectInput.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import Toolbar from '../../Components/Toolbar.vue';
-import { useConfirm } from '../../composables/useConfirm.js';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { date, number, relativeDays } from '../../lib/format.js';
-import { visit } from '../../lib/http.js';
-import { fileIcon } from '../../Modules/Documents/api.js';
-import DirectoryUploadModal from '../../Modules/Documents/Directory/DirectoryUploadModal.vue';
-import DocumentEditModal from '../../Modules/Documents/Directory/DocumentEditModal.vue';
-import DocumentRenewModal from '../../Modules/Documents/Directory/DocumentRenewModal.vue';
-import DocumentReplaceModal from '../../Modules/Documents/Directory/DocumentReplaceModal.vue';
-import DocumentVersionsModal from '../../Modules/Documents/Directory/DocumentVersionsModal.vue';
-import DocumentViewerModal from '../../Modules/Documents/DocumentViewerModal.vue';
+import { useToasts } from '@design/vue/composables/useToasts.js';
+import AppButton from '@/Components/AppButton.vue';
+import Checkbox from '@/Components/Checkbox.vue';
+import DataTable from '@/Components/DataTable.vue';
+import DropdownMenu from '@/Components/DropdownMenu.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import Pagination from '@/Components/Pagination.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import Toolbar from '@/Components/Toolbar.vue';
+import { useConfirm } from '@/composables/useConfirm.js';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { date, number, relativeDays } from '@/lib/format.js';
+import { visit } from '@/lib/http.js';
+import { fileIcon } from '@/Modules/Documents/api.js';
+import DirectoryUploadModal from '@/Modules/Documents/Directory/DirectoryUploadModal.vue';
+import DocumentEditModal from '@/Modules/Documents/Directory/DocumentEditModal.vue';
+import DocumentRenewModal from '@/Modules/Documents/Directory/DocumentRenewModal.vue';
+import DocumentReplaceModal from '@/Modules/Documents/Directory/DocumentReplaceModal.vue';
+import DocumentVersionsModal from '@/Modules/Documents/Directory/DocumentVersionsModal.vue';
+import DocumentViewerModal from '@/Modules/Documents/DocumentViewerModal.vue';
 
 const props = defineProps({
     documents: { type: Object, required: true },

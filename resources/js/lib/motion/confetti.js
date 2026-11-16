@@ -3,8 +3,8 @@
 //   celebrate({ origin: buttonElement }); sale del elemento
 // Un lienzo fijo encima de todo que no recibe clics y se retira solo. Con movimiento reducido no
 // hay partículas: devuelve false y quien llama ya muestra el resultado de forma estática.
-import { isReducedMotion } from './preference.js';
-import { DURATION } from './tokens.js';
+import { isReducedMotion } from '@/lib/motion/preference.js';
+import { DURATION } from '@/lib/motion/tokens.js';
 
 const COLOR_VARS = ['--cap-brand', '--cap-red', '--cap-wine', '--cap-taupe', '--cap-red-200', '--cap-status-ok-solid', '--cap-status-warning-solid'];
 

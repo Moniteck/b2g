@@ -3,13 +3,13 @@
 // y PDF de cada procedimiento.
 import { router } from '@inertiajs/vue3';
 import { computed, nextTick, ref } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import DescriptionList from '../../Components/DescriptionList.vue';
-import PageHeader from '../../Components/PageHeader.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { date, number } from '../../lib/format.js';
-import ProgressBar from './Partials/ProgressBar.vue';
+import AppButton from '@/Components/AppButton.vue';
+import DescriptionList from '@/Components/DescriptionList.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { date, number } from '@/lib/format.js';
+import ProgressBar from '@/Pages/Tools/Partials/ProgressBar.vue';
 
 const props = defineProps({
     sops: { type: Array, default: () => [] },

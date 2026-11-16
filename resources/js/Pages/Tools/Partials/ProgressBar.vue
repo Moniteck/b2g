@@ -3,7 +3,7 @@
 // Props: value (0–100), label (nombre accesible), status ('ok' | 'warning' | 'error' | 'info' | 'brand'),
 //        showValue (pinta «45 %» a la derecha).
 import { computed } from 'vue';
-import { percent } from '../../../lib/format.js';
+import { percent } from '@/lib/format.js';
 
 const props = defineProps({
     value: { type: Number, default: 0 },

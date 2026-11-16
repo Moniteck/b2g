@@ -4,23 +4,23 @@
 // licitación (p. ej. de la captura), se muestran los dos y la persona elige.
 import { router, useForm } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import CapSegmented from '../../../design/vue/CapSegmented.vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import Checkbox from '../../Components/Checkbox.vue';
-import DateTimeInput from '../../Components/DateTimeInput.vue';
-import EmptyState from '../../Components/EmptyState.vue';
-import FormField from '../../Components/FormField.vue';
-import PdfViewer from '../../Components/PdfViewer.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import TextArea from '../../Components/TextArea.vue';
-import TextInput from '../../Components/TextInput.vue';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { dateTime, number, quantity } from '../../lib/format.js';
-import { focusFirstError } from '../../lib/errors.js';
-import { card, textLink } from '../../lib/ui.js';
-import { EVIDENCE_STATUS } from '../../Modules/Tenders/tenders.js';
+import CapAlert from '@design/vue/CapAlert.vue';
+import CapSegmented from '@design/vue/CapSegmented.vue';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import Checkbox from '@/Components/Checkbox.vue';
+import DateTimeInput from '@/Components/DateTimeInput.vue';
+import EmptyState from '@/Components/EmptyState.vue';
+import FormField from '@/Components/FormField.vue';
+import PdfViewer from '@/Components/PdfViewer.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import TextArea from '@/Components/TextArea.vue';
+import TextInput from '@/Components/TextInput.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { dateTime, number, quantity } from '@/lib/format.js';
+import { focusFirstError } from '@/lib/errors.js';
+import { card, textLink } from '@/lib/ui.js';
+import { EVIDENCE_STATUS } from '@/Modules/Tenders/tenders.js';
 
 const props = defineProps({
     tender: { type: Object, required: true },

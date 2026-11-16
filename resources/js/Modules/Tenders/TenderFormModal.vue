@@ -3,17 +3,17 @@
 // Props: open (v-model:open), tender (null = nueva), statuses, modalities.
 import { useForm } from '@inertiajs/vue3';
 import { computed, nextTick, watch } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import DateTimeInput from '../../Components/DateTimeInput.vue';
-import FormField from '../../Components/FormField.vue';
-import MoneyInput from '../../Components/MoneyInput.vue';
-import SearchSelect from '../../Components/SearchSelect.vue';
-import SelectInput from '../../Components/SelectInput.vue';
-import TextArea from '../../Components/TextArea.vue';
-import TextInput from '../../Components/TextInput.vue';
-import { focusFirstError } from '../../lib/errors.js';
-import { emptyTender, formFrom } from './tenders.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import DateTimeInput from '@/Components/DateTimeInput.vue';
+import FormField from '@/Components/FormField.vue';
+import MoneyInput from '@/Components/MoneyInput.vue';
+import SearchSelect from '@/Components/SearchSelect.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import TextArea from '@/Components/TextArea.vue';
+import TextInput from '@/Components/TextInput.vue';
+import { focusFirstError } from '@/lib/errors.js';
+import { emptyTender, formFrom } from '@/Modules/Tenders/tenders.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

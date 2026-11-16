@@ -3,9 +3,9 @@
 // aplicación y ya está montado en `AppLayout`: las páginas no lo incluyen, solo llaman a `useConfirm()`.
 // Sin props. Foco inicial en «Cancelar»; Esc y × cancelan; clic fuera no cierra.
 import { watch } from 'vue';
-import CapConfirmDialog from '../../design/vue/CapConfirmDialog.vue';
-import { confirmHost } from '../composables/useConfirm.js';
-import { useLayer } from '../composables/useLayers.js';
+import CapConfirmDialog from '@design/vue/CapConfirmDialog.vue';
+import { confirmHost } from '@/composables/useConfirm.js';
+import { useLayer } from '@/composables/useLayers.js';
 
 const { state } = confirmHost;
 const layer = useLayer();

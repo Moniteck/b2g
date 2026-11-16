@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { chromium } from 'playwright';
-import { iconSvg, liciSvg, colors } from './lici-svg.mjs';
+import { iconSvg, liciSvg, colors } from '@/pwa/lici-svg.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
 const out = resolve(root, 'public/icons');

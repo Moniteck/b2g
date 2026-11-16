@@ -6,10 +6,10 @@
 // #app-shell-topbar-actions y #app-shell-search.
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed, watch } from 'vue';
-import CapBellButton from '../../../design/vue/CapBellButton.vue';
-import CapNotifications from '../../../design/vue/CapNotifications.vue';
-import CapSectionNav from '../../../design/vue/CapSectionNav.vue';
-import { usePopover } from '../../../design/vue/composables/usePopover.js';
+import CapBellButton from '@design/vue/CapBellButton.vue';
+import CapNotifications from '@design/vue/CapNotifications.vue';
+import CapSectionNav from '@design/vue/CapSectionNav.vue';
+import { usePopover } from '@design/vue/composables/usePopover.js';
 
 const props = defineProps({
     title: { type: String, required: true },

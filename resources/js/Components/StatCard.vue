@@ -6,7 +6,7 @@
 //        variant ('normal' | 'featured' | 'alert'), icon (sin `mdi-`; por defecto en alerta, alert-circle-outline).
 import { Link } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { bindCountUp, formatCount } from '../../design/shell/js/count-up.js';
+import { bindCountUp, formatCount } from '@design/shell/js/count-up.js';
 
 const props = defineProps({
     label: { type: String, required: true },

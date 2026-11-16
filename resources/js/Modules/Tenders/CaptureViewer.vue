@@ -4,8 +4,8 @@
 // cualquier tamaño.
 //   <CaptureViewer ref="viewer" :src="url" :box="activeBox" :boxes="allBoxes" />  →  viewer.value.focusBox(box)
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import IconButton from '../../Components/IconButton.vue';
-import { reducedMotion } from '../../lib/motion/index.js';
+import IconButton from '@/Components/IconButton.vue';
+import { reducedMotion } from '@/lib/motion/index.js';
 
 const props = defineProps({
     src: { type: String, required: true },

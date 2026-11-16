@@ -6,23 +6,23 @@
 // Eventos: update:open, saved.
 import { useForm } from '@inertiajs/vue3';
 import { computed, nextTick, ref, watch } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import CapSkeleton from '../../../design/vue/CapSkeleton.vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import DateInput from '../../Components/DateInput.vue';
-import ErrorState from '../../Components/ErrorState.vue';
-import FormField from '../../Components/FormField.vue';
-import SearchSelect from '../../Components/SearchSelect.vue';
-import SelectInput from '../../Components/SelectInput.vue';
-import TextArea from '../../Components/TextArea.vue';
-import TextInput from '../../Components/TextInput.vue';
-import Toggle from '../../Components/Toggle.vue';
-import { focusFirstError } from '../../lib/errors.js';
-import { date, money, percent } from '../../lib/format.js';
-import { fetchQuote } from './api.js';
-import QuoteLinesEditor from './QuoteLinesEditor.vue';
-import { addDays, linePayload, lineFromServer, quoteTotals, today } from './quotes.js';
+import CapAlert from '@design/vue/CapAlert.vue';
+import CapSkeleton from '@design/vue/CapSkeleton.vue';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import DateInput from '@/Components/DateInput.vue';
+import ErrorState from '@/Components/ErrorState.vue';
+import FormField from '@/Components/FormField.vue';
+import SearchSelect from '@/Components/SearchSelect.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import TextArea from '@/Components/TextArea.vue';
+import TextInput from '@/Components/TextInput.vue';
+import Toggle from '@/Components/Toggle.vue';
+import { focusFirstError } from '@/lib/errors.js';
+import { date, money, percent } from '@/lib/format.js';
+import { fetchQuote } from '@/Modules/Quotes/api.js';
+import QuoteLinesEditor from '@/Modules/Quotes/QuoteLinesEditor.vue';
+import { addDays, linePayload, lineFromServer, quoteTotals, today } from '@/Modules/Quotes/quotes.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

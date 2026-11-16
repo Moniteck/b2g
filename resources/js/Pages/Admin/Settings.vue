@@ -2,23 +2,23 @@
 // Configuración de la empresa activa: datos de membrete, logo, vista previa del PDF y zona de peligro.
 import { router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import DescriptionList from '../../Components/DescriptionList.vue';
-import FileDropzone from '../../Components/FileDropzone.vue';
-import FormField from '../../Components/FormField.vue';
-import PageHeader from '../../Components/PageHeader.vue';
-import PdfViewer from '../../Components/PdfViewer.vue';
-import TextArea from '../../Components/TextArea.vue';
-import TextInput from '../../Components/TextInput.vue';
-import { useConfirm } from '../../composables/useConfirm.js';
-import { useUpload } from '../../composables/useUpload.js';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { focusFirstError } from '../../lib/errors.js';
-import { percent } from '../../lib/format.js';
-import { visit } from '../../lib/http.js';
-import { card } from '../../lib/ui.js';
+import CapAlert from '@design/vue/CapAlert.vue';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import DescriptionList from '@/Components/DescriptionList.vue';
+import FileDropzone from '@/Components/FileDropzone.vue';
+import FormField from '@/Components/FormField.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import PdfViewer from '@/Components/PdfViewer.vue';
+import TextArea from '@/Components/TextArea.vue';
+import TextInput from '@/Components/TextInput.vue';
+import { useConfirm } from '@/composables/useConfirm.js';
+import { useUpload } from '@/composables/useUpload.js';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { focusFirstError } from '@/lib/errors.js';
+import { percent } from '@/lib/format.js';
+import { visit } from '@/lib/http.js';
+import { card } from '@/lib/ui.js';
 
 const props = defineProps({
     settings: { type: Object, default: () => ({}) },

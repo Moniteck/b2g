@@ -3,8 +3,8 @@
 // Props: status ('ok' | 'error' | 'warning' | 'info' | 'neutral'), o value (estado del dominio:
 //        «Vigente», «Borrador»…; el color sale de `config/statuses.js`), label (texto; por defecto `value`).
 import { computed } from 'vue';
-import { statusBadgeClass } from '../../design/statuses.js';
-import { statusOf } from '../config/statuses.js';
+import { statusBadgeClass } from '@design/statuses.js';
+import { statusOf } from '@/config/statuses.js';
 
 const props = defineProps({
     status: { type: String, default: '' },

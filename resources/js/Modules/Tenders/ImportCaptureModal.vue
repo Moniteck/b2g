@@ -5,11 +5,11 @@
 // revisión; nada se guarda hasta confirmar allí.
 // API estable (la usa también el Dashboard): props `open` (v-model:open) y `maxSizeMb`.
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import { useUpload } from '../../composables/useUpload.js';
-import { fileSize } from '../../lib/format.js';
+import CapAlert from '@design/vue/CapAlert.vue';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import { useUpload } from '@/composables/useUpload.js';
+import { fileSize } from '@/lib/format.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

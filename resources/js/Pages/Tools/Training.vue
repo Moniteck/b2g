@@ -2,14 +2,14 @@
 // Capacitación: cursos de lectura por lecciones, con el progreso de cada usuario.
 import { router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import PageHeader from '../../Components/PageHeader.vue';
-import StatCard from '../../Components/StatCard.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { number, percent } from '../../lib/format.js';
-import ProgressBar from './Partials/ProgressBar.vue';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import StatCard from '@/Components/StatCard.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { number, percent } from '@/lib/format.js';
+import ProgressBar from '@/Pages/Tools/Partials/ProgressBar.vue';
 
 const props = defineProps({
     courses: { type: Array, default: () => [] },

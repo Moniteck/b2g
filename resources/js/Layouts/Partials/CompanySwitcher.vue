@@ -9,9 +9,9 @@
 // Eventos: create (abrir el asistente de alta).
 import { Link, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import DropdownMenu from '../../Components/DropdownMenu.vue';
-import { endpoints } from '../../config/navigation.js';
-import { menuItem } from '../../lib/ui.js';
+import DropdownMenu from '@/Components/DropdownMenu.vue';
+import { endpoints } from '@/config/navigation.js';
+import { menuItem } from '@/lib/ui.js';
 
 const props = defineProps({
     companies: { type: Array, default: () => [] },

@@ -5,17 +5,17 @@
 // reabrir o eliminar: la página recarga el rango).
 import { Link } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
-import CapSkeleton from '../../../design/vue/CapSkeleton.vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import DescriptionList from '../../Components/DescriptionList.vue';
-import ErrorState from '../../Components/ErrorState.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import { useConfirm } from '../../composables/useConfirm.js';
-import { date, dateTime, time } from '../../lib/format.js';
-import { getJson, visit } from '../../lib/http.js';
-import { textLink } from '../../lib/ui.js';
-import { TYPE_ICONS, toneOf } from './calendar.js';
+import CapSkeleton from '@design/vue/CapSkeleton.vue';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import DescriptionList from '@/Components/DescriptionList.vue';
+import ErrorState from '@/Components/ErrorState.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import { useConfirm } from '@/composables/useConfirm.js';
+import { date, dateTime, time } from '@/lib/format.js';
+import { getJson, visit } from '@/lib/http.js';
+import { textLink } from '@/lib/ui.js';
+import { TYPE_ICONS, toneOf } from '@/Modules/Calendar/calendar.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

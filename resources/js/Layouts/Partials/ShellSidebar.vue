@@ -13,11 +13,11 @@
 // Props: menu (de visibleMenu), user, owner, mark, systemName. Eventos: logout.
 import { Link } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import CapAvatar from '../../../design/vue/CapAvatar.vue';
-import { iconClass } from '../../../design/vue/helpers.js';
-import { bindSidebarPeek } from '../../../design/shell/js/collapse.js';
-import { readCollapsed, readItem, writeCollapsed, writeItem } from '../../../design/shell/js/storage.js';
-import { toggleTheme } from '../../../design/shell/js/theme.js';
+import CapAvatar from '@design/vue/CapAvatar.vue';
+import { iconClass } from '@design/vue/helpers.js';
+import { bindSidebarPeek } from '@design/shell/js/collapse.js';
+import { readCollapsed, readItem, writeCollapsed, writeItem } from '@design/shell/js/storage.js';
+import { toggleTheme } from '@design/shell/js/theme.js';
 
 const props = defineProps({
     systemName: { type: String, required: true },

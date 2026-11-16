@@ -3,7 +3,7 @@
 // Siempre a la vista (arriba del contenido) con un botón para volver a su empresa.
 import { router } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import { endpoints } from '../../config/navigation.js';
+import { endpoints } from '@/config/navigation.js';
 
 defineProps({
     company: { type: Object, required: true },

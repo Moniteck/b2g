@@ -1,6 +1,6 @@
 // Utilidades del módulo Licitaciones: etapas del flujo, plazos con cuenta regresiva, estados de
 // lectura (OCR e IA), contradicciones de una captura y formularios.
-import { date, daysUntil, time } from '../../lib/format.js';
+import { date, daysUntil, time } from '@/lib/format.js';
 
 /** Honduras no tiene horario de verano: hora de pared = UTC − 6. */
 const HONDURAS_OFFSET_MS = 6 * 60 * 60 * 1000;

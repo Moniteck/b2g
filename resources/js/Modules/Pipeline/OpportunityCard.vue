@@ -4,10 +4,10 @@
 // Props: card (de OpportunityController::card), menu (ítems de DropdownMenu), showParticipants.
 // Eventos: open (ver detalle), participants.
 import { computed } from 'vue';
-import Avatar from '../../Components/Avatar.vue';
-import DropdownMenu from '../../Components/DropdownMenu.vue';
-import { date, money } from '../../lib/format.js';
-import { isClosed, keyDateBadge } from './pipeline.js';
+import Avatar from '@/Components/Avatar.vue';
+import DropdownMenu from '@/Components/DropdownMenu.vue';
+import { date, money } from '@/lib/format.js';
+import { isClosed, keyDateBadge } from '@/Modules/Pipeline/pipeline.js';
 
 const props = defineProps({
     card: { type: Object, required: true },

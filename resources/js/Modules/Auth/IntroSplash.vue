@@ -7,7 +7,7 @@
 //
 //   <IntroSplash :system-name="SYSTEM_NAME" :mark="company.mark" @reveal="…" @done="…" />
 import { onBeforeUnmount, onMounted, ref } from 'vue';
-import Mascot from './Mascot.vue';
+import Mascot from '@/Modules/Auth/Mascot.vue';
 
 const props = defineProps({
     systemName: { type: String, required: true },

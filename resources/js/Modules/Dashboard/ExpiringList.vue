@@ -4,10 +4,10 @@
 // Props: expiring { contracts: [{ id, title, detail, date, progress, href }], documents: [{ id, title, detail, date, href }] }.
 import { Link } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import CapSegmented from '../../../design/vue/CapSegmented.vue';
-import EmptyState from '../../Components/EmptyState.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import { date, daysUntil, number } from '../../lib/format.js';
+import CapSegmented from '@design/vue/CapSegmented.vue';
+import EmptyState from '@/Components/EmptyState.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import { date, daysUntil, number } from '@/lib/format.js';
 
 const props = defineProps({
     expiring: { type: Object, default: () => ({ contracts: [], documents: [] }) },

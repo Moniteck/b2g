@@ -3,7 +3,7 @@
 // Props: icon (sin `mdi-`), label, href (Link de Inertia), external (<a>), disabled, type.
 import { Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import { iconButton } from '../lib/ui.js';
+import { iconButton } from '@/lib/ui.js';
 
 // Área táctil mínima de 44 px en tableta y móvil.
 const TOUCH = 'max-lg:h-11 max-lg:w-11';

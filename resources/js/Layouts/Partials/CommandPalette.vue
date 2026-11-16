@@ -10,11 +10,11 @@
 // Props: open (v-model), auth. Eventos: create-company.
 import { router } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, ref, useId, watch } from 'vue';
-import { trapFocus } from '../../../design/shell/js/focus-trap.js';
-import { toggleTheme } from '../../../design/shell/js/theme.js';
-import { endpoints, navigationTargets } from '../../config/navigation.js';
-import { getJson } from '../../lib/http.js';
-import { useShell } from '../shell.js';
+import { trapFocus } from '@design/shell/js/focus-trap.js';
+import { toggleTheme } from '@design/shell/js/theme.js';
+import { endpoints, navigationTargets } from '@/config/navigation.js';
+import { getJson } from '@/lib/http.js';
+import { useShell } from '@/Layouts/shell.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

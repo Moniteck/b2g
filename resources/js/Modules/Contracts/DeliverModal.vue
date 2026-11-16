@@ -3,13 +3,13 @@
 // La evidencia queda en los documentos del contrato con la categoría «Acta de recepción».
 import { useForm } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import DateInput from '../../Components/DateInput.vue';
-import FileDropzone from '../../Components/FileDropzone.vue';
-import FormField from '../../Components/FormField.vue';
-import TextArea from '../../Components/TextArea.vue';
-import { quantity } from '../../lib/format.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import DateInput from '@/Components/DateInput.vue';
+import FileDropzone from '@/Components/FileDropzone.vue';
+import FormField from '@/Components/FormField.vue';
+import TextArea from '@/Components/TextArea.vue';
+import { quantity } from '@/lib/format.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

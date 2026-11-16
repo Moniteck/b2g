@@ -6,7 +6,7 @@
 //
 // Los errores previos al flujo (422, 429 del límite de uso, 403…) llegan como `HttpError` con el
 // estado y el mensaje del servidor; un error a mitad del flujo, como `Error` con su mensaje.
-import { HttpError } from '../../../lib/http.js';
+import { HttpError } from '@/lib/http.js';
 
 function xsrfToken() {
     const cookie = document.cookie.split('; ').find((entry) => entry.startsWith('XSRF-TOKEN='));

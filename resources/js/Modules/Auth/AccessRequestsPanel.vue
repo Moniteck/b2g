@@ -6,14 +6,14 @@
 //   <AccessRequestsPanel :requests="accessRequests" :roles="roles" :companies="approvalCompanies" :active-company-id="company.id" />
 import { useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import FormField from '../../Components/FormField.vue';
-import SelectInput from '../../Components/SelectInput.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import TextArea from '../../Components/TextArea.vue';
-import { dateTime } from '../../lib/format.js';
-import { card } from '../../lib/ui.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import FormField from '@/Components/FormField.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import TextArea from '@/Components/TextArea.vue';
+import { dateTime } from '@/lib/format.js';
+import { card } from '@/lib/ui.js';
 
 const props = defineProps({
     requests: { type: Array, default: undefined },

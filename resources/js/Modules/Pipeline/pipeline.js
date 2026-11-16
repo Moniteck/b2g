@@ -1,8 +1,8 @@
 // Reglas y textos del pipeline que comparten el tablero, la tarjeta y el detalle.
 // Las transiciones llegan del servidor (prop `transitions`, Opportunity::TRANSITIONS): aquí solo se
 // explican al usuario. El servidor vuelve a validarlas siempre.
-import { daysUntil, money } from '../../lib/format.js';
-import { sendJson } from '../Quotes/api.js';
+import { daysUntil, money } from '@/lib/format.js';
+import { sendJson } from '@/Modules/Quotes/api.js';
 
 export const CLOSED_STAGES = ['adjudicado', 'no_adjudicado'];
 export const CREATABLE_STAGES = ['prospecto', 'oportunidad'];

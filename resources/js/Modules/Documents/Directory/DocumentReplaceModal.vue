@@ -1,11 +1,11 @@
 <script setup>
 // Reemplazar el archivo de un documento: crea una versión nueva; la actual queda en el historial.
 import { ref, watch } from 'vue';
-import CapAlert from '../../../../design/vue/CapAlert.vue';
-import AppButton from '../../../Components/AppButton.vue';
-import BaseModal from '../../../Components/BaseModal.vue';
-import FileDropzone from '../../../Components/FileDropzone.vue';
-import { useUpload } from '../../../composables/useUpload.js';
+import CapAlert from '@design/vue/CapAlert.vue';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import FileDropzone from '@/Components/FileDropzone.vue';
+import { useUpload } from '@/composables/useUpload.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

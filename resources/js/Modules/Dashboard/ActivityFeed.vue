@@ -2,9 +2,9 @@
 // Actividad reciente del equipo (de la auditoría, solo registros del negocio): quién hizo qué y cuándo.
 // Props: items ([{ id, actor, phrase, subject, icon, at, href }]).
 import { Link } from '@inertiajs/vue3';
-import Avatar from '../../Components/Avatar.vue';
-import EmptyState from '../../Components/EmptyState.vue';
-import { dateTime, relativeTime } from '../../lib/format.js';
+import Avatar from '@/Components/Avatar.vue';
+import EmptyState from '@/Components/EmptyState.vue';
+import { dateTime, relativeTime } from '@/lib/format.js';
 
 defineProps({
     items: { type: Array, default: () => [] },

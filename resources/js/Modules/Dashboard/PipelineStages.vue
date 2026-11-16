@@ -4,9 +4,9 @@
 // Props: stages ([{ stage, label, count, amount, weighted, active, href }]), palette, openTenders.
 import { Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import EmptyState from '../../Components/EmptyState.vue';
-import { money, number } from '../../lib/format.js';
-import { compactMoney } from './dashboard.js';
+import EmptyState from '@/Components/EmptyState.vue';
+import { money, number } from '@/lib/format.js';
+import { compactMoney } from '@/Modules/Dashboard/dashboard.js';
 
 const props = defineProps({
     stages: { type: Array, default: () => [] },

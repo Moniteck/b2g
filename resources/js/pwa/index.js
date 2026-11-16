@@ -5,16 +5,16 @@
 //   quedado de una prueba, para que nunca interfiera con el desarrollo.
 // - Aviso «Hay una actualización · Actualizar» y oferta de instalación de una sola vez (PwaPrompts.vue).
 // - Al cerrar sesión borra las cachés del service worker y la suscripción push de este navegador.
-//   El marco puede llamarlo directamente: `import { clearPwaData } from './pwa/index.js'` o
+//   El marco puede llamarlo directamente: `import { clearPwaData } from '@/pwa/pwa/index.js'` o
 //   `window.crmPwa.clearPwaData()`. Además se detecta solo al llegar a /login desde la app.
 // - Modo standalone: los enlaces externos se abren fuera de la app y la barra del sistema
 //   sigue el tema elegido (claro u oscuro).
 import { createApp, h } from 'vue';
 import { router } from '@inertiajs/vue3';
-import motion from '../lib/motion/index.js';
-import PwaPrompts from './PwaPrompts.vue';
-import { syncPush } from './push.js';
-import { canOfferInstall, detectStandalone, offerAlreadyShown, pwa, rememberOffer } from './state.js';
+import motion from '@/lib/motion/index.js';
+import PwaPrompts from '@/pwa/PwaPrompts.vue';
+import { syncPush } from '@/pwa/push.js';
+import { canOfferInstall, detectStandalone, offerAlreadyShown, pwa, rememberOffer } from '@/pwa/state.js';
 
 const THEME_COLORS = { light: '#F1EDE9', dark: '#151312' };
 const VISITS_KEY = 'crm-b2g:pwa-visits';

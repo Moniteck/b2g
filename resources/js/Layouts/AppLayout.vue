@@ -18,8 +18,8 @@
 // Si la página se pinta sin el marco persistente (p. ej. una prueba que la monta sola), este
 // componente monta el marco completo alrededor del contenido, como antes.
 import { Head } from '@inertiajs/vue3';
-import { useShell, usePageMeta } from './shell.js';
-import AppShell from './AppShell.vue';
+import { useShell, usePageMeta } from '@/Layouts/shell.js';
+import AppShell from '@/Layouts/AppShell.vue';
 
 const props = defineProps({
     title: { type: String, default: '' },

@@ -1,20 +1,20 @@
 <script setup>
 // Bitácora de auditoría de la empresa activa (solo lectura), con filtros y detalle de cambios.
 import { computed, ref } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import DataTable from '../../Components/DataTable.vue';
-import DateInput from '../../Components/DateInput.vue';
-import DescriptionList from '../../Components/DescriptionList.vue';
-import FormField from '../../Components/FormField.vue';
-import PageHeader from '../../Components/PageHeader.vue';
-import Pagination from '../../Components/Pagination.vue';
-import SelectInput from '../../Components/SelectInput.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import Toolbar from '../../Components/Toolbar.vue';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { dateTime, number } from '../../lib/format.js';
-import { useListFilters } from './Partials/useListFilters.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import DataTable from '@/Components/DataTable.vue';
+import DateInput from '@/Components/DateInput.vue';
+import DescriptionList from '@/Components/DescriptionList.vue';
+import FormField from '@/Components/FormField.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import Pagination from '@/Components/Pagination.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import Toolbar from '@/Components/Toolbar.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { dateTime, number } from '@/lib/format.js';
+import { useListFilters } from '@/Pages/Admin/Partials/useListFilters.js';
 
 const props = defineProps({
     logs: { type: Object, required: true },

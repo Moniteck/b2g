@@ -4,29 +4,29 @@
 // Los importes se calculan con `Modules/Inventory/pricing.js`, espejo del calculador del servidor.
 import { router, usePage } from '@inertiajs/vue3';
 import { computed, onMounted, reactive, ref, watch } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import { useToasts } from '../../../design/vue/composables/useToasts.js';
-import AppButton from '../../Components/AppButton.vue';
-import DataTable from '../../Components/DataTable.vue';
-import EmptyState from '../../Components/EmptyState.vue';
-import IconButton from '../../Components/IconButton.vue';
-import PageHeader from '../../Components/PageHeader.vue';
-import Pagination from '../../Components/Pagination.vue';
-import SelectInput from '../../Components/SelectInput.vue';
-import StatCard from '../../Components/StatCard.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import Toolbar from '../../Components/Toolbar.vue';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { dateTime, money, number, percent, quantity as formatQuantity, relativeTime } from '../../lib/format.js';
-import { getJson, postJson } from '../../lib/http.js';
-import { tableLink } from '../../lib/ui.js';
-import { documentTotals, itemLine } from '../../Modules/Inventory/pricing.js';
-import ProductDetailModal from '../../Modules/Inventory/ProductDetailModal.vue';
-import QuantityInput from '../../Modules/Inventory/QuantityInput.vue';
-import { QUOTE_URL, readDraft, saveQuoteSelection, writeDraft } from '../../Modules/Inventory/selection.js';
-import SelectionSummary from '../../Modules/Inventory/SelectionSummary.vue';
-import SyncHistoryModal from '../../Modules/Inventory/SyncHistoryModal.vue';
-import SyncResultModal from '../../Modules/Inventory/SyncResultModal.vue';
+import CapAlert from '@design/vue/CapAlert.vue';
+import { useToasts } from '@design/vue/composables/useToasts.js';
+import AppButton from '@/Components/AppButton.vue';
+import DataTable from '@/Components/DataTable.vue';
+import EmptyState from '@/Components/EmptyState.vue';
+import IconButton from '@/Components/IconButton.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import Pagination from '@/Components/Pagination.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import StatCard from '@/Components/StatCard.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import Toolbar from '@/Components/Toolbar.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { dateTime, money, number, percent, quantity as formatQuantity, relativeTime } from '@/lib/format.js';
+import { getJson, postJson } from '@/lib/http.js';
+import { tableLink } from '@/lib/ui.js';
+import { documentTotals, itemLine } from '@/Modules/Inventory/pricing.js';
+import ProductDetailModal from '@/Modules/Inventory/ProductDetailModal.vue';
+import QuantityInput from '@/Modules/Inventory/QuantityInput.vue';
+import { QUOTE_URL, readDraft, saveQuoteSelection, writeDraft } from '@/Modules/Inventory/selection.js';
+import SelectionSummary from '@/Modules/Inventory/SelectionSummary.vue';
+import SyncHistoryModal from '@/Modules/Inventory/SyncHistoryModal.vue';
+import SyncResultModal from '@/Modules/Inventory/SyncResultModal.vue';
 
 const props = defineProps({
     items: { type: Object, required: true },

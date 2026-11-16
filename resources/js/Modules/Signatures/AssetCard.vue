@@ -8,14 +8,14 @@
 // La subida va por Inertia (`useUpload`) y recarga solo la prop `assets`: la página que la contiene
 // (y una modal abierta encima) conserva su estado.
 import { computed, ref } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import { useConfirm } from '../../composables/useConfirm.js';
-import { visit } from '../../lib/http.js';
-import { dateTime, fileSize } from '../../lib/format.js';
-import { card } from '../../lib/ui.js';
-import { endpoints } from './api.js';
-import AssetCreatorModal from './AssetCreatorModal.vue';
+import AppButton from '@/Components/AppButton.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import { useConfirm } from '@/composables/useConfirm.js';
+import { visit } from '@/lib/http.js';
+import { dateTime, fileSize } from '@/lib/format.js';
+import { card } from '@/lib/ui.js';
+import { endpoints } from '@/Modules/Signatures/api.js';
+import AssetCreatorModal from '@/Modules/Signatures/AssetCreatorModal.vue';
 
 const props = defineProps({
     type: { type: String, required: true },

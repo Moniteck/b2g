@@ -4,10 +4,10 @@
 // a /login con un aviso. Lici se tapa los ojos con la contraseña como en «Ingresar».
 import { router, useForm } from '@inertiajs/vue3';
 import { computed, nextTick, ref, watch } from 'vue';
-import CapAlert from '../../../../design/vue/CapAlert.vue';
-import { shakeErrors } from '../../../Modules/Auth/motion.js';
-import AuthButton from './AuthButton.vue';
-import AuthField from './AuthField.vue';
+import CapAlert from '@design/vue/CapAlert.vue';
+import { shakeErrors } from '@/Modules/Auth/motion.js';
+import AuthButton from '@/Pages/Auth/Partials/AuthButton.vue';
+import AuthField from '@/Pages/Auth/Partials/AuthField.vue';
 
 const props = defineProps({
     token: { type: String, required: true },

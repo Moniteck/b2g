@@ -4,7 +4,7 @@
 // Aparece al pasar el cursor o al enfocar con teclado; Esc lo oculta. Nunca es el único portador
 // de la información: los botones de ícono siguen llevando su `aria-label`.
 import { ref, useId } from 'vue';
-import { useFloating } from '../composables/useFloating.js';
+import { useFloating } from '@/composables/useFloating.js';
 
 defineOptions({ inheritAttrs: false });
 

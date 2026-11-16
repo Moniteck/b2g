@@ -3,10 +3,10 @@
 // artículos resaltados), botón para copiar y, mientras llega, un cursor de escritura.
 // Props: message ({ id, role, content, created_at, streaming? }).
 import { ref } from 'vue';
-import { useToasts } from '../../../../design/vue/composables/useToasts.js';
-import { time } from '../../../lib/format.js';
-import { iconButton } from '../../../lib/ui.js';
-import { formatMessage, plainText } from './formatMessage.js';
+import { useToasts } from '@design/vue/composables/useToasts.js';
+import { time } from '@/lib/format.js';
+import { iconButton } from '@/lib/ui.js';
+import { formatMessage, plainText } from '@/Pages/Tools/Partials/formatMessage.js';
 
 const props = defineProps({
     message: { type: Object, required: true },

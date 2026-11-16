@@ -3,9 +3,9 @@
 // permiso del usuario (`adminCards` de config/navigation.js). Cada destino sigue autorizando su ruta.
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import PageHeader from '../../Components/PageHeader.vue';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { accountMenu, visibleAdminCards } from '../../config/navigation.js';
+import PageHeader from '@/Components/PageHeader.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { accountMenu, visibleAdminCards } from '@/config/navigation.js';
 
 const page = usePage();
 const cards = computed(() => visibleAdminCards(page.props.auth ?? {}));

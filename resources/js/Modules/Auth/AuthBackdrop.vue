@@ -4,7 +4,7 @@
 // requestAnimationFrame, se detiene con la pestaña oculta y, con movimiento reducido, se pinta una
 // sola vez quieto. Colores desde las variables --cap-* (cambian solos con el tema).
 import { onBeforeUnmount, onMounted, ref } from 'vue';
-import { cssVar, prefersReducedMotion } from './motion.js';
+import { cssVar, prefersReducedMotion } from '@/Modules/Auth/motion.js';
 
 const props = defineProps({
     density: { type: Number, default: 1 },

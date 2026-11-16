@@ -7,11 +7,11 @@
 // Teclado: escribir la fecha (las barras se ponen solas; también «hoy», «mañana»), Alt+↓ o el botón
 // abren el calendario (← → ↑ ↓ días, Re Pág / Av Pág meses, Enter elige, Esc cierra).
 import { computed, nextTick, onBeforeUnmount, ref, useAttrs, useId, watch } from 'vue';
-import { onPointerOutside, useFloating } from '../composables/useFloating.js';
-import { useField } from '../composables/useField.js';
-import { inputClass } from '../lib/ui.js';
-import DateCalendar from './DateCalendar.vue';
-import { isValidIso, maskDate, parseDisplay, toDisplay } from './dates.js';
+import { onPointerOutside, useFloating } from '@/composables/useFloating.js';
+import { useField } from '@/composables/useField.js';
+import { inputClass } from '@/lib/ui.js';
+import DateCalendar from '@/Components/DateCalendar.vue';
+import { isValidIso, maskDate, parseDisplay, toDisplay } from '@/Components/dates.js';
 
 defineOptions({ inheritAttrs: false });
 

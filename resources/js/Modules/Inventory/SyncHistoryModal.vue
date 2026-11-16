@@ -1,12 +1,12 @@
 <script setup>
 // Modal «Historial de sincronización»: las últimas corridas; al elegir una se abre su resultado.
 import { ref, watch } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import DataTable from '../../Components/DataTable.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import { dateTime, number } from '../../lib/format.js';
-import { getJson } from '../../lib/http.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import DataTable from '@/Components/DataTable.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import { dateTime, number } from '@/lib/format.js';
+import { getJson } from '@/lib/http.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

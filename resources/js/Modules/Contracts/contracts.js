@@ -1,5 +1,5 @@
 // Utilidades del módulo de post-adjudicación (contratos).
-import { date, daysUntil } from '../../lib/format.js';
+import { date, daysUntil } from '@/lib/format.js';
 
 export const CATEGORIES = ['Contrato', 'Adenda', 'Orden de compra', 'Acta de recepción', 'Factura', 'Otro'];
 

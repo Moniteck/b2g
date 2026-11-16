@@ -3,31 +3,31 @@
 // fecha estimada está a 30 días o menos (o vencida) o si se marcó para el cierre del año fiscal.
 import { useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import Checkbox from '../../Components/Checkbox.vue';
-import DataTable from '../../Components/DataTable.vue';
-import DateInput from '../../Components/DateInput.vue';
-import DescriptionList from '../../Components/DescriptionList.vue';
-import DropdownMenu from '../../Components/DropdownMenu.vue';
-import FormField from '../../Components/FormField.vue';
-import MoneyInput from '../../Components/MoneyInput.vue';
-import PageHeader from '../../Components/PageHeader.vue';
-import Pagination from '../../Components/Pagination.vue';
-import SearchSelect from '../../Components/SearchSelect.vue';
-import SelectInput from '../../Components/SelectInput.vue';
-import StatCard from '../../Components/StatCard.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import TextArea from '../../Components/TextArea.vue';
-import TextInput from '../../Components/TextInput.vue';
-import Toolbar from '../../Components/Toolbar.vue';
-import { useConfirm } from '../../composables/useConfirm.js';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { focusFirstError } from '../../lib/errors.js';
-import { date, money, number, percent, relativeDays } from '../../lib/format.js';
-import { visit } from '../../lib/http.js';
-import LoadError from './Partials/LoadError.vue';
-import { useServerList } from './Partials/finance.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import Checkbox from '@/Components/Checkbox.vue';
+import DataTable from '@/Components/DataTable.vue';
+import DateInput from '@/Components/DateInput.vue';
+import DescriptionList from '@/Components/DescriptionList.vue';
+import DropdownMenu from '@/Components/DropdownMenu.vue';
+import FormField from '@/Components/FormField.vue';
+import MoneyInput from '@/Components/MoneyInput.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import Pagination from '@/Components/Pagination.vue';
+import SearchSelect from '@/Components/SearchSelect.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import StatCard from '@/Components/StatCard.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import TextArea from '@/Components/TextArea.vue';
+import TextInput from '@/Components/TextInput.vue';
+import Toolbar from '@/Components/Toolbar.vue';
+import { useConfirm } from '@/composables/useConfirm.js';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { focusFirstError } from '@/lib/errors.js';
+import { date, money, number, percent, relativeDays } from '@/lib/format.js';
+import { visit } from '@/lib/http.js';
+import LoadError from '@/Pages/Finance/Partials/LoadError.vue';
+import { useServerList } from '@/Pages/Finance/Partials/finance.js';
 
 const props = defineProps({
     records: { type: Object, required: true },

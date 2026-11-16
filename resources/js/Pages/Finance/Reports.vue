@@ -8,18 +8,18 @@
 // Las cifras salen de `BusinessMetrics`, la misma definición del Dashboard y de KPI.
 import { Deferred, router, usePage } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, reactive, ref } from 'vue';
-import CapSkeleton from '../../../design/vue/CapSkeleton.vue';
-import DataTable from '../../Components/DataTable.vue';
-import DropdownMenu from '../../Components/DropdownMenu.vue';
-import PageHeader from '../../Components/PageHeader.vue';
-import StatCard from '../../Components/StatCard.vue';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { dateRange, money, number, percent } from '../../lib/format.js';
-import BarChart from './Partials/BarChart.vue';
-import ChartCard from './Partials/ChartCard.vue';
-import LoadError from './Partials/LoadError.vue';
-import PeriodFilter from './Partials/PeriodFilter.vue';
-import { cleanQuery, compactMoney, monthLabel, useChartPalette } from './Partials/finance.js';
+import CapSkeleton from '@design/vue/CapSkeleton.vue';
+import DataTable from '@/Components/DataTable.vue';
+import DropdownMenu from '@/Components/DropdownMenu.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import StatCard from '@/Components/StatCard.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { dateRange, money, number, percent } from '@/lib/format.js';
+import BarChart from '@/Pages/Finance/Partials/BarChart.vue';
+import ChartCard from '@/Pages/Finance/Partials/ChartCard.vue';
+import LoadError from '@/Pages/Finance/Partials/LoadError.vue';
+import PeriodFilter from '@/Pages/Finance/Partials/PeriodFilter.vue';
+import { cleanQuery, compactMoney, monthLabel, useChartPalette } from '@/Pages/Finance/Partials/finance.js';
 
 const props = defineProps({
     filters: { type: Object, required: true },

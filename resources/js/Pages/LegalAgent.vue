@@ -8,23 +8,23 @@
 // (worried) si algo falla. En móvil el chat ocupa todo el espacio entre la barra superior y la
 // inferior, y el campo de escritura queda fijo sobre el teclado virtual.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import CapAlert from '../../design/vue/CapAlert.vue';
-import CapSkeleton from '../../design/vue/CapSkeleton.vue';
-import AppButton from '../Components/AppButton.vue';
-import BaseModal from '../Components/BaseModal.vue';
-import ErrorState from '../Components/ErrorState.vue';
-import IconButton from '../Components/IconButton.vue';
-import { useConfirm } from '../composables/useConfirm.js';
-import AppLayout from '../Layouts/AppLayout.vue';
-import { getJson, HttpError } from '../lib/http.js';
-import { iconButton } from '../lib/ui.js';
-import Mascot from '../Modules/Auth/Mascot.vue';
-import { prefersReducedMotion } from '../Modules/Auth/motion.js';
-import LegalChatMessage from './Tools/Partials/LegalChatMessage.vue';
-import LegalConversationList from './Tools/Partials/LegalConversationList.vue';
-import LegalWritingModal from './Tools/Partials/LegalWritingModal.vue';
-import { streamLegalReply } from './Tools/Partials/legalStream.js';
-import { deleteJson } from './Tools/Partials/requests.js';
+import CapAlert from '@design/vue/CapAlert.vue';
+import CapSkeleton from '@design/vue/CapSkeleton.vue';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import ErrorState from '@/Components/ErrorState.vue';
+import IconButton from '@/Components/IconButton.vue';
+import { useConfirm } from '@/composables/useConfirm.js';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { getJson, HttpError } from '@/lib/http.js';
+import { iconButton } from '@/lib/ui.js';
+import Mascot from '@/Modules/Auth/Mascot.vue';
+import { prefersReducedMotion } from '@/Modules/Auth/motion.js';
+import LegalChatMessage from '@/Pages/Tools/Partials/LegalChatMessage.vue';
+import LegalConversationList from '@/Pages/Tools/Partials/LegalConversationList.vue';
+import LegalWritingModal from '@/Pages/Tools/Partials/LegalWritingModal.vue';
+import { streamLegalReply } from '@/Pages/Tools/Partials/legalStream.js';
+import { deleteJson } from '@/Pages/Tools/Partials/requests.js';
 
 const props = defineProps({
     conversations: { type: Array, default: () => [] },

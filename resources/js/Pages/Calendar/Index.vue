@@ -5,22 +5,22 @@
 //        rules (solo administradores), initial ({ month, event }), can ({ create, update, delete, manage_rules }).
 // Los eventos se piden por rango visible a GET /calendario/eventos.
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import CapSegmented from '../../../design/vue/CapSegmented.vue';
-import CapSkeleton from '../../../design/vue/CapSkeleton.vue';
-import AppButton from '../../Components/AppButton.vue';
-import EmptyState from '../../Components/EmptyState.vue';
-import ErrorState from '../../Components/ErrorState.vue';
-import IconButton from '../../Components/IconButton.vue';
-import SelectInput from '../../Components/SelectInput.vue';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { getJson } from '../../lib/http.js';
-import AgendaList from '../../Modules/Calendar/AgendaList.vue';
-import { LEGEND, monthLabel, monthWeeks, shiftMonth, todayKey } from '../../Modules/Calendar/calendar.js';
-import EventDetailModal from '../../Modules/Calendar/EventDetailModal.vue';
-import EventFormModal from '../../Modules/Calendar/EventFormModal.vue';
-import MonthGrid from '../../Modules/Calendar/MonthGrid.vue';
-import RulesModal from '../../Modules/Calendar/RulesModal.vue';
+import CapAlert from '@design/vue/CapAlert.vue';
+import CapSegmented from '@design/vue/CapSegmented.vue';
+import CapSkeleton from '@design/vue/CapSkeleton.vue';
+import AppButton from '@/Components/AppButton.vue';
+import EmptyState from '@/Components/EmptyState.vue';
+import ErrorState from '@/Components/ErrorState.vue';
+import IconButton from '@/Components/IconButton.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { getJson } from '@/lib/http.js';
+import AgendaList from '@/Modules/Calendar/AgendaList.vue';
+import { LEGEND, monthLabel, monthWeeks, shiftMonth, todayKey } from '@/Modules/Calendar/calendar.js';
+import EventDetailModal from '@/Modules/Calendar/EventDetailModal.vue';
+import EventFormModal from '@/Modules/Calendar/EventFormModal.vue';
+import MonthGrid from '@/Modules/Calendar/MonthGrid.vue';
+import RulesModal from '@/Modules/Calendar/RulesModal.vue';
 
 const props = defineProps({
     types: { type: Array, default: () => [] },

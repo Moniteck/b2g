@@ -3,19 +3,19 @@
 //   1. Tipo de escrito (tarjetas)  2. Datos del caso  3. Borrador en una hoja (copiar o exportar a PDF).
 // El borrador no se guarda en el servidor. Mientras se redacta, Lici escribe sobre una hoja.
 import { computed, reactive, ref, watch } from 'vue';
-import CapAlert from '../../../../design/vue/CapAlert.vue';
-import { useToasts } from '../../../../design/vue/composables/useToasts.js';
-import AppButton from '../../../Components/AppButton.vue';
-import BaseModal from '../../../Components/BaseModal.vue';
-import FormField from '../../../Components/FormField.vue';
-import TextArea from '../../../Components/TextArea.vue';
-import TextInput from '../../../Components/TextInput.vue';
-import { focusFirstError } from '../../../lib/errors.js';
-import { date } from '../../../lib/format.js';
-import { postJson } from '../../../lib/http.js';
-import Mascot from '../../../Modules/Auth/Mascot.vue';
-import { formatMessage, plainText } from './formatMessage.js';
-import { downloadPdf } from './requests.js';
+import CapAlert from '@design/vue/CapAlert.vue';
+import { useToasts } from '@design/vue/composables/useToasts.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import FormField from '@/Components/FormField.vue';
+import TextArea from '@/Components/TextArea.vue';
+import TextInput from '@/Components/TextInput.vue';
+import { focusFirstError } from '@/lib/errors.js';
+import { date } from '@/lib/format.js';
+import { postJson } from '@/lib/http.js';
+import Mascot from '@/Modules/Auth/Mascot.vue';
+import { formatMessage, plainText } from '@/Pages/Tools/Partials/formatMessage.js';
+import { downloadPdf } from '@/Pages/Tools/Partials/requests.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

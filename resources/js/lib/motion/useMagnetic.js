@@ -3,7 +3,7 @@
 // para no pisar el `transform` que el elemento ya tenga (presión de botón, hover).
 //   const button = ref(null); useMagnetic(button, { strength: 6 });
 import { onBeforeUnmount, onMounted, toValue } from 'vue';
-import { isReducedMotion } from './preference.js';
+import { isReducedMotion } from '@/lib/motion/preference.js';
 
 const finePointer = () => typeof matchMedia === 'function' && matchMedia('(hover: hover) and (pointer: fine)').matches;
 

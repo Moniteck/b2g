@@ -17,10 +17,10 @@
 //        card ({ row }: cuerpo propio de la tarjeta móvil), empty-action (botón primario del estado vacío).
 // Eventos: row-click (fila), update:sort, retry, clear-filters.
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
-import CapSkeleton from '../../design/vue/CapSkeleton.vue';
-import { EMPTY } from '../lib/format.js';
-import EmptyState from './EmptyState.vue';
-import ErrorState from './ErrorState.vue';
+import CapSkeleton from '@design/vue/CapSkeleton.vue';
+import { EMPTY } from '@/lib/format.js';
+import EmptyState from '@/Components/EmptyState.vue';
+import ErrorState from '@/Components/ErrorState.vue';
 
 const props = defineProps({
     columns: { type: Array, required: true },

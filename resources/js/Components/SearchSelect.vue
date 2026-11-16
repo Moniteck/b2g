@@ -12,10 +12,10 @@
 // Eventos: update:modelValue, select (opción completa o null).
 // Teclado: ↓ ↑ recorren, Enter elige, Esc cierra, Inicio/Fin saltan.
 import { computed, nextTick, onBeforeUnmount, ref, useId, watch } from 'vue';
-import { useField } from '../composables/useField.js';
-import { onPointerOutside, useFloating } from '../composables/useFloating.js';
-import { getJson } from '../lib/http.js';
-import { floatingPanel, iconButton, inputClass } from '../lib/ui.js';
+import { useField } from '@/composables/useField.js';
+import { onPointerOutside, useFloating } from '@/composables/useFloating.js';
+import { getJson } from '@/lib/http.js';
+import { floatingPanel, iconButton, inputClass } from '@/lib/ui.js';
 
 defineOptions({ inheritAttrs: false });
 

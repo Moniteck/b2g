@@ -3,14 +3,14 @@
 //
 //   <PwaAccountSection />   (resources/js/Pages/Admin/Account.vue)
 import { computed, onMounted, ref } from 'vue';
-import AppButton from '../Components/AppButton.vue';
-import StatusBadge from '../Components/StatusBadge.vue';
-import Toggle from '../Components/Toggle.vue';
-import { useToasts } from '../../design/vue/composables/useToasts.js';
-import { card } from '../lib/ui.js';
-import IosInstallSteps from './IosInstallSteps.vue';
-import { disablePush, enablePush, pushStatus, sendTestPush } from './push.js';
-import { detectStandalone, promptInstall, pwa } from './state.js';
+import AppButton from '@/Components/AppButton.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import Toggle from '@/Components/Toggle.vue';
+import { useToasts } from '@design/vue/composables/useToasts.js';
+import { card } from '@/lib/ui.js';
+import IosInstallSteps from '@/pwa/IosInstallSteps.vue';
+import { disablePush, enablePush, pushStatus, sendTestPush } from '@/pwa/push.js';
+import { detectStandalone, promptInstall, pwa } from '@/pwa/state.js';
 
 // Ruta pública (no un import de Vite): el ícono vive en public/icons.
 const APP_ICON = '/icons/icon-192.png';

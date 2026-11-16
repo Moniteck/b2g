@@ -14,10 +14,10 @@
 // Teclado: la zona de páginas es enfocable y se desplaza con las flechas; los botones de la barra
 // cambian de página y de zoom.
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
-import { httpErrorMessage } from '../lib/errors.js';
-import { EASE, play } from '../lib/motion/index.js';
-import { iconButton, inputClass } from '../lib/ui.js';
-import ErrorState from './ErrorState.vue';
+import { httpErrorMessage } from '@/lib/errors.js';
+import { EASE, play } from '@/lib/motion/index.js';
+import { iconButton, inputClass } from '@/lib/ui.js';
+import ErrorState from '@/Components/ErrorState.vue';
 
 const props = defineProps({
     src: { type: String, default: '' },

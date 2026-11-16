@@ -6,10 +6,10 @@
 //        readonly, id, required.
 // Atributos: `class` y `style` van al contenedor; el resto al campo de fecha.
 import { computed, ref, useAttrs, watch } from 'vue';
-import { useField } from '../composables/useField.js';
-import { inputClass } from '../lib/ui.js';
-import DateInput from './DateInput.vue';
-import { maskTime, meridiemLabel, parseTime } from './dates.js';
+import { useField } from '@/composables/useField.js';
+import { inputClass } from '@/lib/ui.js';
+import DateInput from '@/Components/DateInput.vue';
+import { maskTime, meridiemLabel, parseTime } from '@/Components/dates.js';
 
 defineOptions({ inheritAttrs: false });
 

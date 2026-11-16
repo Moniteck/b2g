@@ -3,7 +3,7 @@
 // Props: modelValue (v-model: booleano, o lista si se pasa `value`), value, label, description,
 //        disabled, invalid, id. La etiqueta también puede ir en el slot.
 import { computed } from 'vue';
-import { useField } from '../composables/useField.js';
+import { useField } from '@/composables/useField.js';
 
 const props = defineProps({
     modelValue: { type: [Boolean, Array, Number], default: false },

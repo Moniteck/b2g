@@ -5,8 +5,8 @@
 //        title (nombre accesible), height, highlight (índice de categoría resaltada: «hoy»).
 // Lleva leyenda, tooltip sólido al pasar el cursor o con el teclado y una tabla oculta para lectores.
 import { computed, ref } from 'vue';
-import { money } from '../../../lib/format.js';
-import { compactMoney, niceMax, useChartPalette, useWidth } from './finance.js';
+import { money } from '@/lib/format.js';
+import { compactMoney, niceMax, useChartPalette, useWidth } from '@/Pages/Finance/Partials/finance.js';
 
 const props = defineProps({
     categories: { type: Array, required: true },

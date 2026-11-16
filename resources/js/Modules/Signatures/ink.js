@@ -33,12 +33,12 @@ export const HANDWRITING_FONTS = [
 ];
 
 const FONT_URLS = {
-    'great-vibes': () => import('./fonts/great-vibes.woff2?url'),
-    allura: () => import('./fonts/allura.woff2?url'),
-    sacramento: () => import('./fonts/sacramento.woff2?url'),
-    'herr-von-muellerhoff': () => import('./fonts/herr-von-muellerhoff.woff2?url'),
-    'dancing-script': () => import('./fonts/dancing-script.woff2?url'),
-    caveat: () => import('./fonts/caveat.woff2?url'),
+    'great-vibes': () => import('@/Modules/Signatures/fonts/great-vibes.woff2?url'),
+    allura: () => import('@/Modules/Signatures/fonts/allura.woff2?url'),
+    sacramento: () => import('@/Modules/Signatures/fonts/sacramento.woff2?url'),
+    'herr-von-muellerhoff': () => import('@/Modules/Signatures/fonts/herr-von-muellerhoff.woff2?url'),
+    'dancing-script': () => import('@/Modules/Signatures/fonts/dancing-script.woff2?url'),
+    caveat: () => import('@/Modules/Signatures/fonts/caveat.woff2?url'),
 };
 
 let fontsPromise = null;

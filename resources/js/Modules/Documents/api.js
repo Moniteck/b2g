@@ -1,6 +1,6 @@
 // Peticiones JSON del módulo de documentos (fuera del ciclo de Inertia).
 // Las subidas van con `useUpload()` (Inertia): el servidor responde con un «volver atrás».
-import { getJson, HttpError } from '../../lib/http.js';
+import { getJson, HttpError } from '@/lib/http.js';
 
 export const attachmentsUrl = (entityType, entityId) => `/adjuntos/${entityType}/${entityId}`;
 

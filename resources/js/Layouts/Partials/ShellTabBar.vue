@@ -2,7 +2,7 @@
 // Barra de pestañas inferior (móvil < 1024 px): 4 destinos + «Más». La etiqueta va en su propio
 // <span> para poder recortarla con puntos suspensivos a 360 px (B-14).
 import { Link } from '@inertiajs/vue3';
-import { iconClass } from '../../../design/vue/helpers.js';
+import { iconClass } from '@design/vue/helpers.js';
 
 defineProps({
     tabs: { type: Array, default: () => [] },

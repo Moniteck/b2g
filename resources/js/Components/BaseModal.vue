@@ -12,9 +12,9 @@
 // Movimiento (m-modal en resources/css/motion.css): en escritorio entra con escala y el fondo se
 // desenfoca apenas (en móvil, fondo sólido: es caro de pintar); cierra en ≤ 160 ms; en móvil sube desde abajo y se cierra arrastrando la cabecera hacia abajo (si no es persistent).
 import { computed, nextTick, onBeforeUnmount, reactive, ref, useId, watch } from 'vue';
-import { trapFocus } from '../../design/shell/js/focus-trap.js';
-import { useLayer } from '../composables/useLayers.js';
-import { iconButton } from '../lib/ui.js';
+import { trapFocus } from '@design/shell/js/focus-trap.js';
+import { useLayer } from '@/composables/useLayers.js';
+import { iconButton } from '@/lib/ui.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

@@ -3,12 +3,12 @@
 // (que crea una versión nueva). Sin archivo solo cambian las fechas.
 import { useForm } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
-import AppButton from '../../../Components/AppButton.vue';
-import BaseModal from '../../../Components/BaseModal.vue';
-import DateInput from '../../../Components/DateInput.vue';
-import FileDropzone from '../../../Components/FileDropzone.vue';
-import FormField from '../../../Components/FormField.vue';
-import { date } from '../../../lib/format.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import DateInput from '@/Components/DateInput.vue';
+import FileDropzone from '@/Components/FileDropzone.vue';
+import FormField from '@/Components/FormField.vue';
+import { date } from '@/lib/format.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

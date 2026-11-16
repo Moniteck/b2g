@@ -4,8 +4,8 @@
 // Props: items ([{ id, tone: 'error'|'warning'|'info', icon, title, detail, due_at, all_day, action: { label, href } }]).
 import { Link } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import { dateTime, relativeDays, time } from '../../lib/format.js';
-import { todayKey } from './dashboard.js';
+import { dateTime, relativeDays, time } from '@/lib/format.js';
+import { todayKey } from '@/Modules/Dashboard/dashboard.js';
 
 const props = defineProps({
     items: { type: Array, default: () => [] },

@@ -3,10 +3,10 @@
 // inicio; las barras indican hasta cuándo corren. Expone `scrollTo(día)` para «+N más».
 // Props: month ('AAAA-MM'), events. Eventos: open (evento).
 import { computed, nextTick, ref } from 'vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import { date, time } from '../../lib/format.js';
-import { card } from '../../lib/ui.js';
-import { TYPE_ICONS, isBar, todayKey, toneOf } from './calendar.js';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import { date, time } from '@/lib/format.js';
+import { card } from '@/lib/ui.js';
+import { TYPE_ICONS, isBar, todayKey, toneOf } from '@/Modules/Calendar/calendar.js';
 
 const props = defineProps({
     month: { type: String, required: true },

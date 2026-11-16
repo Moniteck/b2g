@@ -7,7 +7,7 @@
 //   const exit = playLoginExit({ card, mascot, name: 'Ana' });
 //   await exit.ready;   // momento de cambiar de página (~0,95 s; antes si el usuario interrumpe)
 //   exit.finish();      // tras el cambio: la cortina se abre y se retira
-import { confetti, prefersReducedMotion } from './motion.js';
+import { confetti, prefersReducedMotion } from '@/Modules/Auth/motion.js';
 
 const FULL = { fields: 260, cardDelay: 110, card: 420, ring: 700, discDelay: 240, disc: 600, helloDelay: 560, ready: 950, out: 620 };
 const REDUCED = { fields: 0, cardDelay: 0, card: 0, ring: 0, discDelay: 0, disc: 200, helloDelay: 0, ready: 420, out: 220 };

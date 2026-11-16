@@ -12,8 +12,8 @@
 // transiciones. Los estilos viven en mascot.css (no son `scoped`, para que la cortina de salida y la
 // intro puedan clonar el SVG fuera de Vue); auth.css solo agrega lo propio de la pantalla de acceso.
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
-import './mascot.css';
-import { prefersReducedMotion } from './motion.js';
+import '@/Modules/Auth/mascot.css';
+import { prefersReducedMotion } from '@/Modules/Auth/motion.js';
 
 const props = defineProps({
     state: { type: String, default: 'idle' },

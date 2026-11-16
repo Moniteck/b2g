@@ -11,19 +11,19 @@
 // Una fila es «nuestra oferta» (única) y, conocido el resultado, una es el ganador (única). Se guarda
 // por diferencias: las filas con id se actualizan, las nuevas se crean y las quitadas se borran.
 import { computed, onMounted, ref, watch } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import CapSkeleton from '../../../design/vue/CapSkeleton.vue';
-import { useToasts } from '../../../design/vue/composables/useToasts.js';
-import AppButton from '../../Components/AppButton.vue';
-import Checkbox from '../../Components/Checkbox.vue';
-import EmptyState from '../../Components/EmptyState.vue';
-import ErrorState from '../../Components/ErrorState.vue';
-import FormField from '../../Components/FormField.vue';
-import IconButton from '../../Components/IconButton.vue';
-import MoneyInput from '../../Components/MoneyInput.vue';
-import TextInput from '../../Components/TextInput.vue';
-import { money, percent } from '../../lib/format.js';
-import { fetchParticipants, flatErrors, saveParticipants } from './api.js';
+import CapAlert from '@design/vue/CapAlert.vue';
+import CapSkeleton from '@design/vue/CapSkeleton.vue';
+import { useToasts } from '@design/vue/composables/useToasts.js';
+import AppButton from '@/Components/AppButton.vue';
+import Checkbox from '@/Components/Checkbox.vue';
+import EmptyState from '@/Components/EmptyState.vue';
+import ErrorState from '@/Components/ErrorState.vue';
+import FormField from '@/Components/FormField.vue';
+import IconButton from '@/Components/IconButton.vue';
+import MoneyInput from '@/Components/MoneyInput.vue';
+import TextInput from '@/Components/TextInput.vue';
+import { money, percent } from '@/lib/format.js';
+import { fetchParticipants, flatErrors, saveParticipants } from '@/Modules/Quotes/api.js';
 
 const props = defineProps({
     subject: { type: Object, required: true },

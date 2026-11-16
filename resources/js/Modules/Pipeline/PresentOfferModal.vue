@@ -5,12 +5,12 @@
 // Props: open (v-model:open), card (tarjeta del tablero). Eventos: moved ({ message, card }).
 // Cancelar o cerrar no mueve nada: la tarjeta sigue en su columna.
 import { computed, ref, watch } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import ParticipantsEditor from '../Quotes/ParticipantsEditor.vue';
-import { firstError } from '../Quotes/api.js';
-import { moveOpportunity } from './pipeline.js';
+import CapAlert from '@design/vue/CapAlert.vue';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import ParticipantsEditor from '@/Modules/Quotes/ParticipantsEditor.vue';
+import { firstError } from '@/Modules/Quotes/api.js';
+import { moveOpportunity } from '@/Modules/Pipeline/pipeline.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

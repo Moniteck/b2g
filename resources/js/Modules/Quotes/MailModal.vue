@@ -2,11 +2,11 @@
 // Enviar la cotización en PDF por correo (hasta 5 destinatarios). Props: open, quote (fila).
 import { useForm } from '@inertiajs/vue3';
 import { computed, watch } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import FormField from '../../Components/FormField.vue';
-import TextArea from '../../Components/TextArea.vue';
-import TextInput from '../../Components/TextInput.vue';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import FormField from '@/Components/FormField.vue';
+import TextArea from '@/Components/TextArea.vue';
+import TextInput from '@/Components/TextInput.vue';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

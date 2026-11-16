@@ -1,5 +1,5 @@
 // Endpoints JSON de «Mi firma y sello» (routes/modules/signatures.php).
-import { getJson, HttpError, postJson } from '../../lib/http.js';
+import { getJson, HttpError, postJson } from '@/lib/http.js';
 
 export const endpoints = {
     page: '/firmas',

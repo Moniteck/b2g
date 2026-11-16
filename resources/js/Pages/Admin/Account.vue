@@ -2,17 +2,17 @@
 // Mi cuenta: nombre, teléfono y contraseña del usuario que inició sesión.
 import { Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import FormField from '../../Components/FormField.vue';
-import PageHeader from '../../Components/PageHeader.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import TextInput from '../../Components/TextInput.vue';
-import Toggle from '../../Components/Toggle.vue';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import PwaAccountSection from '../../pwa/AccountSection.vue';
-import { focusFirstError } from '../../lib/errors.js';
-import { reducedMotion, setMotionPreference, systemReducedMotion } from '../../lib/motion/index.js';
-import { card, textLink } from '../../lib/ui.js';
+import AppButton from '@/Components/AppButton.vue';
+import FormField from '@/Components/FormField.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import TextInput from '@/Components/TextInput.vue';
+import Toggle from '@/Components/Toggle.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import PwaAccountSection from '@/pwa/AccountSection.vue';
+import { focusFirstError } from '@/lib/errors.js';
+import { reducedMotion, setMotionPreference, systemReducedMotion } from '@/lib/motion/index.js';
+import { card, textLink } from '@/lib/ui.js';
 
 const props = defineProps({
     account: { type: Object, required: true },

@@ -4,9 +4,9 @@
 // Props: conversations ([{ id, title, updated_at, messages_count }]), activeId, disabled.
 // Eventos: open (conversación), remove (conversación).
 import { computed, ref } from 'vue';
-import IconButton from '../../../Components/IconButton.vue';
-import { daysUntil, relativeTime } from '../../../lib/format.js';
-import { inputClass } from '../../../lib/ui.js';
+import IconButton from '@/Components/IconButton.vue';
+import { daysUntil, relativeTime } from '@/lib/format.js';
+import { inputClass } from '@/lib/ui.js';
 
 const props = defineProps({
     conversations: { type: Array, default: () => [] },

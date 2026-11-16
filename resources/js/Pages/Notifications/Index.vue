@@ -5,16 +5,16 @@
 //        filters ({ estado, tipo }), types, unread, can ({ manage_templates }).
 import { Link, router } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
-import CapSegmented from '../../../design/vue/CapSegmented.vue';
-import AppButton from '../../Components/AppButton.vue';
-import EmptyState from '../../Components/EmptyState.vue';
-import Pagination from '../../Components/Pagination.vue';
-import SelectInput from '../../Components/SelectInput.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { date, dateTime, relativeTime } from '../../lib/format.js';
-import { postJson } from '../../lib/http.js';
-import { card } from '../../lib/ui.js';
+import CapSegmented from '@design/vue/CapSegmented.vue';
+import AppButton from '@/Components/AppButton.vue';
+import EmptyState from '@/Components/EmptyState.vue';
+import Pagination from '@/Components/Pagination.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { date, dateTime, relativeTime } from '@/lib/format.js';
+import { postJson } from '@/lib/http.js';
+import { card } from '@/lib/ui.js';
 
 const props = defineProps({
     reminders: { type: Object, required: true },

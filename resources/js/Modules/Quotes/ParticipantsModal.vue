@@ -2,9 +2,9 @@
 // Modal de participantes sobre `ParticipantsEditor` (cotización u oportunidad).
 // Props: open (v-model:open), subject ({ type, id }), title. Eventos: saved.
 import { ref } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import ParticipantsEditor from './ParticipantsEditor.vue';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import ParticipantsEditor from '@/Modules/Quotes/ParticipantsEditor.vue';
 
 defineProps({
     open: { type: Boolean, default: false },

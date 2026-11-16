@@ -3,28 +3,28 @@
 // cumplimiento y administración de metas (solo administradores de la empresa).
 import { router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, reactive, ref } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import DataTable from '../../Components/DataTable.vue';
-import DateInput from '../../Components/DateInput.vue';
-import DropdownMenu from '../../Components/DropdownMenu.vue';
-import FormField from '../../Components/FormField.vue';
-import IconButton from '../../Components/IconButton.vue';
-import MoneyInput from '../../Components/MoneyInput.vue';
-import PageHeader from '../../Components/PageHeader.vue';
-import Pagination from '../../Components/Pagination.vue';
-import SelectInput from '../../Components/SelectInput.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import TextInput from '../../Components/TextInput.vue';
-import { useConfirm } from '../../composables/useConfirm.js';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { focusFirstError } from '../../lib/errors.js';
-import { dateRange, money, percent } from '../../lib/format.js';
-import { visit } from '../../lib/http.js';
-import ChartCard from './Partials/ChartCard.vue';
-import LoadError from './Partials/LoadError.vue';
-import PeriodFilter from './Partials/PeriodFilter.vue';
-import { cleanQuery, useChartPalette } from './Partials/finance.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import DataTable from '@/Components/DataTable.vue';
+import DateInput from '@/Components/DateInput.vue';
+import DropdownMenu from '@/Components/DropdownMenu.vue';
+import FormField from '@/Components/FormField.vue';
+import IconButton from '@/Components/IconButton.vue';
+import MoneyInput from '@/Components/MoneyInput.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import Pagination from '@/Components/Pagination.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import TextInput from '@/Components/TextInput.vue';
+import { useConfirm } from '@/composables/useConfirm.js';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { focusFirstError } from '@/lib/errors.js';
+import { dateRange, money, percent } from '@/lib/format.js';
+import { visit } from '@/lib/http.js';
+import ChartCard from '@/Pages/Finance/Partials/ChartCard.vue';
+import LoadError from '@/Pages/Finance/Partials/LoadError.vue';
+import PeriodFilter from '@/Pages/Finance/Partials/PeriodFilter.vue';
+import { cleanQuery, useChartPalette } from '@/Pages/Finance/Partials/finance.js';
 
 const props = defineProps({
     period: { type: Object, required: true },

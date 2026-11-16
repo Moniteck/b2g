@@ -2,8 +2,8 @@
 // Línea con área (relleno plano al 12 %) en SVG propio, para una sola serie (saldo en el tiempo).
 // Props: points ([{ label, value }]), title, height, format (tooltip), axisFormat (eje).
 import { computed, ref } from 'vue';
-import { money } from '../../../lib/format.js';
-import { compactMoney, niceMax, useChartPalette, useWidth } from './finance.js';
+import { money } from '@/lib/format.js';
+import { compactMoney, niceMax, useChartPalette, useWidth } from '@/Pages/Finance/Partials/finance.js';
 
 const props = defineProps({
     points: { type: Array, required: true },

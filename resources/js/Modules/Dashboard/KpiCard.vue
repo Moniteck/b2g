@@ -5,9 +5,9 @@
 //        palette (de useChartPalette).
 import { Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import { useCountUp } from '../../lib/motion/index.js';
-import { kpiFull, kpiText, variation } from './dashboard.js';
-import Sparkline from './Sparkline.vue';
+import { useCountUp } from '@/lib/motion/index.js';
+import { kpiFull, kpiText, variation } from '@/Modules/Dashboard/dashboard.js';
+import Sparkline from '@/Modules/Dashboard/Sparkline.vue';
 
 const props = defineProps({
     kpi: { type: Object, required: true },

@@ -9,18 +9,18 @@
 // `quotesCount` (cotizaciones no cerradas de la tarjeta del tablero) y es 0 o 1, no pide nada.
 import { Link } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import DateInput from '../../Components/DateInput.vue';
-import FormField from '../../Components/FormField.vue';
-import MoneyInput from '../../Components/MoneyInput.vue';
-import SelectInput from '../../Components/SelectInput.vue';
-import { getJson } from '../../lib/http.js';
-import { money } from '../../lib/format.js';
-import { textLink } from '../../lib/ui.js';
-import { flatErrors, markWon } from './api.js';
-import { today } from './quotes.js';
+import CapAlert from '@design/vue/CapAlert.vue';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import DateInput from '@/Components/DateInput.vue';
+import FormField from '@/Components/FormField.vue';
+import MoneyInput from '@/Components/MoneyInput.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import { getJson } from '@/lib/http.js';
+import { money } from '@/lib/format.js';
+import { textLink } from '@/lib/ui.js';
+import { flatErrors, markWon } from '@/Modules/Quotes/api.js';
+import { today } from '@/Modules/Quotes/quotes.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

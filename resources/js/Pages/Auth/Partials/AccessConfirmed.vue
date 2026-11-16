@@ -4,7 +4,7 @@
 // o invalid (no corresponde a ninguna solicitud vigente).
 import { router } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import AuthButton from './AuthButton.vue';
+import AuthButton from '@/Pages/Auth/Partials/AuthButton.vue';
 
 const props = defineProps({
     confirmation: { type: Object, required: true },

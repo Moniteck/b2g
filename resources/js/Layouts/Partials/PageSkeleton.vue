@@ -1,7 +1,7 @@
 <script setup>
 // Esqueleto genérico de una pantalla mientras llega la siguiente (visita de más de 300 ms).
 // Cabecera de página, una fila de cifras y una lista; el título real ya está en la cabecera.
-import CapSkeleton from '../../../design/vue/CapSkeleton.vue';
+import CapSkeleton from '@design/vue/CapSkeleton.vue';
 
 defineProps({
     label: { type: String, default: 'Cargando la pantalla' },

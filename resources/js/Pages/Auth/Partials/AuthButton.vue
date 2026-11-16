@@ -3,7 +3,7 @@
 // onda desde el punto del clic y, al cargar, tres puntos que saltan y una barra que avanza.
 // Mantiene `cap-button` (píldora del marco) y `aria-busy` para los lectores de pantalla.
 import { ref } from 'vue';
-import { prefersReducedMotion } from '../../../Modules/Auth/motion.js';
+import { prefersReducedMotion } from '@/Modules/Auth/motion.js';
 
 const props = defineProps({
     type: { type: String, default: 'button' },

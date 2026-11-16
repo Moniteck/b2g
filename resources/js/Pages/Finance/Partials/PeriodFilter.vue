@@ -4,10 +4,10 @@
 // Props: from, to, module (v-model de cada uno), modules ([{ value, label }]), errors, defaultPreset.
 // Eventos: apply.
 import { computed, ref } from 'vue';
-import DateInput from '../../../Components/DateInput.vue';
-import FormField from '../../../Components/FormField.vue';
-import SelectInput from '../../../Components/SelectInput.vue';
-import { presetRange } from './finance.js';
+import DateInput from '@/Components/DateInput.vue';
+import FormField from '@/Components/FormField.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import { presetRange } from '@/Pages/Finance/Partials/finance.js';
 
 const props = defineProps({
     from: { type: String, default: '' },

@@ -3,26 +3,26 @@
 // La contraseña temporal llega una sola vez (`credentials`, dato flash) y se muestra en una modal.
 import { useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import { useToasts } from '../../../design/vue/composables/useToasts.js';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import DataTable from '../../Components/DataTable.vue';
-import DropdownMenu from '../../Components/DropdownMenu.vue';
-import FormField from '../../Components/FormField.vue';
-import PageHeader from '../../Components/PageHeader.vue';
-import Pagination from '../../Components/Pagination.vue';
-import SelectInput from '../../Components/SelectInput.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import TextInput from '../../Components/TextInput.vue';
-import Toolbar from '../../Components/Toolbar.vue';
-import { useConfirm } from '../../composables/useConfirm.js';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { focusFirstError } from '../../lib/errors.js';
-import { visit } from '../../lib/http.js';
-import { card } from '../../lib/ui.js';
-import { useListFilters } from './Partials/useListFilters.js';
-import AccessRequestsPanel from '../../Modules/Auth/AccessRequestsPanel.vue';
+import CapAlert from '@design/vue/CapAlert.vue';
+import { useToasts } from '@design/vue/composables/useToasts.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import DataTable from '@/Components/DataTable.vue';
+import DropdownMenu from '@/Components/DropdownMenu.vue';
+import FormField from '@/Components/FormField.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import Pagination from '@/Components/Pagination.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import TextInput from '@/Components/TextInput.vue';
+import Toolbar from '@/Components/Toolbar.vue';
+import { useConfirm } from '@/composables/useConfirm.js';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { focusFirstError } from '@/lib/errors.js';
+import { visit } from '@/lib/http.js';
+import { card } from '@/lib/ui.js';
+import { useListFilters } from '@/Pages/Admin/Partials/useListFilters.js';
+import AccessRequestsPanel from '@/Modules/Auth/AccessRequestsPanel.vue';
 
 const props = defineProps({
     users: { type: Object, required: true },

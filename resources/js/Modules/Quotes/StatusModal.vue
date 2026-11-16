@@ -3,11 +3,11 @@
 // Props: open, quote (fila con `number`, `status`, `next_statuses`).
 import { useForm } from '@inertiajs/vue3';
 import { computed, watch } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import FormField from '../../Components/FormField.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import { STATUS_HELP } from './quotes.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import FormField from '@/Components/FormField.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import { STATUS_HELP } from '@/Modules/Quotes/quotes.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

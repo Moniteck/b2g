@@ -10,22 +10,22 @@
 // Eventos: update:open, saved (tipo guardado).
 import { usePage } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import CapSegmented from '../../../design/vue/CapSegmented.vue';
-import CapSkeleton from '../../../design/vue/CapSkeleton.vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import Checkbox from '../../Components/Checkbox.vue';
-import FileDropzone from '../../Components/FileDropzone.vue';
-import FormField from '../../Components/FormField.vue';
-import IconButton from '../../Components/IconButton.vue';
-import Tabs from '../../Components/Tabs.vue';
-import TextInput from '../../Components/TextInput.vue';
-import { useUpload } from '../../composables/useUpload.js';
-import { endpoints } from './api.js';
-import { canvasToFile, fitCanvas, HANDWRITING_FONTS, INKS, inkColor, loadHandwritingFonts, loadImage, removeLightBackground, STAMP_INKS, trimCanvas } from './ink.js';
-import { renderStamp, renderTyped } from './renderers.js';
-import SignaturePad from './SignaturePad.vue';
+import CapAlert from '@design/vue/CapAlert.vue';
+import CapSegmented from '@design/vue/CapSegmented.vue';
+import CapSkeleton from '@design/vue/CapSkeleton.vue';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import Checkbox from '@/Components/Checkbox.vue';
+import FileDropzone from '@/Components/FileDropzone.vue';
+import FormField from '@/Components/FormField.vue';
+import IconButton from '@/Components/IconButton.vue';
+import Tabs from '@/Components/Tabs.vue';
+import TextInput from '@/Components/TextInput.vue';
+import { useUpload } from '@/composables/useUpload.js';
+import { endpoints } from '@/Modules/Signatures/api.js';
+import { canvasToFile, fitCanvas, HANDWRITING_FONTS, INKS, inkColor, loadHandwritingFonts, loadImage, removeLightBackground, STAMP_INKS, trimCanvas } from '@/Modules/Signatures/ink.js';
+import { renderStamp, renderTyped } from '@/Modules/Signatures/renderers.js';
+import SignaturePad from '@/Modules/Signatures/SignaturePad.vue';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

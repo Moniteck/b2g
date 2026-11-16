@@ -2,8 +2,8 @@
 // Resumen flotante de la selección del inventario: productos elegidos, subtotal, ISV y total,
 // con «Llevar a una cotización» y «Limpiar». En escritorio es la barra de selección de vidrio
 // del recetario; en móvil, una tarjeta fija sobre la barra de pestañas.
-import CapButton from '../../../design/vue/CapButton.vue';
-import { money, number } from '../../lib/format.js';
+import CapButton from '@design/vue/CapButton.vue';
+import { money, number } from '@/lib/format.js';
 
 defineProps({
     count: { type: Number, required: true },

@@ -6,18 +6,18 @@
 // Props: open (v-model:open), quote (fila de la lista: id, number, status, outcome, pdf, can),
 //        startWithUpload (abre «Agregar PDF» al cargar). Eventos: changed (subió, firmó o eliminó).
 import { computed, nextTick, ref, watch } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import { useToasts } from '../../../design/vue/composables/useToasts.js';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import PdfViewer from '../../Components/PdfViewer.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import { useConfirm } from '../../composables/useConfirm.js';
-import { dateTime, money } from '../../lib/format.js';
-import { deleteAttachment } from '../Documents/api.js';
-import AttachmentPanel from '../Documents/AttachmentPanel.vue';
-import SignDocumentModal from '../Signatures/SignDocumentModal.vue';
-import { firstError, snapshotPdf } from './api.js';
+import CapAlert from '@design/vue/CapAlert.vue';
+import { useToasts } from '@design/vue/composables/useToasts.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import PdfViewer from '@/Components/PdfViewer.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import { useConfirm } from '@/composables/useConfirm.js';
+import { dateTime, money } from '@/lib/format.js';
+import { deleteAttachment } from '@/Modules/Documents/api.js';
+import AttachmentPanel from '@/Modules/Documents/AttachmentPanel.vue';
+import SignDocumentModal from '@/Modules/Signatures/SignDocumentModal.vue';
+import { firstError, snapshotPdf } from '@/Modules/Quotes/api.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

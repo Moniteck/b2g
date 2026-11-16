@@ -4,27 +4,27 @@
 // secciones en pestañas desplazables (B-25). Documentos, análisis, matriz e historial llegan diferidos.
 import { Deferred, Link, router, usePage } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import CapSkeleton from '../../../design/vue/CapSkeleton.vue';
-import { useToasts } from '../../../design/vue/composables/useToasts.js';
-import AppButton from '../../Components/AppButton.vue';
-import Avatar from '../../Components/Avatar.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import DropdownMenu from '../../Components/DropdownMenu.vue';
-import EmptyState from '../../Components/EmptyState.vue';
-import IconButton from '../../Components/IconButton.vue';
-import PdfViewer from '../../Components/PdfViewer.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import Tabs from '../../Components/Tabs.vue';
-import { useConfirm } from '../../composables/useConfirm.js';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { date, dateTime, fileSize, money } from '../../lib/format.js';
-import { visit } from '../../lib/http.js';
-import { card, tableLink, textLink } from '../../lib/ui.js';
-import BidAnalysisPanel from '../../Modules/Tenders/BidAnalysisPanel.vue';
-import TenderFormModal from '../../Modules/Tenders/TenderFormModal.vue';
-import TenderStepper from '../../Modules/Tenders/TenderStepper.vue';
-import { countdown, CRITICAL_DATES, DEADLINE_ICONS, instantOf, stageBadge } from '../../Modules/Tenders/tenders.js';
+import CapAlert from '@design/vue/CapAlert.vue';
+import CapSkeleton from '@design/vue/CapSkeleton.vue';
+import { useToasts } from '@design/vue/composables/useToasts.js';
+import AppButton from '@/Components/AppButton.vue';
+import Avatar from '@/Components/Avatar.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import DropdownMenu from '@/Components/DropdownMenu.vue';
+import EmptyState from '@/Components/EmptyState.vue';
+import IconButton from '@/Components/IconButton.vue';
+import PdfViewer from '@/Components/PdfViewer.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import Tabs from '@/Components/Tabs.vue';
+import { useConfirm } from '@/composables/useConfirm.js';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { date, dateTime, fileSize, money } from '@/lib/format.js';
+import { visit } from '@/lib/http.js';
+import { card, tableLink, textLink } from '@/lib/ui.js';
+import BidAnalysisPanel from '@/Modules/Tenders/BidAnalysisPanel.vue';
+import TenderFormModal from '@/Modules/Tenders/TenderFormModal.vue';
+import TenderStepper from '@/Modules/Tenders/TenderStepper.vue';
+import { countdown, CRITICAL_DATES, DEADLINE_ICONS, instantOf, stageBadge } from '@/Modules/Tenders/tenders.js';
 
 const props = defineProps({
     tender: { type: Object, required: true },

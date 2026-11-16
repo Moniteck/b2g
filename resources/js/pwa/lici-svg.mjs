@@ -5,7 +5,7 @@
 //   liciSvg()                          → solo el búho, fondo transparente (viewBox 160×150)
 //   iconSvg({ size: 512, maskable })   → ícono cuadrado con fondo del marco
 //   liciSvg({ state: 'offline' })      → con la mirada baja y una gota de sudor (sin conexión)
-import tokens from '../../design/tokens.json' with { type: 'json' };
+import tokens from '@design/tokens.json' with { type: 'json' };
 
 const red = tokens.brand.redScale;
 const C = {

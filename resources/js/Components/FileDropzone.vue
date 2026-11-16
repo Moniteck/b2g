@@ -8,9 +8,9 @@
 // Eventos: update:modelValue (archivos válidos), rejected ([{ file, reason }]).
 // Teclado: la zona es un botón (Enter o espacio abren el selector); cada archivo tiene su «Quitar».
 import { computed, ref } from 'vue';
-import { useField } from '../composables/useField.js';
-import { fileSize } from '../lib/format.js';
-import { iconButton } from '../lib/ui.js';
+import { useField } from '@/composables/useField.js';
+import { fileSize } from '@/lib/format.js';
+import { iconButton } from '@/lib/ui.js';
 
 const props = defineProps({
     modelValue: { type: Array, default: () => [] },

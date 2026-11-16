@@ -5,10 +5,10 @@
 //    «Compartir → Añadir a pantalla de inicio»). Después queda disponible en Mi cuenta.
 // Van sobre la barra inferior móvil y respetan el área segura (notch).
 import { computed } from 'vue';
-import AppButton from '../Components/AppButton.vue';
-import IconButton from '../Components/IconButton.vue';
-import IosInstallSteps from './IosInstallSteps.vue';
-import { applyUpdate, promptInstall, pwa, rememberOffer } from './state.js';
+import AppButton from '@/Components/AppButton.vue';
+import IconButton from '@/Components/IconButton.vue';
+import IosInstallSteps from '@/pwa/IosInstallSteps.vue';
+import { applyUpdate, promptInstall, pwa, rememberOffer } from '@/pwa/state.js';
 
 // Ruta pública (no un import de Vite): el ícono vive en public/icons.
 const APP_ICON = '/icons/icon-192.png';

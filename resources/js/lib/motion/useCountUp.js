@@ -2,8 +2,8 @@
 //   const shown = useCountUp(() => props.total, { format: (v) => money(v) });   →   {{ shown }}
 // Con movimiento reducido o la pestaña oculta muestra el valor final al instante.
 import { onBeforeUnmount, ref, toValue, watch } from 'vue';
-import { isFirstLoad, isReducedMotion } from './preference.js';
-import { DURATION, easeOutExpo } from './tokens.js';
+import { isFirstLoad, isReducedMotion } from '@/lib/motion/preference.js';
+import { DURATION, easeOutExpo } from '@/lib/motion/tokens.js';
 
 const plain = (value) => String(Math.round(value));
 

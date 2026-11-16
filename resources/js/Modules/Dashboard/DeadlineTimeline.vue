@@ -5,9 +5,9 @@
 // Props: items ([{ id, title, type, category, at, all_day, href }]), palette, limit (filas de la lista).
 import { Link } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import EmptyState from '../../Components/EmptyState.vue';
-import { date, time } from '../../lib/format.js';
-import { addDays, TIMELINE_CATEGORIES, todayKey } from './dashboard.js';
+import EmptyState from '@/Components/EmptyState.vue';
+import { date, time } from '@/lib/format.js';
+import { addDays, TIMELINE_CATEGORIES, todayKey } from '@/Modules/Dashboard/dashboard.js';
 
 const props = defineProps({
     items: { type: Array, default: () => [] },

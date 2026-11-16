@@ -5,13 +5,13 @@
 //        escritas a mano), defaultRate, errors (errores del formulario: `items.0.quantity`…), disabled,
 //        showCost (muestra costo unitario y margen por línea; solo operador y administrador).
 import { computed, ref } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import EmptyState from '../../Components/EmptyState.vue';
-import IconButton from '../../Components/IconButton.vue';
-import SearchSelect from '../../Components/SearchSelect.vue';
-import TextInput from '../../Components/TextInput.vue';
-import { money } from '../../lib/format.js';
-import { emptyLine, lineFromProduct, priced } from './quotes.js';
+import AppButton from '@/Components/AppButton.vue';
+import EmptyState from '@/Components/EmptyState.vue';
+import IconButton from '@/Components/IconButton.vue';
+import SearchSelect from '@/Components/SearchSelect.vue';
+import TextInput from '@/Components/TextInput.vue';
+import { money } from '@/lib/format.js';
+import { emptyLine, lineFromProduct, priced } from '@/Modules/Quotes/quotes.js';
 
 const props = defineProps({
     modelValue: { type: Array, default: () => [] },

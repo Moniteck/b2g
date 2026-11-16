@@ -1,6 +1,6 @@
 // Utilidades de fecha de los campos `DateInput` / `DateTimeInput` (sin librerías). Trabajan con
 // cadenas «AAAA-MM-DD» en el calendario civil (sin husos: hoy se calcula en America/Tegucigalpa).
-import { TIME_ZONE } from '../lib/format.js';
+import { TIME_ZONE } from '@/lib/format.js';
 
 const pad = (value) => String(value).padStart(2, '0');
 

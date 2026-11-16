@@ -3,29 +3,29 @@
 // El token de Blessing nunca llega al navegador: solo si está configurado y sus últimos caracteres.
 import { router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import CapAlert from '../../../../design/vue/CapAlert.vue';
-import { useToasts } from '../../../../design/vue/composables/useToasts.js';
-import AppButton from '../../../Components/AppButton.vue';
-import BaseModal from '../../../Components/BaseModal.vue';
-import Checkbox from '../../../Components/Checkbox.vue';
-import DataTable from '../../../Components/DataTable.vue';
-import DropdownMenu from '../../../Components/DropdownMenu.vue';
-import FileDropzone from '../../../Components/FileDropzone.vue';
-import FormField from '../../../Components/FormField.vue';
-import PageHeader from '../../../Components/PageHeader.vue';
-import SearchSelect from '../../../Components/SearchSelect.vue';
-import SelectInput from '../../../Components/SelectInput.vue';
-import StatusBadge from '../../../Components/StatusBadge.vue';
-import Tabs from '../../../Components/Tabs.vue';
-import TextInput from '../../../Components/TextInput.vue';
-import Toggle from '../../../Components/Toggle.vue';
-import { useConfirm } from '../../../composables/useConfirm.js';
-import { useUpload } from '../../../composables/useUpload.js';
-import AppLayout from '../../../Layouts/AppLayout.vue';
-import { focusFirstError } from '../../../lib/errors.js';
-import { number } from '../../../lib/format.js';
-import { visit } from '../../../lib/http.js';
-import { card } from '../../../lib/ui.js';
+import CapAlert from '@design/vue/CapAlert.vue';
+import { useToasts } from '@design/vue/composables/useToasts.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import Checkbox from '@/Components/Checkbox.vue';
+import DataTable from '@/Components/DataTable.vue';
+import DropdownMenu from '@/Components/DropdownMenu.vue';
+import FileDropzone from '@/Components/FileDropzone.vue';
+import FormField from '@/Components/FormField.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import SearchSelect from '@/Components/SearchSelect.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import Tabs from '@/Components/Tabs.vue';
+import TextInput from '@/Components/TextInput.vue';
+import Toggle from '@/Components/Toggle.vue';
+import { useConfirm } from '@/composables/useConfirm.js';
+import { useUpload } from '@/composables/useUpload.js';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { focusFirstError } from '@/lib/errors.js';
+import { number } from '@/lib/format.js';
+import { visit } from '@/lib/http.js';
+import { card } from '@/lib/ui.js';
 
 const props = defineProps({
     company: { type: Object, required: true },

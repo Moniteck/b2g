@@ -1,7 +1,7 @@
 // Utilidades del Dashboard: formato compacto de cifras, variación frente al período anterior,
 // colores por tipo de plazo y saludo según la hora de Honduras.
-import { compactMoney } from '../../Pages/Finance/Partials/finance.js';
-import { money, number, percent } from '../../lib/format.js';
+import { compactMoney } from '@/Pages/Finance/Partials/finance.js';
+import { money, number, percent } from '@/lib/format.js';
 
 export { compactMoney };
 

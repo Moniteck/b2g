@@ -2,12 +2,12 @@
 // Revertir el resultado (solo administrador, decisión 15). Props: open, subject ({ type, id, label, outcome }).
 // Eventos: done (resultado, mensaje).
 import { ref, watch } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import FormField from '../../Components/FormField.vue';
-import TextArea from '../../Components/TextArea.vue';
-import { flatErrors, revertOutcome } from './api.js';
+import CapAlert from '@design/vue/CapAlert.vue';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import FormField from '@/Components/FormField.vue';
+import TextArea from '@/Components/TextArea.vue';
+import { flatErrors, revertOutcome } from '@/Modules/Quotes/api.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

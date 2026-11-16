@@ -4,13 +4,13 @@
 // Props: month ('AAAA-MM'), events (TenderListQuery::calendar), loading. Eventos: month (nuevo mes).
 import { Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import CapSkeleton from '../../../design/vue/CapSkeleton.vue';
-import AppButton from '../../Components/AppButton.vue';
-import EmptyState from '../../Components/EmptyState.vue';
-import IconButton from '../../Components/IconButton.vue';
-import { date, time } from '../../lib/format.js';
-import { card } from '../../lib/ui.js';
-import { countdown, DEADLINE_ICONS } from './tenders.js';
+import CapSkeleton from '@design/vue/CapSkeleton.vue';
+import AppButton from '@/Components/AppButton.vue';
+import EmptyState from '@/Components/EmptyState.vue';
+import IconButton from '@/Components/IconButton.vue';
+import { date, time } from '@/lib/format.js';
+import { card } from '@/lib/ui.js';
+import { countdown, DEADLINE_ICONS } from '@/Modules/Tenders/tenders.js';
 
 const props = defineProps({
     month: { type: String, required: true },

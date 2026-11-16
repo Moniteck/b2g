@@ -5,8 +5,8 @@
 //        filter (v-model:filter), filterLabel (nombre accesible del segmentado).
 // Slots: filters (selectores extra: fechas, `SelectInput` para más de 5 opciones), actions.
 import { onBeforeUnmount, ref, watch } from 'vue';
-import CapSegmented from '../../design/vue/CapSegmented.vue';
-import { iconButton, inputClass } from '../lib/ui.js';
+import CapSegmented from '@design/vue/CapSegmented.vue';
+import { iconButton, inputClass } from '@/lib/ui.js';
 
 const props = defineProps({
     search: { type: String, default: '' },

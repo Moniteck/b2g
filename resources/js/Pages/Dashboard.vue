@@ -12,24 +12,24 @@
 // Móvil: KPI en 2×2 y, tras plazos, tareas y pipeline, el resto se abre con «Ver más del tablero».
 import { Deferred, router, usePage } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, ref } from 'vue';
-import CapSegmented from '../../design/vue/CapSegmented.vue';
-import AppButton from '../Components/AppButton.vue';
-import EmptyState from '../Components/EmptyState.vue';
-import AppLayout from '../Layouts/AppLayout.vue';
-import { date } from '../lib/format.js';
-import ActivityFeed from '../Modules/Dashboard/ActivityFeed.vue';
-import AttentionStrip from '../Modules/Dashboard/AttentionStrip.vue';
-import BlockCard from '../Modules/Dashboard/BlockCard.vue';
-import { greeting } from '../Modules/Dashboard/dashboard.js';
-import DeadlineTimeline from '../Modules/Dashboard/DeadlineTimeline.vue';
-import ExpiringList from '../Modules/Dashboard/ExpiringList.vue';
-import KpiCard from '../Modules/Dashboard/KpiCard.vue';
-import OnboardingGuide from '../Modules/Dashboard/OnboardingGuide.vue';
-import PipelineStages from '../Modules/Dashboard/PipelineStages.vue';
-import TaskList from '../Modules/Dashboard/TaskList.vue';
-import ImportCaptureModal from '../Modules/Tenders/ImportCaptureModal.vue';
-import BarChart from './Finance/Partials/BarChart.vue';
-import { monthLabel, useChartPalette } from './Finance/Partials/finance.js';
+import CapSegmented from '@design/vue/CapSegmented.vue';
+import AppButton from '@/Components/AppButton.vue';
+import EmptyState from '@/Components/EmptyState.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { date } from '@/lib/format.js';
+import ActivityFeed from '@/Modules/Dashboard/ActivityFeed.vue';
+import AttentionStrip from '@/Modules/Dashboard/AttentionStrip.vue';
+import BlockCard from '@/Modules/Dashboard/BlockCard.vue';
+import { greeting } from '@/Modules/Dashboard/dashboard.js';
+import DeadlineTimeline from '@/Modules/Dashboard/DeadlineTimeline.vue';
+import ExpiringList from '@/Modules/Dashboard/ExpiringList.vue';
+import KpiCard from '@/Modules/Dashboard/KpiCard.vue';
+import OnboardingGuide from '@/Modules/Dashboard/OnboardingGuide.vue';
+import PipelineStages from '@/Modules/Dashboard/PipelineStages.vue';
+import TaskList from '@/Modules/Dashboard/TaskList.vue';
+import ImportCaptureModal from '@/Modules/Tenders/ImportCaptureModal.vue';
+import BarChart from '@/Pages/Finance/Partials/BarChart.vue';
+import { monthLabel, useChartPalette } from '@/Pages/Finance/Partials/finance.js';
 
 const props = defineProps({
     period: { type: Object, required: true },

@@ -4,9 +4,9 @@
 // enviada!» con los próximos pasos (la celebración de Lici la lanza la página).
 import { useForm } from '@inertiajs/vue3';
 import { computed, nextTick, ref, watch } from 'vue';
-import { shakeErrors } from '../../../Modules/Auth/motion.js';
-import AuthButton from './AuthButton.vue';
-import AuthField from './AuthField.vue';
+import { shakeErrors } from '@/Modules/Auth/motion.js';
+import AuthButton from '@/Pages/Auth/Partials/AuthButton.vue';
+import AuthField from '@/Pages/Auth/Partials/AuthField.vue';
 
 const OTHER = '__otra';
 

@@ -3,23 +3,23 @@
 // pendientes o vencidos. La ficha de cada matriz está en ComplianceMatrices/Show.
 import { router, useForm } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import AppButton from '../Components/AppButton.vue';
-import BaseModal from '../Components/BaseModal.vue';
-import DataTable from '../Components/DataTable.vue';
-import DateInput from '../Components/DateInput.vue';
-import FormField from '../Components/FormField.vue';
-import IconButton from '../Components/IconButton.vue';
-import PageHeader from '../Components/PageHeader.vue';
-import Pagination from '../Components/Pagination.vue';
-import SearchSelect from '../Components/SearchSelect.vue';
-import TextInput from '../Components/TextInput.vue';
-import Toolbar from '../Components/Toolbar.vue';
-import CapAlert from '../../design/vue/CapAlert.vue';
-import AppLayout from '../Layouts/AppLayout.vue';
-import { fieldError, focusFirstError } from '../lib/errors.js';
-import { EMPTY, date, number, relativeDays } from '../lib/format.js';
-import ProgressBar from './Tools/Partials/ProgressBar.vue';
-import { useListFilters } from './Tools/Partials/useListFilters.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import DataTable from '@/Components/DataTable.vue';
+import DateInput from '@/Components/DateInput.vue';
+import FormField from '@/Components/FormField.vue';
+import IconButton from '@/Components/IconButton.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import Pagination from '@/Components/Pagination.vue';
+import SearchSelect from '@/Components/SearchSelect.vue';
+import TextInput from '@/Components/TextInput.vue';
+import Toolbar from '@/Components/Toolbar.vue';
+import CapAlert from '@design/vue/CapAlert.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { fieldError, focusFirstError } from '@/lib/errors.js';
+import { EMPTY, date, number, relativeDays } from '@/lib/format.js';
+import ProgressBar from '@/Pages/Tools/Partials/ProgressBar.vue';
+import { useListFilters } from '@/Pages/Tools/Partials/useListFilters.js';
 
 const props = defineProps({
     records: { type: Object, required: true },

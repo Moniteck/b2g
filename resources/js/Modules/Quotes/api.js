@@ -1,7 +1,7 @@
 // Peticiones JSON del módulo de cotizaciones (fuera del ciclo de Inertia).
 // Un «sujeto» es { type: 'quote' | 'opportunity', id }: el resultado y los participantes se registran
 // igual sobre una cotización o sobre una oportunidad (kanban). Ver README.md de esta carpeta.
-import { getJson, HttpError } from '../../lib/http.js';
+import { getJson, HttpError } from '@/lib/http.js';
 
 function xsrfToken() {
     const cookie = document.cookie.split('; ').find((entry) => entry.startsWith('XSRF-TOKEN='));

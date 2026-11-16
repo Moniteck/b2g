@@ -2,7 +2,7 @@
 // Tarjeta de una gráfica: título, línea de contexto, acción opcional y estado vacío propio
 // (una gráfica sin datos no se dibuja: se explica).
 // Props: title, description, empty (no hay datos que dibujar), emptyText.
-import EmptyState from '../../../Components/EmptyState.vue';
+import EmptyState from '@/Components/EmptyState.vue';
 
 defineProps({
     title: { type: String, required: true },

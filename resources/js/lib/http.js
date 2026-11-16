@@ -1,7 +1,7 @@
 // Peticiones JSON fuera del ciclo de Inertia (combos con búsqueda remota, marcar notificaciones).
 // Para todo lo que cambie de página o guarde un formulario se usa `router` o `useForm` de Inertia.
 import { router } from '@inertiajs/vue3';
-import { httpErrorMessage } from './errors.js';
+import { httpErrorMessage } from '@/lib/errors.js';
 
 function xsrfToken() {
     const cookie = document.cookie.split('; ').find((entry) => entry.startsWith('XSRF-TOKEN='));

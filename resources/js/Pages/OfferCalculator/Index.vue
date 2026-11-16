@@ -4,22 +4,22 @@
 // las líneas y muestra el resultado.
 import { router, usePage } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import CapSegmented from '../../../design/vue/CapSegmented.vue';
-import { useToasts } from '../../../design/vue/composables/useToasts.js';
-import AppButton from '../../Components/AppButton.vue';
-import Checkbox from '../../Components/Checkbox.vue';
-import FormField from '../../Components/FormField.vue';
-import IconButton from '../../Components/IconButton.vue';
-import PageHeader from '../../Components/PageHeader.vue';
-import SearchSelect from '../../Components/SearchSelect.vue';
-import SelectInput from '../../Components/SelectInput.vue';
-import TextInput from '../../Components/TextInput.vue';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { fieldError } from '../../lib/errors.js';
-import { money, percent, quantity as formatQuantity } from '../../lib/format.js';
-import { postJson } from '../../lib/http.js';
-import { QUOTE_URL, saveQuoteSelection } from '../../Modules/Inventory/selection.js';
+import CapAlert from '@design/vue/CapAlert.vue';
+import CapSegmented from '@design/vue/CapSegmented.vue';
+import { useToasts } from '@design/vue/composables/useToasts.js';
+import AppButton from '@/Components/AppButton.vue';
+import Checkbox from '@/Components/Checkbox.vue';
+import FormField from '@/Components/FormField.vue';
+import IconButton from '@/Components/IconButton.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import SearchSelect from '@/Components/SearchSelect.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import TextInput from '@/Components/TextInput.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { fieldError } from '@/lib/errors.js';
+import { money, percent, quantity as formatQuantity } from '@/lib/format.js';
+import { postJson } from '@/lib/http.js';
+import { QUOTE_URL, saveQuoteSelection } from '@/Modules/Inventory/selection.js';
 
 const props = defineProps({
     tax: { type: Object, default: () => ({ rate: 15 }) },

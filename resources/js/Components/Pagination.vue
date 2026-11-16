@@ -8,8 +8,8 @@
 // Eventos: navigate (url) después de pedir la página. Sin páginas que mostrar no pinta nada.
 import { router } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import { number } from '../lib/format.js';
-import { iconButton, inputClass } from '../lib/ui.js';
+import { number } from '@/lib/format.js';
+import { iconButton, inputClass } from '@/lib/ui.js';
 
 const props = defineProps({
     paginator: { type: Object, default: null },

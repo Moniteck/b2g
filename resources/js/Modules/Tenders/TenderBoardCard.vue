@@ -3,9 +3,9 @@
 // próximo plazo con su cuenta regresiva, monto y responsable. Clases de la receta `cap-kanban-card__*`.
 import { Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import DropdownMenu from '../../Components/DropdownMenu.vue';
-import { money } from '../../lib/format.js';
-import { countdown, DEADLINE_ICONS, stageBadge } from './tenders.js';
+import DropdownMenu from '@/Components/DropdownMenu.vue';
+import { money } from '@/lib/format.js';
+import { countdown, DEADLINE_ICONS, stageBadge } from '@/Modules/Tenders/tenders.js';
 
 const props = defineProps({
     tender: { type: Object, required: true },

@@ -4,8 +4,8 @@
 // Props: month ('AAAA-MM'), events (resumen del servidor), selected ('AAAA-MM-DD').
 // Eventos: open (evento), select (día), more (día: ver todos en la agenda).
 import { computed } from 'vue';
-import { time } from '../../lib/format.js';
-import { WEEKDAYS, isBar, monthWeeks, todayKey, toneOf, weekBars } from './calendar.js';
+import { time } from '@/lib/format.js';
+import { WEEKDAYS, isBar, monthWeeks, todayKey, toneOf, weekBars } from '@/Modules/Calendar/calendar.js';
 
 const props = defineProps({
     month: { type: String, required: true },

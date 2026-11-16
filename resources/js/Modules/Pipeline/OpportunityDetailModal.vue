@@ -14,21 +14,21 @@
 // de pestaña; guardar participantes usa las filas que devuelve el PUT. Al cerrar se descarta todo.
 import { Link } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import CapSkeleton from '../../../design/vue/CapSkeleton.vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import DescriptionList from '../../Components/DescriptionList.vue';
-import ErrorState from '../../Components/ErrorState.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import Tabs from '../../Components/Tabs.vue';
-import Timeline from '../../Components/Timeline.vue';
-import { date, dateTime, money, relativeDays } from '../../lib/format.js';
-import { getJson } from '../../lib/http.js';
-import { tableLink, textLink } from '../../lib/ui.js';
-import AttachmentPanel from '../Documents/AttachmentPanel.vue';
-import ParticipantsEditor from '../Quotes/ParticipantsEditor.vue';
-import { differenceText, historyEntry } from './pipeline.js';
+import CapAlert from '@design/vue/CapAlert.vue';
+import CapSkeleton from '@design/vue/CapSkeleton.vue';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import DescriptionList from '@/Components/DescriptionList.vue';
+import ErrorState from '@/Components/ErrorState.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import Tabs from '@/Components/Tabs.vue';
+import Timeline from '@/Components/Timeline.vue';
+import { date, dateTime, money, relativeDays } from '@/lib/format.js';
+import { getJson } from '@/lib/http.js';
+import { tableLink, textLink } from '@/lib/ui.js';
+import AttachmentPanel from '@/Modules/Documents/AttachmentPanel.vue';
+import ParticipantsEditor from '@/Modules/Quotes/ParticipantsEditor.vue';
+import { differenceText, historyEntry } from '@/Modules/Pipeline/pipeline.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

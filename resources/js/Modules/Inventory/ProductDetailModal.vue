@@ -2,16 +2,16 @@
 // Modal «Detalle de producto»: todos los datos, desglose de precio, historial de precio y última sincronización.
 // Props: open (v-model:open), item (fila del listado; se usa mientras llega el detalle), quantity (la escrita en la fila).
 import { computed, ref, watch } from 'vue';
-import CapSkeleton from '../../../design/vue/CapSkeleton.vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import DescriptionList from '../../Components/DescriptionList.vue';
-import ErrorState from '../../Components/ErrorState.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import Timeline from '../../Components/Timeline.vue';
-import { dateTime, money, percent, quantity as formatQuantity } from '../../lib/format.js';
-import { getJson } from '../../lib/http.js';
-import { itemLine } from './pricing.js';
+import CapSkeleton from '@design/vue/CapSkeleton.vue';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import DescriptionList from '@/Components/DescriptionList.vue';
+import ErrorState from '@/Components/ErrorState.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import Timeline from '@/Components/Timeline.vue';
+import { dateTime, money, percent, quantity as formatQuantity } from '@/lib/format.js';
+import { getJson } from '@/lib/http.js';
+import { itemLine } from '@/Modules/Inventory/pricing.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

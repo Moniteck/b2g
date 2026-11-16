@@ -2,8 +2,8 @@
 // Error de una petición de Inertia que no trae una página (419 sesión expirada, 500, sin conexión…):
 // se muestra en una modal propia en español en lugar de la página de error dentro de un iframe.
 import { computed } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
 
 const props = defineProps({
     status: { type: Number, default: 500 },

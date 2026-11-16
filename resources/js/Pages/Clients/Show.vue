@@ -2,21 +2,21 @@
 // Ficha de un cliente: datos y contacto, ofertas ganadas, contratos y línea de tiempo.
 import { Link } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import DataTable from '../../Components/DataTable.vue';
-import DescriptionList from '../../Components/DescriptionList.vue';
-import PageHeader from '../../Components/PageHeader.vue';
-import StatCard from '../../Components/StatCard.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import Tabs from '../../Components/Tabs.vue';
-import Timeline from '../../Components/Timeline.vue';
-import Tooltip from '../../Components/Tooltip.vue';
-import { useConfirm } from '../../composables/useConfirm.js';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { date, money, number } from '../../lib/format.js';
-import { visit } from '../../lib/http.js';
-import { card, tableLink } from '../../lib/ui.js';
-import ClientFormModal from './Partials/ClientFormModal.vue';
+import AppButton from '@/Components/AppButton.vue';
+import DataTable from '@/Components/DataTable.vue';
+import DescriptionList from '@/Components/DescriptionList.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import StatCard from '@/Components/StatCard.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import Tabs from '@/Components/Tabs.vue';
+import Timeline from '@/Components/Timeline.vue';
+import Tooltip from '@/Components/Tooltip.vue';
+import { useConfirm } from '@/composables/useConfirm.js';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { date, money, number } from '@/lib/format.js';
+import { visit } from '@/lib/http.js';
+import { card, tableLink } from '@/lib/ui.js';
+import ClientFormModal from '@/Pages/Clients/Partials/ClientFormModal.vue';
 
 const props = defineProps({
     client: { type: Object, required: true },

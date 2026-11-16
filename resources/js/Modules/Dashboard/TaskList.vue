@@ -3,9 +3,9 @@
 // semana y los de los próximos 14 días). Cada uno abre su registro.
 // Props: items ([{ id, title, type, at, all_day, overdue, href }]).
 import { Link } from '@inertiajs/vue3';
-import EmptyState from '../../Components/EmptyState.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import { dateTime, relativeDays, time } from '../../lib/format.js';
+import EmptyState from '@/Components/EmptyState.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import { dateTime, relativeDays, time } from '@/lib/format.js';
 
 defineProps({
     items: { type: Array, default: () => [] },

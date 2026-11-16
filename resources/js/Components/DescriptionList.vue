@@ -2,7 +2,7 @@
 // Datos de un registro: etiqueta encima del valor, dos columnas desde `md`.
 // Props: items ([{ key?, label, value, wide? }]; `wide` ocupa las dos columnas; sin valor muestra «—»),
 //        columns (1, 2 o 3). Slot por ítem con el nombre de su `key` ({ item }) para badges, enlaces o montos.
-import { text } from '../lib/format.js';
+import { text } from '@/lib/format.js';
 
 defineProps({
     items: { type: Array, required: true },

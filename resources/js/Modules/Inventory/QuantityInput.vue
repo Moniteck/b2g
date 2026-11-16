@@ -1,6 +1,6 @@
 <script setup>
 // Cantidad de una fila del inventario: número positivo, alineado a la derecha. Vacío = no elegido.
-import { inputClass } from '../../lib/ui.js';
+import { inputClass } from '@/lib/ui.js';
 
 const props = defineProps({
     modelValue: { type: Number, default: null },

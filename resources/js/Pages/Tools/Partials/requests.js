@@ -1,6 +1,6 @@
 // Peticiones de las herramientas que no cubre `lib/http.js`: descargar un PDF generado con POST y
 // borrar con DELETE fuera del ciclo de Inertia.
-import { HttpError } from '../../../lib/http.js';
+import { HttpError } from '@/lib/http.js';
 
 function xsrfToken() {
     const cookie = document.cookie.split('; ').find((entry) => entry.startsWith('XSRF-TOKEN='));

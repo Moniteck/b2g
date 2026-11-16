@@ -6,11 +6,11 @@
 // Slots: actions ({ document }) — botones extra en el pie, p. ej. «Firmar y sellar»;
 //        aside ({ document }) — panel lateral en escritorio (lista de adjuntos, datos).
 // Eventos: update:open, delete (document), closed.
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import EmptyState from '../../Components/EmptyState.vue';
-import PdfViewer from '../../Components/PdfViewer.vue';
-import { canPreview, fileIcon } from './api.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import EmptyState from '@/Components/EmptyState.vue';
+import PdfViewer from '@/Components/PdfViewer.vue';
+import { canPreview, fileIcon } from '@/Modules/Documents/api.js';
 
 defineProps({
     open: { type: Boolean, default: false },

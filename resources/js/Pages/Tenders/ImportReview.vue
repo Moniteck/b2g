@@ -8,23 +8,23 @@
 // vivo (B-18). Nada se guarda hasta «Confirmar».
 import { Link, router, useForm } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import AppButton from '../../Components/AppButton.vue';
-import Checkbox from '../../Components/Checkbox.vue';
-import DateTimeInput from '../../Components/DateTimeInput.vue';
-import FormField from '../../Components/FormField.vue';
-import MoneyInput from '../../Components/MoneyInput.vue';
-import SearchSelect from '../../Components/SearchSelect.vue';
-import SelectInput from '../../Components/SelectInput.vue';
-import TextArea from '../../Components/TextArea.vue';
-import TextInput from '../../Components/TextInput.vue';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { focusFirstError } from '../../lib/errors.js';
-import { getJson } from '../../lib/http.js';
-import { card, tableLink, textLink } from '../../lib/ui.js';
-import Mascot from '../../Modules/Auth/Mascot.vue';
-import CaptureViewer from '../../Modules/Tenders/CaptureViewer.vue';
-import { captureWarnings, createPoller, READ_STATUS } from '../../Modules/Tenders/tenders.js';
+import CapAlert from '@design/vue/CapAlert.vue';
+import AppButton from '@/Components/AppButton.vue';
+import Checkbox from '@/Components/Checkbox.vue';
+import DateTimeInput from '@/Components/DateTimeInput.vue';
+import FormField from '@/Components/FormField.vue';
+import MoneyInput from '@/Components/MoneyInput.vue';
+import SearchSelect from '@/Components/SearchSelect.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import TextArea from '@/Components/TextArea.vue';
+import TextInput from '@/Components/TextInput.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { focusFirstError } from '@/lib/errors.js';
+import { getJson } from '@/lib/http.js';
+import { card, tableLink, textLink } from '@/lib/ui.js';
+import Mascot from '@/Modules/Auth/Mascot.vue';
+import CaptureViewer from '@/Modules/Tenders/CaptureViewer.vue';
+import { captureWarnings, createPoller, READ_STATUS } from '@/Modules/Tenders/tenders.js';
 
 const props = defineProps({
     review: { type: Object, required: true },

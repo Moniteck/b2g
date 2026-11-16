@@ -11,23 +11,23 @@
 //          changed ({ action: 'uploaded' | 'deleted', items }), loaded (items).
 // Expone: reload(), openUpload().
 import { computed, getCurrentInstance, onMounted, ref, watch } from 'vue';
-import CapSkeleton from '../../../design/vue/CapSkeleton.vue';
-import { useToasts } from '../../../design/vue/composables/useToasts.js';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import EmptyState from '../../Components/EmptyState.vue';
-import ErrorState from '../../Components/ErrorState.vue';
-import FileDropzone from '../../Components/FileDropzone.vue';
-import FormField from '../../Components/FormField.vue';
-import IconButton from '../../Components/IconButton.vue';
-import SelectInput from '../../Components/SelectInput.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import TextInput from '../../Components/TextInput.vue';
-import { useConfirm } from '../../composables/useConfirm.js';
-import { useUpload } from '../../composables/useUpload.js';
-import { dateTime, fileSize } from '../../lib/format.js';
-import { attachmentsUrl, deleteAttachment, fetchAttachments, fileIcon } from './api.js';
-import DocumentViewerModal from './DocumentViewerModal.vue';
+import CapSkeleton from '@design/vue/CapSkeleton.vue';
+import { useToasts } from '@design/vue/composables/useToasts.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import EmptyState from '@/Components/EmptyState.vue';
+import ErrorState from '@/Components/ErrorState.vue';
+import FileDropzone from '@/Components/FileDropzone.vue';
+import FormField from '@/Components/FormField.vue';
+import IconButton from '@/Components/IconButton.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import TextInput from '@/Components/TextInput.vue';
+import { useConfirm } from '@/composables/useConfirm.js';
+import { useUpload } from '@/composables/useUpload.js';
+import { dateTime, fileSize } from '@/lib/format.js';
+import { attachmentsUrl, deleteAttachment, fetchAttachments, fileIcon } from '@/Modules/Documents/api.js';
+import DocumentViewerModal from '@/Modules/Documents/DocumentViewerModal.vue';
 
 const props = defineProps({
     entityType: { type: String, required: true },

@@ -2,30 +2,30 @@
 // Ficha del contrato: resumen, documentos (con firmar y sellar), entregas, seguimientos e historial.
 import { Deferred, Link, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import CapSkeleton from '../../../design/vue/CapSkeleton.vue';
-import AppButton from '../../Components/AppButton.vue';
-import DescriptionList from '../../Components/DescriptionList.vue';
-import DropdownMenu from '../../Components/DropdownMenu.vue';
-import EmptyState from '../../Components/EmptyState.vue';
-import IconButton from '../../Components/IconButton.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import Tabs from '../../Components/Tabs.vue';
-import Timeline from '../../Components/Timeline.vue';
-import { useConfirm } from '../../composables/useConfirm.js';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { date, dateTime, money, quantity } from '../../lib/format.js';
-import { visit } from '../../lib/http.js';
-import { card, tableLink } from '../../lib/ui.js';
-import AttachmentPanel from '../../Modules/Documents/AttachmentPanel.vue';
-import DocumentViewerModal from '../../Modules/Documents/DocumentViewerModal.vue';
-import SignDocumentModal from '../../Modules/Signatures/SignDocumentModal.vue';
-import ContractFormModal from '../../Modules/Contracts/ContractFormModal.vue';
-import DeliverModal from '../../Modules/Contracts/DeliverModal.vue';
-import DeliveryModal from '../../Modules/Contracts/DeliveryModal.vue';
-import FollowUpModal from '../../Modules/Contracts/FollowUpModal.vue';
-import StatusModal from '../../Modules/Contracts/StatusModal.vue';
-import { CATEGORIES, DELIVERY_TONES, HISTORY_LABELS, historyDetail, percentOf, remaining, termLabel, tone } from '../../Modules/Contracts/contracts.js';
+import CapAlert from '@design/vue/CapAlert.vue';
+import CapSkeleton from '@design/vue/CapSkeleton.vue';
+import AppButton from '@/Components/AppButton.vue';
+import DescriptionList from '@/Components/DescriptionList.vue';
+import DropdownMenu from '@/Components/DropdownMenu.vue';
+import EmptyState from '@/Components/EmptyState.vue';
+import IconButton from '@/Components/IconButton.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import Tabs from '@/Components/Tabs.vue';
+import Timeline from '@/Components/Timeline.vue';
+import { useConfirm } from '@/composables/useConfirm.js';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { date, dateTime, money, quantity } from '@/lib/format.js';
+import { visit } from '@/lib/http.js';
+import { card, tableLink } from '@/lib/ui.js';
+import AttachmentPanel from '@/Modules/Documents/AttachmentPanel.vue';
+import DocumentViewerModal from '@/Modules/Documents/DocumentViewerModal.vue';
+import SignDocumentModal from '@/Modules/Signatures/SignDocumentModal.vue';
+import ContractFormModal from '@/Modules/Contracts/ContractFormModal.vue';
+import DeliverModal from '@/Modules/Contracts/DeliverModal.vue';
+import DeliveryModal from '@/Modules/Contracts/DeliveryModal.vue';
+import FollowUpModal from '@/Modules/Contracts/FollowUpModal.vue';
+import StatusModal from '@/Modules/Contracts/StatusModal.vue';
+import { CATEGORIES, DELIVERY_TONES, HISTORY_LABELS, historyDetail, percentOf, remaining, termLabel, tone } from '@/Modules/Contracts/contracts.js';
 
 const props = defineProps({
     contract: { type: Object, required: true },

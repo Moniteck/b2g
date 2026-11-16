@@ -6,9 +6,9 @@
 // Al salir del campo muestra «12,345.67»; al entrar, la cifra sin separadores para editarla.
 // Ancho fijo de 160 px (176 con selector de moneda); `class="w-full"` lo estira.
 import { computed, ref, watch } from 'vue';
-import { useField } from '../composables/useField.js';
-import { currencySymbol, number } from '../lib/format.js';
-import { inputClass } from '../lib/ui.js';
+import { useField } from '@/composables/useField.js';
+import { currencySymbol, number } from '@/lib/format.js';
+import { inputClass } from '@/lib/ui.js';
 
 defineOptions({ inheritAttrs: false });
 

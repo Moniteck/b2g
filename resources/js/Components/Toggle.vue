@@ -1,7 +1,7 @@
 <script setup>
 // Interruptor para activar o desactivar algo que se aplica al momento (una casilla espera a «Guardar»).
 // Props: modelValue (v-model), label, description, disabled, id. Sin `label` visible, pasar `aria-label`.
-import { useField } from '../composables/useField.js';
+import { useField } from '@/composables/useField.js';
 
 defineOptions({ inheritAttrs: false });
 

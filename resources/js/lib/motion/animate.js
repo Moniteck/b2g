@@ -2,8 +2,8 @@
 // La WAAPI no se ve afectada por la regla de `tokens.css` que anula transiciones CSS, así que
 // cada llamada decide aquí qué hacer con movimiento reducido:
 //   reduced: 'skip' (por defecto: no anima), 'fade' (fundido corto de opacidad) o 'run' (anima igual).
-import { DURATION, EASE } from './tokens.js';
-import { isReducedMotion } from './preference.js';
+import { DURATION, EASE } from '@/lib/motion/tokens.js';
+import { isReducedMotion } from '@/lib/motion/preference.js';
 
 /**
  * Anima `element` con `keyframes`. Devuelve la `Animation` o null si no se animó.

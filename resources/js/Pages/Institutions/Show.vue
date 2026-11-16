@@ -3,20 +3,20 @@
 // (licitaciones, cotizaciones y contratos).
 import { Link } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import DataTable from '../../Components/DataTable.vue';
-import DescriptionList from '../../Components/DescriptionList.vue';
-import DropdownMenu from '../../Components/DropdownMenu.vue';
-import PageHeader from '../../Components/PageHeader.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import Tabs from '../../Components/Tabs.vue';
-import { useConfirm } from '../../composables/useConfirm.js';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { date, dateTime, money } from '../../lib/format.js';
-import { visit } from '../../lib/http.js';
-import { card, tableLink } from '../../lib/ui.js';
-import ContactFormModal from '../Contacts/Partials/ContactFormModal.vue';
-import InstitutionFormModal from './Partials/InstitutionFormModal.vue';
+import AppButton from '@/Components/AppButton.vue';
+import DataTable from '@/Components/DataTable.vue';
+import DescriptionList from '@/Components/DescriptionList.vue';
+import DropdownMenu from '@/Components/DropdownMenu.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import Tabs from '@/Components/Tabs.vue';
+import { useConfirm } from '@/composables/useConfirm.js';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { date, dateTime, money } from '@/lib/format.js';
+import { visit } from '@/lib/http.js';
+import { card, tableLink } from '@/lib/ui.js';
+import ContactFormModal from '@/Pages/Contacts/Partials/ContactFormModal.vue';
+import InstitutionFormModal from '@/Pages/Institutions/Partials/InstitutionFormModal.vue';
 
 const props = defineProps({
     institution: { type: Object, required: true },

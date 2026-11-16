@@ -3,12 +3,12 @@
 // para editar, null cerrada. `lockInstitution` fija la institución (desde la ficha de la institución).
 import { useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
-import AppButton from '../../../Components/AppButton.vue';
-import BaseModal from '../../../Components/BaseModal.vue';
-import FormField from '../../../Components/FormField.vue';
-import SearchSelect from '../../../Components/SearchSelect.vue';
-import TextInput from '../../../Components/TextInput.vue';
-import { focusFirstError } from '../../../lib/errors.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import FormField from '@/Components/FormField.vue';
+import SearchSelect from '@/Components/SearchSelect.vue';
+import TextInput from '@/Components/TextInput.vue';
+import { focusFirstError } from '@/lib/errors.js';
 
 const props = defineProps({
     contact: { type: Object, default: null },

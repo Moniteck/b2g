@@ -4,12 +4,12 @@
 // Cerrada queda `inert` (fuera del orden de tabulación y del árbol de accesibilidad).
 import { Link } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, onMounted, ref, toRef } from 'vue';
-import CapAvatar from '../../../design/vue/CapAvatar.vue';
-import { useEscapeKey } from '../../../design/vue/composables/useEscapeKey.js';
-import { useFocusTrap } from '../../../design/vue/composables/useFocusTrap.js';
-import { iconClass } from '../../../design/vue/helpers.js';
-import { createDragToClose } from '../../../design/shell/js/sheet.js';
-import { toggleTheme } from '../../../design/shell/js/theme.js';
+import CapAvatar from '@design/vue/CapAvatar.vue';
+import { useEscapeKey } from '@design/vue/composables/useEscapeKey.js';
+import { useFocusTrap } from '@design/vue/composables/useFocusTrap.js';
+import { iconClass } from '@design/vue/helpers.js';
+import { createDragToClose } from '@design/shell/js/sheet.js';
+import { toggleTheme } from '@design/shell/js/theme.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

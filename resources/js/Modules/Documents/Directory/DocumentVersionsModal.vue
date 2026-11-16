@@ -2,14 +2,14 @@
 // Historial de versiones de un documento: ver y descargar cada una.
 // Eventos: view ({ id, name, previewUrl, downloadUrl, mime, fileName }) para abrir el visor encima.
 import { ref, watch } from 'vue';
-import CapSkeleton from '../../../../design/vue/CapSkeleton.vue';
-import AppButton from '../../../Components/AppButton.vue';
-import BaseModal from '../../../Components/BaseModal.vue';
-import ErrorState from '../../../Components/ErrorState.vue';
-import IconButton from '../../../Components/IconButton.vue';
-import StatusBadge from '../../../Components/StatusBadge.vue';
-import { date, dateTime, fileSize } from '../../../lib/format.js';
-import { fetchVersions, fileIcon } from '../api.js';
+import CapSkeleton from '@design/vue/CapSkeleton.vue';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import ErrorState from '@/Components/ErrorState.vue';
+import IconButton from '@/Components/IconButton.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import { date, dateTime, fileSize } from '@/lib/format.js';
+import { fetchVersions, fileIcon } from '@/Modules/Documents/api.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

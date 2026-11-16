@@ -4,7 +4,7 @@
 //        en `auth.user.initials`), size ('sm' 24 px | 'md' 32 px | 'lg' 40 px).
 // Decorativo junto al nombre; si va solo, el `title` da el nombre.
 import { computed } from 'vue';
-import { initialsOf } from '../../design/vue/helpers.js';
+import { initialsOf } from '@design/vue/helpers.js';
 
 const props = defineProps({
     name: { type: String, default: '' },

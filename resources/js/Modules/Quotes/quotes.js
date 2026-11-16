@@ -1,5 +1,5 @@
 // Reglas y textos de la pantalla de cotizaciones que no son de un solo componente.
-import { documentTotals, priceLine } from '../Inventory/pricing.js';
+import { documentTotals, priceLine } from '@/Modules/Inventory/pricing.js';
 
 /** Qué significa pasar a cada estado (modal «Cambiar estado»). */
 export const STATUS_HELP = {

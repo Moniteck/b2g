@@ -1,6 +1,6 @@
 // Generadores de imagen para «Crear firma» (escrita con una fuente manuscrita) y «Crear sello»
 // (circular o rectangular). Devuelven un <canvas> transparente y recortado, listo para exportar a PNG.
-import { HANDWRITING_FONTS, trimCanvas } from './ink.js';
+import { HANDWRITING_FONTS, trimCanvas } from '@/Modules/Signatures/ink.js';
 
 const STAMP_FONT = 'Poppins, Inter, "Segoe UI", Arial, sans-serif';
 

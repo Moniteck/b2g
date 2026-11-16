@@ -3,15 +3,15 @@
 // Las transiciones válidas llegan del servidor (`transitions`); cerrar exige producto entregado.
 import { useForm } from '@inertiajs/vue3';
 import { computed, watch } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import Checkbox from '../../Components/Checkbox.vue';
-import FormField from '../../Components/FormField.vue';
-import SelectInput from '../../Components/SelectInput.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import TextArea from '../../Components/TextArea.vue';
-import { tone } from './contracts.js';
+import CapAlert from '@design/vue/CapAlert.vue';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import Checkbox from '@/Components/Checkbox.vue';
+import FormField from '@/Components/FormField.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import TextArea from '@/Components/TextArea.vue';
+import { tone } from '@/Modules/Contracts/contracts.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

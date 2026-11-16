@@ -3,22 +3,22 @@
 // Props: templates (paginador: [{ id, name, channel, subject, body, active, updated_at }]), channels.
 import { useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import DataTable from '../../Components/DataTable.vue';
-import DropdownMenu from '../../Components/DropdownMenu.vue';
-import FormField from '../../Components/FormField.vue';
-import Pagination from '../../Components/Pagination.vue';
-import SelectInput from '../../Components/SelectInput.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import TextArea from '../../Components/TextArea.vue';
-import TextInput from '../../Components/TextInput.vue';
-import Toggle from '../../Components/Toggle.vue';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { useConfirm } from '../../composables/useConfirm.js';
-import { focusFirstError } from '../../lib/errors.js';
-import { date } from '../../lib/format.js';
-import { visit } from '../../lib/http.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import DataTable from '@/Components/DataTable.vue';
+import DropdownMenu from '@/Components/DropdownMenu.vue';
+import FormField from '@/Components/FormField.vue';
+import Pagination from '@/Components/Pagination.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import TextArea from '@/Components/TextArea.vue';
+import TextInput from '@/Components/TextInput.vue';
+import Toggle from '@/Components/Toggle.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { useConfirm } from '@/composables/useConfirm.js';
+import { focusFirstError } from '@/lib/errors.js';
+import { date } from '@/lib/format.js';
+import { visit } from '@/lib/http.js';
 
 const props = defineProps({
     templates: { type: Object, required: true },

@@ -2,20 +2,20 @@
 // Contactos de las instituciones (catálogo compartido del grupo).
 import { Link } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import DataTable from '../../Components/DataTable.vue';
-import DropdownMenu from '../../Components/DropdownMenu.vue';
-import PageHeader from '../../Components/PageHeader.vue';
-import Pagination from '../../Components/Pagination.vue';
-import SearchSelect from '../../Components/SearchSelect.vue';
-import Toolbar from '../../Components/Toolbar.vue';
-import { useConfirm } from '../../composables/useConfirm.js';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { number } from '../../lib/format.js';
-import { visit } from '../../lib/http.js';
-import { tableLink } from '../../lib/ui.js';
-import { useListFilters } from '../Admin/Partials/useListFilters.js';
-import ContactFormModal from './Partials/ContactFormModal.vue';
+import AppButton from '@/Components/AppButton.vue';
+import DataTable from '@/Components/DataTable.vue';
+import DropdownMenu from '@/Components/DropdownMenu.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import Pagination from '@/Components/Pagination.vue';
+import SearchSelect from '@/Components/SearchSelect.vue';
+import Toolbar from '@/Components/Toolbar.vue';
+import { useConfirm } from '@/composables/useConfirm.js';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { number } from '@/lib/format.js';
+import { visit } from '@/lib/http.js';
+import { tableLink } from '@/lib/ui.js';
+import { useListFilters } from '@/Pages/Admin/Partials/useListFilters.js';
+import ContactFormModal from '@/Pages/Contacts/Partials/ContactFormModal.vue';
 
 const props = defineProps({
     contacts: { type: Object, required: true },

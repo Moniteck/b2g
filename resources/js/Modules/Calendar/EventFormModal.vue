@@ -6,18 +6,18 @@
 // Eventos: saved.
 import { useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import Checkbox from '../../Components/Checkbox.vue';
-import DateInput from '../../Components/DateInput.vue';
-import DateTimeInput from '../../Components/DateTimeInput.vue';
-import FormField from '../../Components/FormField.vue';
-import SelectInput from '../../Components/SelectInput.vue';
-import TextArea from '../../Components/TextArea.vue';
-import TextInput from '../../Components/TextInput.vue';
-import Toggle from '../../Components/Toggle.vue';
-import { focusFirstError } from '../../lib/errors.js';
-import { offsetLabel } from './offsets.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import Checkbox from '@/Components/Checkbox.vue';
+import DateInput from '@/Components/DateInput.vue';
+import DateTimeInput from '@/Components/DateTimeInput.vue';
+import FormField from '@/Components/FormField.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import TextArea from '@/Components/TextArea.vue';
+import TextInput from '@/Components/TextInput.vue';
+import Toggle from '@/Components/Toggle.vue';
+import { focusFirstError } from '@/lib/errors.js';
+import { offsetLabel } from '@/Modules/Calendar/offsets.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

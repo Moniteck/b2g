@@ -2,7 +2,7 @@
 // Estado de error de una pantalla o de una sección (parcial): qué pasó y cómo seguir.
 // Props: title, description, code (código o id para soporte), retryLabel ('Reintentar'; '' lo oculta),
 //        compact. Eventos: retry. Slot `action` para otra salida («Volver a la lista»).
-import AppButton from './AppButton.vue';
+import AppButton from '@/Components/AppButton.vue';
 
 defineProps({
     title: { type: String, default: 'No se pudo cargar esta sección' },

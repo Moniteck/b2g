@@ -6,7 +6,7 @@
 // Movimiento: presión al pulsar, el primario se inclina hacia el puntero (v-magnetic) y, tras un envío
 // correcto de Inertia, muestra un check animado (lib/motion/navigation.js).
 import { Link } from '@inertiajs/vue3';
-import CapButton from '../../design/vue/CapButton.vue';
+import CapButton from '@design/vue/CapButton.vue';
 
 defineProps({
     variant: { type: String, default: 'secondary' },

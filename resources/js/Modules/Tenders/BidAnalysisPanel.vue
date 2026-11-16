@@ -6,19 +6,19 @@
 // `uploadSignal` (número): cada vez que cambia, abre la subida (botón «Importar pliego» de la ficha).
 import { router } from '@inertiajs/vue3';
 import { computed, onBeforeUnmount, ref, watch } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import EmptyState from '../../Components/EmptyState.vue';
-import FileDropzone from '../../Components/FileDropzone.vue';
-import FormField from '../../Components/FormField.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import TextArea from '../../Components/TextArea.vue';
-import { useUpload } from '../../composables/useUpload.js';
-import { dateTime, number } from '../../lib/format.js';
-import { getJson, postJson, visit } from '../../lib/http.js';
-import { card } from '../../lib/ui.js';
-import { ANALYSIS_STATUS, createPoller } from './tenders.js';
+import CapAlert from '@design/vue/CapAlert.vue';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import EmptyState from '@/Components/EmptyState.vue';
+import FileDropzone from '@/Components/FileDropzone.vue';
+import FormField from '@/Components/FormField.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import TextArea from '@/Components/TextArea.vue';
+import { useUpload } from '@/composables/useUpload.js';
+import { dateTime, number } from '@/lib/format.js';
+import { getJson, postJson, visit } from '@/lib/http.js';
+import { card } from '@/lib/ui.js';
+import { ANALYSIS_STATUS, createPoller } from '@/Modules/Tenders/tenders.js';
 
 const props = defineProps({
     tender: { type: Object, required: true },

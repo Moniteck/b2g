@@ -2,13 +2,13 @@
 // Modal para editar los datos y el contacto de un cliente. Se abre al recibir `client` y emite `close`.
 import { useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
-import AppButton from '../../../Components/AppButton.vue';
-import BaseModal from '../../../Components/BaseModal.vue';
-import FormField from '../../../Components/FormField.vue';
-import SelectInput from '../../../Components/SelectInput.vue';
-import TextArea from '../../../Components/TextArea.vue';
-import TextInput from '../../../Components/TextInput.vue';
-import { focusFirstError } from '../../../lib/errors.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import FormField from '@/Components/FormField.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import TextArea from '@/Components/TextArea.vue';
+import TextInput from '@/Components/TextInput.vue';
+import { focusFirstError } from '@/lib/errors.js';
 
 const props = defineProps({ client: { type: Object, default: null } });
 const emit = defineEmits(['close']);

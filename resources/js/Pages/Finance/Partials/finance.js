@@ -2,8 +2,8 @@
 // que sigue al tema y cifras compactas para ejes.
 import { router } from '@inertiajs/vue3';
 import { onBeforeUnmount, onMounted, reactive, ref } from 'vue';
-import { chartColors } from '../../../../design/chart-colors.js';
-import { number } from '../../../lib/format.js';
+import { chartColors } from '@design/chart-colors.js';
+import { number } from '@/lib/format.js';
 
 /** Quita los filtros vacíos o por defecto para que la URL quede limpia. */
 export function cleanQuery(values, defaults = {}) {

@@ -4,15 +4,15 @@
 // Props: open (v-model:open), rules ([{ event_type, label, days_before, send_time, channels, recipients, is_active }]).
 import { useForm } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import Checkbox from '../../Components/Checkbox.vue';
-import FormField from '../../Components/FormField.vue';
-import TextInput from '../../Components/TextInput.vue';
-import Toggle from '../../Components/Toggle.vue';
-import { focusFirstError } from '../../lib/errors.js';
-import { inputClass } from '../../lib/ui.js';
-import { parseDays } from './offsets.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import Checkbox from '@/Components/Checkbox.vue';
+import FormField from '@/Components/FormField.vue';
+import TextInput from '@/Components/TextInput.vue';
+import Toggle from '@/Components/Toggle.vue';
+import { focusFirstError } from '@/lib/errors.js';
+import { inputClass } from '@/lib/ui.js';
+import { parseDays } from '@/Modules/Calendar/offsets.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

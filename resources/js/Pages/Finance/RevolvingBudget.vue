@@ -3,30 +3,30 @@
 // servidor, registro manual, monto inicial, sincronización con cotizaciones, licitaciones y cobros, y exportes.
 import { router, useForm } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import DataTable from '../../Components/DataTable.vue';
-import DateInput from '../../Components/DateInput.vue';
-import DropdownMenu from '../../Components/DropdownMenu.vue';
-import FormField from '../../Components/FormField.vue';
-import MoneyInput from '../../Components/MoneyInput.vue';
-import PageHeader from '../../Components/PageHeader.vue';
-import Pagination from '../../Components/Pagination.vue';
-import StatCard from '../../Components/StatCard.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import TextInput from '../../Components/TextInput.vue';
-import Toolbar from '../../Components/Toolbar.vue';
-import CapSegmented from '../../../design/vue/CapSegmented.vue';
-import { useConfirm } from '../../composables/useConfirm.js';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { focusFirstError } from '../../lib/errors.js';
-import { date, money, number } from '../../lib/format.js';
-import { visit } from '../../lib/http.js';
-import ChartCard from './Partials/ChartCard.vue';
-import LineChart from './Partials/LineChart.vue';
-import LoadError from './Partials/LoadError.vue';
-import { FINANCE_SECTIONS } from './Partials/sections.js';
-import { cleanQuery, useServerList } from './Partials/finance.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import DataTable from '@/Components/DataTable.vue';
+import DateInput from '@/Components/DateInput.vue';
+import DropdownMenu from '@/Components/DropdownMenu.vue';
+import FormField from '@/Components/FormField.vue';
+import MoneyInput from '@/Components/MoneyInput.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import Pagination from '@/Components/Pagination.vue';
+import StatCard from '@/Components/StatCard.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import TextInput from '@/Components/TextInput.vue';
+import Toolbar from '@/Components/Toolbar.vue';
+import CapSegmented from '@design/vue/CapSegmented.vue';
+import { useConfirm } from '@/composables/useConfirm.js';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { focusFirstError } from '@/lib/errors.js';
+import { date, money, number } from '@/lib/format.js';
+import { visit } from '@/lib/http.js';
+import ChartCard from '@/Pages/Finance/Partials/ChartCard.vue';
+import LineChart from '@/Pages/Finance/Partials/LineChart.vue';
+import LoadError from '@/Pages/Finance/Partials/LoadError.vue';
+import { FINANCE_SECTIONS } from '@/Pages/Finance/Partials/sections.js';
+import { cleanQuery, useServerList } from '@/Pages/Finance/Partials/finance.js';
 
 const props = defineProps({
     budget: { type: Object, required: true },

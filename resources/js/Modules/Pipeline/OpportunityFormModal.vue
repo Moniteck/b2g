@@ -7,17 +7,17 @@
 // crear; después se cambia moviendo la tarjeta.
 import { useForm } from '@inertiajs/vue3';
 import { computed, nextTick, watch } from 'vue';
-import CapSegmented from '../../../design/vue/CapSegmented.vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import DateInput from '../../Components/DateInput.vue';
-import FormField from '../../Components/FormField.vue';
-import MoneyInput from '../../Components/MoneyInput.vue';
-import SearchSelect from '../../Components/SearchSelect.vue';
-import SelectInput from '../../Components/SelectInput.vue';
-import TextArea from '../../Components/TextArea.vue';
-import TextInput from '../../Components/TextInput.vue';
-import { focusFirstError } from '../../lib/errors.js';
+import CapSegmented from '@design/vue/CapSegmented.vue';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import DateInput from '@/Components/DateInput.vue';
+import FormField from '@/Components/FormField.vue';
+import MoneyInput from '@/Components/MoneyInput.vue';
+import SearchSelect from '@/Components/SearchSelect.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import TextArea from '@/Components/TextArea.vue';
+import TextInput from '@/Components/TextInput.vue';
+import { focusFirstError } from '@/lib/errors.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

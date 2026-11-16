@@ -2,20 +2,20 @@
 // Catálogo de instituciones compradoras, compartido por las empresas del grupo.
 import { router } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import DataTable from '../../Components/DataTable.vue';
-import DropdownMenu from '../../Components/DropdownMenu.vue';
-import PageHeader from '../../Components/PageHeader.vue';
-import Pagination from '../../Components/Pagination.vue';
-import SelectInput from '../../Components/SelectInput.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import Toolbar from '../../Components/Toolbar.vue';
-import { useConfirm } from '../../composables/useConfirm.js';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { number } from '../../lib/format.js';
-import { visit } from '../../lib/http.js';
-import { useListFilters } from '../Admin/Partials/useListFilters.js';
-import InstitutionFormModal from './Partials/InstitutionFormModal.vue';
+import AppButton from '@/Components/AppButton.vue';
+import DataTable from '@/Components/DataTable.vue';
+import DropdownMenu from '@/Components/DropdownMenu.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import Pagination from '@/Components/Pagination.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import Toolbar from '@/Components/Toolbar.vue';
+import { useConfirm } from '@/composables/useConfirm.js';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { number } from '@/lib/format.js';
+import { visit } from '@/lib/http.js';
+import { useListFilters } from '@/Pages/Admin/Partials/useListFilters.js';
+import InstitutionFormModal from '@/Pages/Institutions/Partials/InstitutionFormModal.vue';
 
 const props = defineProps({
     institutions: { type: Object, required: true },

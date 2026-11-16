@@ -5,7 +5,7 @@
 //        es uno de la biblioteca), hideLabel (etiqueta solo para lectores de pantalla).
 // El control de la biblioteca que vaya dentro toma solo su id, `aria-invalid` y `aria-describedby`.
 import { computed, provide, useId } from 'vue';
-import { FIELD_KEY } from '../composables/useField.js';
+import { FIELD_KEY } from '@/composables/useField.js';
 
 const props = defineProps({
     label: { type: String, default: '' },

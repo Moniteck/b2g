@@ -1,6 +1,6 @@
 // Utilidades del calendario: fechas como claves «AAAA-MM-DD» en hora de pared de Honduras
 // (sin zonas en medio), rejilla mensual que empieza en lunes, colores por tipo y reparto de barras.
-import { TIME_ZONE } from '../../lib/format.js';
+import { TIME_ZONE } from '@/lib/format.js';
 
 const DAY_MS = 86_400_000;
 

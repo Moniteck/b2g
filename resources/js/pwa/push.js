@@ -5,7 +5,7 @@
 //
 // La clave pública VAPID llega en <meta name="pwa-vapid"> (resources/views/partials/pwa-head.blade.php).
 // Backend: routes/modules/pwa.php.
-import { pwa } from './state.js';
+import { pwa } from '@/pwa/state.js';
 
 const ENDPOINT = '/pwa/push/suscripciones';
 

@@ -13,10 +13,10 @@
 // Las visitas que conservan estado (filtros, paginación, recargas parciales) no animan nada.
 import { router } from '@inertiajs/vue3';
 import { onBeforeUnmount, onMounted, watch } from 'vue';
-import { pop, ring } from './animate.js';
-import { endFirstLoad, isFirstLoad, isReducedMotion } from './preference.js';
-import { DURATION, EASE } from './tokens.js';
-import { countUpText } from './useCountUp.js';
+import { pop, ring } from '@/lib/motion/animate.js';
+import { endFirstLoad, isFirstLoad, isReducedMotion } from '@/lib/motion/preference.js';
+import { DURATION, EASE } from '@/lib/motion/tokens.js';
+import { countUpText } from '@/lib/motion/useCountUp.js';
 
 const ACTIVE = '[aria-current="page"], [data-active="true"]';
 const INDICATORS = [

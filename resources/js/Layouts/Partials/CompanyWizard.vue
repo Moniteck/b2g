@@ -9,13 +9,13 @@
 // Vive en el marco persistente: sigue abierto aunque la página de atrás cambie.
 import { router, useForm, usePage } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import Checkbox from '../../Components/Checkbox.vue';
-import FormField from '../../Components/FormField.vue';
-import SearchSelect from '../../Components/SearchSelect.vue';
-import TextInput from '../../Components/TextInput.vue';
-import { endpoints } from '../../config/navigation.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import Checkbox from '@/Components/Checkbox.vue';
+import FormField from '@/Components/FormField.vue';
+import SearchSelect from '@/Components/SearchSelect.vue';
+import TextInput from '@/Components/TextInput.vue';
+import { endpoints } from '@/config/navigation.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

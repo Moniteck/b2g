@@ -2,19 +2,19 @@
 // Subir varios documentos al Directorio Institucional, cada uno con su categoría y sus fechas.
 // Un archivo por petición: progreso y errores por archivo; los que fallan quedan en la lista.
 import { computed, ref, watch } from 'vue';
-import { useToasts } from '../../../../design/vue/composables/useToasts.js';
-import AppButton from '../../../Components/AppButton.vue';
-import BaseModal from '../../../Components/BaseModal.vue';
-import DateInput from '../../../Components/DateInput.vue';
-import FileDropzone from '../../../Components/FileDropzone.vue';
-import FormField from '../../../Components/FormField.vue';
-import IconButton from '../../../Components/IconButton.vue';
-import SelectInput from '../../../Components/SelectInput.vue';
-import TextInput from '../../../Components/TextInput.vue';
-import { useUpload } from '../../../composables/useUpload.js';
-import { fieldError } from '../../../lib/errors.js';
-import { fileSize } from '../../../lib/format.js';
-import { fileIcon } from '../api.js';
+import { useToasts } from '@design/vue/composables/useToasts.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import DateInput from '@/Components/DateInput.vue';
+import FileDropzone from '@/Components/FileDropzone.vue';
+import FormField from '@/Components/FormField.vue';
+import IconButton from '@/Components/IconButton.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import TextInput from '@/Components/TextInput.vue';
+import { useUpload } from '@/composables/useUpload.js';
+import { fieldError } from '@/lib/errors.js';
+import { fileSize } from '@/lib/format.js';
+import { fileIcon } from '@/Modules/Documents/api.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

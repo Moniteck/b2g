@@ -2,18 +2,18 @@
 // Conexiones MCP: accesos concedidos a ChatGPT, Claude u otros asistentes. Cada usuario ve y revoca
 // las suyas; el administrador de la empresa activa ve también las de su empresa.
 import { ref } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import DataTable from '../../Components/DataTable.vue';
-import PageHeader from '../../Components/PageHeader.vue';
-import Pagination from '../../Components/Pagination.vue';
-import StatCard from '../../Components/StatCard.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import Toolbar from '../../Components/Toolbar.vue';
-import { useConfirm } from '../../composables/useConfirm.js';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { dateTime, number, relativeTime } from '../../lib/format.js';
-import { visit } from '../../lib/http.js';
-import { useListFilters } from './Partials/useListFilters.js';
+import AppButton from '@/Components/AppButton.vue';
+import DataTable from '@/Components/DataTable.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import Pagination from '@/Components/Pagination.vue';
+import StatCard from '@/Components/StatCard.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import Toolbar from '@/Components/Toolbar.vue';
+import { useConfirm } from '@/composables/useConfirm.js';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { dateTime, number, relativeTime } from '@/lib/format.js';
+import { visit } from '@/lib/http.js';
+import { useListFilters } from '@/Pages/Admin/Partials/useListFilters.js';
 
 const props = defineProps({
     connections: { type: Object, required: true },

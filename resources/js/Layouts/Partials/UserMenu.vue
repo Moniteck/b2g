@@ -6,12 +6,12 @@
 // Eventos: logout.
 import { Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import CapAvatar from '../../../design/vue/CapAvatar.vue';
-import { toggleTheme } from '../../../design/shell/js/theme.js';
-import DropdownMenu from '../../Components/DropdownMenu.vue';
-import { accountMenu } from '../../config/navigation.js';
-import { motionPreference, systemReducedMotion, toggleMotionPreference } from '../../lib/motion/index.js';
-import { menuItem } from '../../lib/ui.js';
+import CapAvatar from '@design/vue/CapAvatar.vue';
+import { toggleTheme } from '@design/shell/js/theme.js';
+import DropdownMenu from '@/Components/DropdownMenu.vue';
+import { accountMenu } from '@/config/navigation.js';
+import { motionPreference, systemReducedMotion, toggleMotionPreference } from '@/lib/motion/index.js';
+import { menuItem } from '@/lib/ui.js';
 
 const props = defineProps({
     user: { type: Object, required: true },

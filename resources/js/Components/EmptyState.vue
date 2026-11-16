@@ -5,7 +5,7 @@
 //        title, description, icon (sin `mdi-`), compact (menos alto, para secciones dentro de una tarjeta).
 // Eventos: clear (solo en 'no-results').
 import { computed } from 'vue';
-import AppButton from './AppButton.vue';
+import AppButton from '@/Components/AppButton.vue';
 
 const props = defineProps({
     variant: { type: String, default: 'empty' },

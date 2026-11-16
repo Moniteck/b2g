@@ -1,8 +1,8 @@
 <script setup>
 // Aviso en línea cuando falla la recarga de una sección, con «Reintentar».
 // Props: title, message. Eventos: retry.
-import CapAlert from '../../../../design/vue/CapAlert.vue';
-import AppButton from '../../../Components/AppButton.vue';
+import CapAlert from '@design/vue/CapAlert.vue';
+import AppButton from '@/Components/AppButton.vue';
 
 defineProps({
     title: { type: String, default: 'No se pudo actualizar la pantalla' },

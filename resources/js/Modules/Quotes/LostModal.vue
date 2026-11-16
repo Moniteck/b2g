@@ -2,19 +2,19 @@
 // Registrar una oferta como Perdida: exige quién ganó (de los participantes o escrito) y el valor de su
 // oferta; motivo opcional. Props: open (v-model:open), subject ({ type, id, label, quoteId? }). Eventos: done.
 import { computed, ref, watch } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import CapSegmented from '../../../design/vue/CapSegmented.vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import DateInput from '../../Components/DateInput.vue';
-import FormField from '../../Components/FormField.vue';
-import MoneyInput from '../../Components/MoneyInput.vue';
-import SelectInput from '../../Components/SelectInput.vue';
-import TextArea from '../../Components/TextArea.vue';
-import TextInput from '../../Components/TextInput.vue';
-import { money } from '../../lib/format.js';
-import { fetchParticipants, flatErrors, markLost } from './api.js';
-import { today } from './quotes.js';
+import CapAlert from '@design/vue/CapAlert.vue';
+import CapSegmented from '@design/vue/CapSegmented.vue';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import DateInput from '@/Components/DateInput.vue';
+import FormField from '@/Components/FormField.vue';
+import MoneyInput from '@/Components/MoneyInput.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import TextArea from '@/Components/TextArea.vue';
+import TextInput from '@/Components/TextInput.vue';
+import { money } from '@/lib/format.js';
+import { fetchParticipants, flatErrors, markLost } from '@/Modules/Quotes/api.js';
+import { today } from '@/Modules/Quotes/quotes.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

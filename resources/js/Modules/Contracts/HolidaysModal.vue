@@ -3,21 +3,21 @@
 // Vienen sembrados los nacionales de Honduras; los marcados «Por revisar» son fechas estimadas.
 // Props: open (v-model:open), canManage (solo administrador).
 import { computed, reactive, ref, watch } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import CapSegmented from '../../../design/vue/CapSegmented.vue';
-import CapSkeleton from '../../../design/vue/CapSkeleton.vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import DateInput from '../../Components/DateInput.vue';
-import ErrorState from '../../Components/ErrorState.vue';
-import FormField from '../../Components/FormField.vue';
-import IconButton from '../../Components/IconButton.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import TextInput from '../../Components/TextInput.vue';
-import { useConfirm } from '../../composables/useConfirm.js';
-import { useToasts } from '../../../design/vue/composables/useToasts.js';
-import { date } from '../../lib/format.js';
-import { getJson, postJson } from '../../lib/http.js';
+import CapAlert from '@design/vue/CapAlert.vue';
+import CapSegmented from '@design/vue/CapSegmented.vue';
+import CapSkeleton from '@design/vue/CapSkeleton.vue';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import DateInput from '@/Components/DateInput.vue';
+import ErrorState from '@/Components/ErrorState.vue';
+import FormField from '@/Components/FormField.vue';
+import IconButton from '@/Components/IconButton.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import TextInput from '@/Components/TextInput.vue';
+import { useConfirm } from '@/composables/useConfirm.js';
+import { useToasts } from '@design/vue/composables/useToasts.js';
+import { date } from '@/lib/format.js';
+import { getJson, postJson } from '@/lib/http.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

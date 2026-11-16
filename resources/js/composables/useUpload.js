@@ -9,7 +9,7 @@
 // Con `{ together: true }` van todos en una sola petición como `field[]`.
 import { router } from '@inertiajs/vue3';
 import { computed, reactive, ref } from 'vue';
-import { fieldError } from '../lib/errors.js';
+import { fieldError } from '@/lib/errors.js';
 
 export function useUpload() {
     // Estado por archivo: { status: 'pending' | 'uploading' | 'done' | 'error', progress: 0–100, error: '' }

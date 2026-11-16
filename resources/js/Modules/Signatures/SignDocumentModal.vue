@@ -5,20 +5,20 @@
 //        para un PDF suelto).
 // Eventos: signed (documento actualizado o null si es un PDF suelto, respuesta completa), update:open.
 import { computed, nextTick, reactive, ref, watch } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import { useToasts } from '../../../design/vue/composables/useToasts.js';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import Checkbox from '../../Components/Checkbox.vue';
-import FormField from '../../Components/FormField.vue';
-import PdfViewer from '../../Components/PdfViewer.vue';
-import SelectInput from '../../Components/SelectInput.vue';
-import Toggle from '../../Components/Toggle.vue';
-import { useConfirm } from '../../composables/useConfirm.js';
-import { dateTime } from '../../lib/format.js';
-import { fetchState, signDocument, signFile } from './api.js';
-import AssetCard from './AssetCard.vue';
-import PlacementBox from './PlacementBox.vue';
+import CapAlert from '@design/vue/CapAlert.vue';
+import { useToasts } from '@design/vue/composables/useToasts.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import Checkbox from '@/Components/Checkbox.vue';
+import FormField from '@/Components/FormField.vue';
+import PdfViewer from '@/Components/PdfViewer.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import Toggle from '@/Components/Toggle.vue';
+import { useConfirm } from '@/composables/useConfirm.js';
+import { dateTime } from '@/lib/format.js';
+import { fetchState, signDocument, signFile } from '@/Modules/Signatures/api.js';
+import AssetCard from '@/Modules/Signatures/AssetCard.vue';
+import PlacementBox from '@/Modules/Signatures/PlacementBox.vue';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

@@ -2,11 +2,11 @@
 // Modal «Resultado de sincronización»: estado, altas, cambios, bajas, errores y duración de una corrida.
 // Props: open (v-model:open), run (resumen de `InventorySyncRun::summary()`).
 import { computed } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import { dateTime, number } from '../../lib/format.js';
+import CapAlert from '@design/vue/CapAlert.vue';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import { dateTime, number } from '@/lib/format.js';
 
 const props = defineProps({
     open: { type: Boolean, default: false },

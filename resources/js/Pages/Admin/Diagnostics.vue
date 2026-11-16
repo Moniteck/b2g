@@ -3,14 +3,14 @@
 // Datos: { checks: [{ key, label, status: ok|warning|error, detail, meta }], summary, generated_at }.
 import { router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import AppButton from '../../Components/AppButton.vue';
-import PageHeader from '../../Components/PageHeader.vue';
-import StatCard from '../../Components/StatCard.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { dateTime } from '../../lib/format.js';
-import { card } from '../../lib/ui.js';
+import CapAlert from '@design/vue/CapAlert.vue';
+import AppButton from '@/Components/AppButton.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import StatCard from '@/Components/StatCard.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { dateTime } from '@/lib/format.js';
+import { card } from '@/lib/ui.js';
 
 const props = defineProps({
     checks: { type: Array, default: () => [] },

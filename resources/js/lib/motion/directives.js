@@ -13,11 +13,11 @@
 //   v-settle="'.cap-kanban-card'"  los elementos que entran después del montaje se acomodan con resorte
 //
 // Todas respetan la preferencia de movimiento: con «reducidas» el contenido aparece sin desplazarse.
-import { shake } from './animate.js';
-import { isReducedMotion } from './preference.js';
-import { STAGGER } from './tokens.js';
-import { tween, decimalsOf } from './useCountUp.js';
-import { bindMagnetic } from './useMagnetic.js';
+import { shake } from '@/lib/motion/animate.js';
+import { isReducedMotion } from '@/lib/motion/preference.js';
+import { STAGGER } from '@/lib/motion/tokens.js';
+import { tween, decimalsOf } from '@/lib/motion/useCountUp.js';
+import { bindMagnetic } from '@/lib/motion/useMagnetic.js';
 
 function restartStagger(element) {
     const children = [...element.children];

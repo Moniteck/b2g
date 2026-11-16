@@ -9,8 +9,8 @@
 // Eventos: select (ítem). Teclado: ↑ ↓ Inicio Fin recorren, Enter activa, Esc cierra y devuelve el foco.
 import { Link } from '@inertiajs/vue3';
 import { computed, nextTick, onBeforeUnmount, ref, useId, watch } from 'vue';
-import { onPointerOutside, useFloating } from '../composables/useFloating.js';
-import { floatingPanel, iconButton, menuItem, menuItemDanger } from '../lib/ui.js';
+import { onPointerOutside, useFloating } from '@/composables/useFloating.js';
+import { floatingPanel, iconButton, menuItem, menuItemDanger } from '@/lib/ui.js';
 
 defineOptions({ inheritAttrs: false });
 

@@ -3,26 +3,26 @@
 // los documentos generados y su PDF. Requiere `generate_documents`.
 import { router } from '@inertiajs/vue3';
 import { computed, reactive, ref } from 'vue';
-import AppButton from '../../Components/AppButton.vue';
-import BaseModal from '../../Components/BaseModal.vue';
-import DataTable from '../../Components/DataTable.vue';
-import DropdownMenu from '../../Components/DropdownMenu.vue';
-import FormField from '../../Components/FormField.vue';
-import PageHeader from '../../Components/PageHeader.vue';
-import Pagination from '../../Components/Pagination.vue';
-import SelectInput from '../../Components/SelectInput.vue';
-import TextArea from '../../Components/TextArea.vue';
-import TextInput from '../../Components/TextInput.vue';
-import Toolbar from '../../Components/Toolbar.vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import { useToasts } from '../../../design/vue/composables/useToasts.js';
-import { useConfirm } from '../../composables/useConfirm.js';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { focusFirstError } from '../../lib/errors.js';
-import { dateTime } from '../../lib/format.js';
-import { HttpError, postJson, visit } from '../../lib/http.js';
-import { formatMessage, plainText } from './Partials/formatMessage.js';
-import { useListFilters } from './Partials/useListFilters.js';
+import AppButton from '@/Components/AppButton.vue';
+import BaseModal from '@/Components/BaseModal.vue';
+import DataTable from '@/Components/DataTable.vue';
+import DropdownMenu from '@/Components/DropdownMenu.vue';
+import FormField from '@/Components/FormField.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import Pagination from '@/Components/Pagination.vue';
+import SelectInput from '@/Components/SelectInput.vue';
+import TextArea from '@/Components/TextArea.vue';
+import TextInput from '@/Components/TextInput.vue';
+import Toolbar from '@/Components/Toolbar.vue';
+import CapAlert from '@design/vue/CapAlert.vue';
+import { useToasts } from '@design/vue/composables/useToasts.js';
+import { useConfirm } from '@/composables/useConfirm.js';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { focusFirstError } from '@/lib/errors.js';
+import { dateTime } from '@/lib/format.js';
+import { HttpError, postJson, visit } from '@/lib/http.js';
+import { formatMessage, plainText } from '@/Pages/Tools/Partials/formatMessage.js';
+import { useListFilters } from '@/Pages/Tools/Partials/useListFilters.js';
 
 const props = defineProps({
     records: { type: Object, required: true },

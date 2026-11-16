@@ -2,21 +2,21 @@
 // Base de clientes de la empresa activa. Los clientes nacen al ganar una oferta: no hay alta manual.
 import { router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
-import CapAlert from '../../../design/vue/CapAlert.vue';
-import AppButton from '../../Components/AppButton.vue';
-import DataTable from '../../Components/DataTable.vue';
-import DropdownMenu from '../../Components/DropdownMenu.vue';
-import PageHeader from '../../Components/PageHeader.vue';
-import Pagination from '../../Components/Pagination.vue';
-import StatCard from '../../Components/StatCard.vue';
-import StatusBadge from '../../Components/StatusBadge.vue';
-import Toolbar from '../../Components/Toolbar.vue';
-import { useConfirm } from '../../composables/useConfirm.js';
-import AppLayout from '../../Layouts/AppLayout.vue';
-import { date, money, number, relativeDays } from '../../lib/format.js';
-import { visit } from '../../lib/http.js';
-import { useListFilters } from '../Admin/Partials/useListFilters.js';
-import ClientFormModal from './Partials/ClientFormModal.vue';
+import CapAlert from '@design/vue/CapAlert.vue';
+import AppButton from '@/Components/AppButton.vue';
+import DataTable from '@/Components/DataTable.vue';
+import DropdownMenu from '@/Components/DropdownMenu.vue';
+import PageHeader from '@/Components/PageHeader.vue';
+import Pagination from '@/Components/Pagination.vue';
+import StatCard from '@/Components/StatCard.vue';
+import StatusBadge from '@/Components/StatusBadge.vue';
+import Toolbar from '@/Components/Toolbar.vue';
+import { useConfirm } from '@/composables/useConfirm.js';
+import AppLayout from '@/Layouts/AppLayout.vue';
+import { date, money, number, relativeDays } from '@/lib/format.js';
+import { visit } from '@/lib/http.js';
+import { useListFilters } from '@/Pages/Admin/Partials/useListFilters.js';
+import ClientFormModal from '@/Pages/Clients/Partials/ClientFormModal.vue';
 
 const props = defineProps({
     clients: { type: Object, required: true },
