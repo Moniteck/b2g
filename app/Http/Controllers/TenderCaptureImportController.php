@@ -8,6 +8,7 @@ use App\Models\Opportunity;
 use App\Models\Tender;
 use App\Services\Documents\UploadInspector;
 use App\Services\Tenancy\CompanyContext;
+use App\Services\Tenders\CaptureConsistency;
 use App\Services\Tenders\CaptureImportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -66,6 +67,7 @@ class TenderCaptureImportController extends Controller
             'review' => $this->imports->review($token, $state),
             'statuses' => Tender::STATUSES,
             'modalities' => Tender::MODALITIES,
+            'finishedStages' => CaptureConsistency::FINISHED_STAGES,
             'can' => [
                 'createInstitution' => $request->user()->can('create', Institution::class),
                 'createOpportunity' => $request->user()->can('create', Opportunity::class),
@@ -109,9 +111,19 @@ class TenderCaptureImportController extends Controller
             ? "Licitación {$result['tender']->reference} creada desde la captura."
             : "Licitación {$result['tender']->reference} actualizada con la captura.";
 
+        if ($result['opportunity'] !== null) {
+            $message .= $result['opportunity']['created']
+                ? ' Se agregó su oportunidad al pipeline.'
+                : ' Ya tenía oportunidad en el pipeline: se reutilizó en lugar de crear otra.';
+        }
+
+        // Las contradicciones que quedaron sin corregir se recuerdan al guardar (B-18).
+        $warnings = array_column(array_filter(CaptureConsistency::check($data, $state['parsed']['fields'] ?? []), fn ($w) => $w['kind'] === 'contradiction'), 'message');
+        $warning = trim(implode(' ', array_filter([$result['warning'], $warnings ? 'Revisa: '.implode(' ', $warnings) : null])));
+
         $redirect = redirect()->route('tenders.show', $result['tender'])->with('success', $message);
 
-        return $result['warning'] ? $redirect->with('warning', $result['warning']) : $redirect;
+        return $warning !== '' ? $redirect->with('warning', $warning) : $redirect;
     }
 
     private function companyId(): int

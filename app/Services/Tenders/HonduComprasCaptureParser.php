@@ -62,11 +62,18 @@ class HonduComprasCaptureParser
         'acquisition_type' => ['Bienes', 'Servicios', 'Consultoria', 'Obras', 'Servicios de Consultoria', 'Obra Pública', 'Suministro'],
     ];
 
+    /** @var array<int, string> Líneas del contacto (índice de la captura => texto). */
+    private array $contactLines = [];
+
     /**
-     * @return array{fields: array<string, array{value: mixed, status: string, raw: ?string, note: ?string}>, useful: bool, lines: int}
+     * Cada campo trae además `lines`: los índices de las líneas no vacías del texto de donde salió
+     * (sirven para ubicar su caja en la captura con la disposición del OCR).
+     *
+     * @return array{fields: array<string, array{value: mixed, status: string, raw: ?string, note: ?string, lines: array<int, int>}>, useful: bool, lines: int}
      */
     public function parse(string $text): array
     {
+        $this->contactLines = [];
         $lines = $this->lines($text);
         $found = $this->locateLabels($lines);
         $fields = [];
@@ -206,9 +213,10 @@ class HonduComprasCaptureParser
         }
 
         $raw = $found[$field]['rest'];
+        $used = [$found[$field]['line']];
 
         if (in_array($field, self::MULTILINE, true)) {
-            $raw = $this->multilineValue($field, $found, $lines);
+            [$raw, $used] = $this->multilineValue($field, $found, $lines);
         }
 
         $raw = trim($raw, " \t\"“”'‘’|[]");
@@ -231,7 +239,7 @@ class HonduComprasCaptureParser
             $result['note'] ??= 'La etiqueta se leyó con errores; revisa el valor.';
         }
 
-        return $result + ['raw' => $raw];
+        return $result + ['raw' => $raw, 'lines' => $used];
     }
 
     /**
@@ -240,8 +248,9 @@ class HonduComprasCaptureParser
      *
      * @param  array<string, array{line: int, rest: string, score: float}>  $found
      * @param  array<int, string>  $lines
+     * @return array{0: string, 1: array<int, int>} valor y líneas de la captura que lo forman
      */
-    private function multilineValue(string $field, array $found, array $lines): string
+    private function multilineValue(string $field, array $found, array $lines): array
     {
         $own = $found[$field]['line'];
         $previous = -1;
@@ -261,12 +270,20 @@ class HonduComprasCaptureParser
 
         $parts = [];
         for ($i = $previous + 1; $i < $next; $i++) {
-            $parts[] = $i === $own ? $found[$field]['rest'] : $lines[$i];
+            $part = trim($i === $own ? $found[$field]['rest'] : $lines[$i], " \"“”'‘’");
+            if ($part !== '') {
+                $parts[$i] = $part;
+            }
+        }
+
+        // El contacto conserva el índice de cada línea para ubicar nombre, teléfono y correo.
+        if ($field === 'contact') {
+            $this->contactLines = $parts;
         }
 
         $separator = $field === 'contact' ? "\n" : ' ';
 
-        return implode($separator, array_filter(array_map(fn ($part) => trim($part, " \"“”'‘’"), $parts), fn ($part) => $part !== ''));
+        return [implode($separator, $parts), $parts ? array_keys($parts) : [$own]];
     }
 
     /**
@@ -366,8 +383,12 @@ class HonduComprasCaptureParser
         unset($fields['contact']);
 
         $name = $phone = $email = null;
+        $at = ['name' => [], 'phone' => [], 'email' => []];
+        // Con índices de la captura si se conocen; si no, solo el texto.
+        $source = $contact['status'] !== self::MISSING && $this->contactLines ? $this->contactLines : preg_split('/\n/', (string) ($contact['raw'] ?? ''));
+        $indexed = $source === $this->contactLines;
 
-        foreach (preg_split('/\n/', (string) ($contact['raw'] ?? '')) as $line) {
+        foreach ($source as $index => $line) {
             $line = trim($line);
 
             if ($line === '') {
@@ -376,32 +397,37 @@ class HonduComprasCaptureParser
 
             if (preg_match('/\S+@\S+\.\S+/', $line, $match) || preg_match('/\S+\.(?:gob|com|org|net|edu)\.\S+/i', $line, $match)) {
                 $email = $match[0];
+                $at['email'][] = $index;
             } elseif (preg_match('/\d{4}[\s\-]?\d{4}/', $line)) {
                 $phone = $line;
+                $at['phone'][] = $index;
             } else {
                 $name = $name === null ? $line : "{$name} {$line}";
+                $at['name'][] = $index;
             }
         }
 
-        $fields['contact_name'] = $name !== null ? ['value' => $name, 'status' => self::READ, 'raw' => $name, 'note' => null] : $this->missing();
-        $fields['contact_phone'] = $phone !== null ? ['value' => $phone, 'status' => self::READ, 'raw' => $phone, 'note' => null] : $this->missing();
+        $lines = fn (string $part) => $indexed ? $at[$part] : [];
+
+        $fields['contact_name'] = $name !== null ? ['value' => $name, 'status' => self::READ, 'raw' => $name, 'note' => null, 'lines' => $lines('name')] : $this->missing();
+        $fields['contact_phone'] = $phone !== null ? ['value' => $phone, 'status' => self::READ, 'raw' => $phone, 'note' => null, 'lines' => $lines('phone')] : $this->missing();
 
         if ($email === null) {
             $fields['contact_email'] = $this->missing();
         } elseif (filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $fields['contact_email'] = ['value' => strtolower($email), 'status' => self::READ, 'raw' => $email, 'note' => null];
+            $fields['contact_email'] = ['value' => strtolower($email), 'status' => self::READ, 'raw' => $email, 'note' => null, 'lines' => $lines('email')];
         } else {
-            $fields['contact_email'] = ['value' => $email, 'status' => self::DOUBTFUL, 'raw' => $email, 'note' => 'El correo no se leyó bien; corrígelo antes de confirmar.'];
+            $fields['contact_email'] = ['value' => $email, 'status' => self::DOUBTFUL, 'raw' => $email, 'note' => 'El correo no se leyó bien; corrígelo antes de confirmar.', 'lines' => $lines('email')];
         }
 
         return $fields;
     }
 
     /**
-     * @return array{value: null, status: string, raw: null, note: null}
+     * @return array{value: null, status: string, raw: null, note: null, lines: array<int, int>}
      */
     private function missing(): array
     {
-        return ['value' => null, 'status' => self::MISSING, 'raw' => null, 'note' => null];
+        return ['value' => null, 'status' => self::MISSING, 'raw' => null, 'note' => null, 'lines' => []];
     }
 }
