@@ -59,7 +59,16 @@ final class TooManyRequests
         $candidates = [$request->headers->get('referer'), $request->hasSession() ? $request->session()->previousUrl() : null];
 
         foreach ($candidates as $previous) {
-            if (is_string($previous) && parse_url($previous, PHP_URL_HOST) === $request->getHost() && $previous !== $request->fullUrl()) {
+            if (! is_string($previous) || $previous === '') {
+                continue;
+            }
+
+            // Ruta relativa del mismo sitio («/clientes», nunca «//otro.dominio»).
+            if (str_starts_with($previous, '/') && ! str_starts_with($previous, '//')) {
+                $previous = $request->getSchemeAndHttpHost().$previous;
+            }
+
+            if (parse_url($previous, PHP_URL_HOST) === $request->getHost() && $previous !== $request->fullUrl()) {
                 return $previous;
             }
         }
