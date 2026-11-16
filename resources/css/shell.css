@@ -534,3 +534,61 @@
         animation: m-fade-in 160ms linear both;
     }
 }
+
+/* ───────── Páginas de error (Pages/Errors/Show.vue) ───────── */
+.app-error-standalone {
+    display: grid;
+    min-height: 100dvh;
+    place-items: center;
+    padding: 24px 16px;
+    background:
+        radial-gradient(48% 54% at 8% 18%, var(--cap-blob-red), transparent 70%),
+        radial-gradient(56% 60% at 92% 88%, var(--cap-blob-wine), transparent 70%),
+        var(--cap-page);
+}
+.app-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    max-width: 560px;
+    margin: 4vh auto;
+    padding: 32px 24px;
+    border: 1px solid var(--cap-divider);
+    border-radius: var(--cap-radius-shell);
+    background: var(--cap-card);
+    box-shadow: var(--cap-shadow-card);
+    text-align: center;
+}
+.app-error__code {
+    color: var(--cap-brand);
+    font: 600 13px var(--cap-font-text);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+.dark .app-error__code {
+    color: var(--cap-red-200);
+}
+.app-error__title {
+    color: var(--cap-text);
+    font: 600 22px/1.25 var(--cap-font-display);
+}
+.app-error__detail {
+    color: var(--cap-text-soft);
+    font-size: 15px;
+    line-height: 1.5;
+}
+.app-error__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+.app-error__link {
+    width: 100%;
+    color: var(--cap-text-soft);
+    font-size: 13px;
+    text-decoration: underline;
+}

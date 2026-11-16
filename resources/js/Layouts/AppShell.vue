@@ -144,6 +144,9 @@ function openWizard() {
     wizardLoaded.value = true;
     wizardOpen.value = true;
 }
+// Las páginas (p. ej. Empresas) abren el asistente con `useShell().openCompanyWizard()`.
+shell.openCompanyWizard = openWizard;
+shell.openSearch = () => openPalette();
 
 function onKeydown(event) {
     if ((event.metaKey || event.ctrlKey) && !event.altKey && event.key.toLowerCase() === 'k') {

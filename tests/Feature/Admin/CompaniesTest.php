@@ -27,7 +27,7 @@ class CompaniesTest extends TestCase
         $this->actingAs($admin)->put("/empresas/{$company->id}", ['name' => 'Cambiada'])->assertForbidden();
         $this->actingAs($admin)->delete("/empresas/{$company->id}")->assertForbidden();
         $this->actingAs($admin)->get('/empresas')->assertOk()->assertInertia(fn (Assert $page) => $page
-            ->component('Admin/Companies/Index')->where('can.manage', false)->has('companies.data', 1));
+            ->component('Admin/Companies/Index')->where('can.manage', false)->has('companyRecords.data', 1));
 
         $this->actingAs($root)->post('/empresas', ['name' => 'Empresa Nueva', 'code' => 'EN', 'tax_id' => '08019999999999'])->assertRedirect();
         $created = Company::query()->where('code', 'EN')->firstOrFail();

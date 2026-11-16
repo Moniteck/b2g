@@ -15,7 +15,7 @@ Route::get('/cotizaciones/export/list-pdf', [QuoteExportController::class, 'list
 Route::get('/cotizaciones/export/excel', [QuoteExportController::class, 'excel'])->middleware(['throttle:exports', 'audit.export'])->name('quotes.excel');
 
 Route::whereNumber('quote')->group(function () {
-    Route::get('/cotizaciones/{quote}', [QuoteController::class, 'show'])->name('quotes.show');
+    Route::get('/cotizaciones/{quote}', [QuoteController::class, 'show'])->middleware(\App\Http\Middleware\RedirectBrowserToScreen::class.':/cotizaciones?ver={quote}')->name('quotes.show');
     Route::put('/cotizaciones/{quote}', [QuoteController::class, 'update'])->name('quotes.update');
     Route::delete('/cotizaciones/{quote}', [QuoteController::class, 'destroy'])->name('quotes.destroy');
     Route::patch('/cotizaciones/{quote}/estado', [QuoteController::class, 'status'])->name('quotes.status');

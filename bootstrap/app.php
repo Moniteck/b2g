@@ -54,4 +54,6 @@ return Application::configure(basePath: dirname(__DIR__))
             TooManyRequests::message((int) ($exception->getHeaders()['Retry-After'] ?? 60)),
             $exception->getHeaders(),
         ));
+        // Páginas de error propias en español (403, 404, 419, 429, 500, 503); el JSON no cambia.
+        $exceptions->respond(fn ($response, \Throwable $exception, Request $request) => \App\Support\ErrorPage::respond($response, $request));
     })->create();

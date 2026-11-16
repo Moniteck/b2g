@@ -8,9 +8,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/inventario', [InventoryController::class, 'index'])->name('inventory.index');
 Route::get('/inventario/buscar', [InventoryController::class, 'search'])->name('inventory.search');
-Route::get('/inventario/sincronizaciones', [InventoryController::class, 'runs'])->name('inventory.runs');
+Route::get('/inventario/sincronizaciones', [InventoryController::class, 'runs'])->middleware(\App\Http\Middleware\RedirectBrowserToScreen::class.':/inventario?panel=sincronizaciones')->name('inventory.runs');
 Route::post('/inventario/sincronizar', [InventoryController::class, 'sync'])->middleware('throttle:6,1')->name('inventory.sync');
-Route::get('/inventario/{inventoryItem}', [InventoryController::class, 'show'])->whereNumber('inventoryItem')->name('inventory.show');
+Route::get('/inventario/{inventoryItem}', [InventoryController::class, 'show'])->whereNumber('inventoryItem')->middleware(\App\Http\Middleware\RedirectBrowserToScreen::class.':/inventario?ver={inventoryItem}')->name('inventory.show');
 
 /* Calculadora de oferta */
 
