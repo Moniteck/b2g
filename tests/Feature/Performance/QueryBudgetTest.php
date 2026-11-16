@@ -3,6 +3,7 @@
 namespace Tests\Feature\Performance;
 
 use App\Http\Controllers\DiagnosticsController;
+use App\Http\Middleware\HandleInertiaRequests;
 use App\Mail\DailyDigestMail;
 use App\Mail\QuoteMail;
 use App\Models\Company;
@@ -14,6 +15,7 @@ use App\Models\ReminderRule;
 use App\Models\Tender;
 use App\Models\User;
 use App\Services\Notifications\DailyDigestService;
+use App\Services\Notifications\NotificationFeed;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -138,7 +140,7 @@ class QueryBudgetTest extends TestCase
 
     public function test_notifications_travel_once_and_again_only_when_they_change(): void
     {
-        $first = $this->as()->get('/calendario', ['X-Inertia' => 'true', 'X-Inertia-Version' => (string) app(\App\Http\Middleware\HandleInertiaRequests::class)->version(request())]);
+        $first = $this->as()->get('/calendario', ['X-Inertia' => 'true', 'X-Inertia-Version' => (string) app(HandleInertiaRequests::class)->version(request())]);
         $first->assertOk();
         $page = $first->json();
         $this->assertArrayHasKey('notifications', $page['props']);
@@ -150,7 +152,7 @@ class QueryBudgetTest extends TestCase
         $this->assertArrayNotHasKey('notifications', $second['props'], 'Si el cliente ya la tiene, no viaja.');
 
         // Cambia el contenido (otro recuento): cambia la versión y vuelve a viajar.
-        Cache::put(\App\Services\Notifications\NotificationFeed::cacheKey($this->admin->id, $this->company->id), ['unread' => 3, 'items' => []], 60);
+        Cache::put(NotificationFeed::cacheKey($this->admin->id, $this->company->id), ['unread' => 3, 'items' => []], 60);
         $third = $this->as()->get('/calendario', $headers)->json();
         $this->assertSame(3, $third['props']['notifications']['unread']);
     }
@@ -159,7 +161,7 @@ class QueryBudgetTest extends TestCase
     {
         $other = Company::factory()->create(['name' => 'Empresa B']);
         $this->admin->companies()->attach($other->id, ['role' => 'operator']);
-        $version = (string) app(\App\Http\Middleware\HandleInertiaRequests::class)->version(request());
+        $version = (string) app(HandleInertiaRequests::class)->version(request());
 
         $first = $this->as()->get('/calendario', ['X-Inertia' => 'true', 'X-Inertia-Version' => $version])->json();
         $this->assertCount(2, $first['props']['companies']);

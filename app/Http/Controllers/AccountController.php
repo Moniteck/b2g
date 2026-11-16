@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\Auth\SessionTerminator;
 use App\Services\AuditLogger;
+use App\Services\Auth\SessionTerminator;
 use App\Support\Permissions;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

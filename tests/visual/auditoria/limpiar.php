@@ -3,6 +3,11 @@
 // Limpieza de los datos que crea la auditoría (prefijo AUD-).
 //   php artisan tinker --execute="require 'tests/visual/auditoria/limpiar.php';"           solo lista
 //   php artisan tinker --execute="\$borrar = true; require 'tests/visual/auditoria/limpiar.php';"   borra
+use App\Models\Contract;
+use App\Models\Event;
+use App\Models\Opportunity;
+use App\Models\Quote;
+use App\Models\Tender;
 use Illuminate\Support\Facades\DB;
 
 $borrar = $borrar ?? false;
@@ -23,11 +28,11 @@ echo 'Eventos: ', $events->count(), PHP_EOL;
 if ($borrar) {
     DB::transaction(function () use ($tenders, $quotes, $contracts, $opportunities, $events) {
         $models = [
-            [App\Models\Contract::class, $contracts->pluck('id')],
-            [App\Models\Quote::class, $quotes->pluck('id')],
-            [App\Models\Opportunity::class, $opportunities->pluck('id')],
-            [App\Models\Tender::class, $tenders->pluck('id')],
-            [App\Models\Event::class, $events->pluck('id')],
+            [Contract::class, $contracts->pluck('id')],
+            [Quote::class, $quotes->pluck('id')],
+            [Opportunity::class, $opportunities->pluck('id')],
+            [Tender::class, $tenders->pluck('id')],
+            [Event::class, $events->pluck('id')],
         ];
         foreach ($models as [$class, $ids]) {
             foreach ($class::query()->withoutGlobalScopes()->whereIn('id', $ids)->get() as $model) {

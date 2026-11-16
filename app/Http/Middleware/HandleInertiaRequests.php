@@ -283,7 +283,6 @@ class HandleInertiaRequests extends Middleware
         });
     }
 
-
     /** Memoria por petición (en los atributos de la petición, no en el middleware). */
     protected function memo(Request $request, string $key, callable $resolve): mixed
     {

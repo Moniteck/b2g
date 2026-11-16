@@ -24,7 +24,6 @@ class SecurityHeaders
     /** Orígenes del servidor de Vite en desarrollo. */
     private const VITE_DEV_HOSTS = ['localhost:5173', '127.0.0.1:5173'];
 
-
     public function handle(Request $request, Closure $next): Response
     {
         $nonce = Vite::useCspNonce();

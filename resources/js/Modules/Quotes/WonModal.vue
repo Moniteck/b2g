@@ -29,7 +29,6 @@ const props = defineProps({
 
 const emit = defineEmits(['update:open', 'done']);
 
-
 const form = ref({ awarded_amount: null, awarded_at: today(), quote_id: null });
 const liveQuotes = ref([]);
 const loadingQuotes = ref(false);
