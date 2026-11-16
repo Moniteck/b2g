@@ -2,14 +2,14 @@
 //   const shown = useCountUp(() => props.total, { format: (v) => money(v) });   →   {{ shown }}
 // Con movimiento reducido o la pestaña oculta muestra el valor final al instante.
 import { onBeforeUnmount, ref, toValue, watch } from 'vue';
-import { isReducedMotion } from './preference.js';
+import { isFirstLoad, isReducedMotion } from './preference.js';
 import { DURATION, easeOutExpo } from './tokens.js';
 
 const plain = (value) => String(Math.round(value));
 
 /** Interpola de `from` a `to` llamando a `onFrame(valor)` en cada cuadro. Devuelve la función que cancela. */
 export function tween(from, to, onFrame, { duration = DURATION.count, delay = 0 } = {}) {
-    if (isReducedMotion() || document.hidden || from === to || !Number.isFinite(from) || !Number.isFinite(to)) {
+    if (isReducedMotion() || isFirstLoad() || document.hidden || from === to || !Number.isFinite(from) || !Number.isFinite(to)) {
         onFrame(to);
         return () => {};
     }

@@ -76,6 +76,13 @@
 .m-page > .grid > :nth-child(6) { animation-delay: 250ms; }
 .m-page > .grid > :nth-child(n + 7) { animation-delay: 280ms; }
 
+/* Carga completa (primera pintura): el contenido principal aparece sin animar para no retrasar el LCP
+   (lib/motion/preference.js · isFirstLoad). Las visitas de Inertia posteriores sí entran en cascada. */
+html[data-first-load] .m-page > *,
+html[data-first-load] .m-page > .grid > * {
+    animation: none;
+}
+
 /* Durante una visita lenta la página anterior no se atenúa ni se congela: el marco persistente
    muestra la barra de progreso y, pasados 300 ms, un esqueleto (Layouts/Partials/PageSkeleton.vue). */
 

@@ -14,7 +14,7 @@
 import { router } from '@inertiajs/vue3';
 import { onBeforeUnmount, onMounted, watch } from 'vue';
 import { pop, ring } from './animate.js';
-import { isReducedMotion } from './preference.js';
+import { endFirstLoad, isFirstLoad, isReducedMotion } from './preference.js';
 import { DURATION, EASE } from './tokens.js';
 import { countUpText } from './useCountUp.js';
 
@@ -135,6 +135,13 @@ let installed = false;
 export function installPageTransitions() {
     if (installed || typeof window === 'undefined') return;
     installed = true;
+
+    // Carga completa: sin entrada animada ni conteo hasta la primera navegación (LCP).
+    document.documentElement.setAttribute('data-first-load', '');
+    const initialPath = window.location.pathname;
+    router.on('navigate', (event) => {
+        if (isFirstLoad() && pathOf(event.detail.page?.url ?? '/') !== initialPath) endFirstLoad();
+    });
 
     // Éxito de un envío: el botón que lo disparó muestra un check (si sigue en pantalla).
     let lastSubmitter = null;
