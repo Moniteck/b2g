@@ -3,7 +3,7 @@
 namespace App\Mcp\Tools;
 
 use App\Models\User;
-use App\Services\DashboardMetricsService;
+use App\Services\Metrics\DashboardMetricsService;
 use App\Services\Notifications\DeadlineService;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;

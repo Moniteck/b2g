@@ -3,7 +3,7 @@
 namespace App\Listeners;
 
 use App\Models\User;
-use App\Services\AuditLogger;
+use App\Services\System\AuditLogger;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Auth\Events\Login;

@@ -1,8 +1,8 @@
 <?php
 
-use App\Http\Controllers\AdjudicationController;
-use App\Http\Controllers\QuoteController;
-use App\Http\Controllers\QuoteExportController;
+use App\Http\Controllers\Quotes\AdjudicationController;
+use App\Http\Controllers\Quotes\QuoteController;
+use App\Http\Controllers\Quotes\QuoteExportController;
 use App\Http\Middleware\RedirectBrowserToScreen;
 use Illuminate\Support\Facades\Route;
 

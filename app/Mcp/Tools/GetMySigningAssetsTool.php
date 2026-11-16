@@ -2,7 +2,7 @@
 
 namespace App\Mcp\Tools;
 
-use App\Http\Controllers\SignatureController;
+use App\Http\Controllers\Signatures\SignatureController;
 use App\Models\SignatureApplication;
 use App\Models\SigningAsset;
 use App\Models\User;

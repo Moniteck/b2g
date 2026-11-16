@@ -4,7 +4,7 @@ namespace App\Services\Notifications;
 
 use App\Models\Event;
 use App\Models\User;
-use App\Services\AuditLogger;
+use App\Services\System\AuditLogger;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;

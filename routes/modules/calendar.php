@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\CalendarController;
-use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\Calendar\CalendarController;
+use App\Http\Controllers\Calendar\NotificationController;
 use App\Http\Middleware\RedirectBrowserToScreen;
 use Illuminate\Support\Facades\Route;
 

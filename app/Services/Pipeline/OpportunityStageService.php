@@ -6,9 +6,9 @@ use App\Models\Opportunity;
 use App\Models\Quote;
 use App\Models\QuoteParticipant;
 use App\Models\User;
-use App\Services\AuditLogger;
 use App\Services\Business\QuoteService;
 use App\Services\Notifications\CalendarSyncService;
+use App\Services\System\AuditLogger;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 

@@ -2,13 +2,13 @@
 
 namespace App\Mcp\Tools;
 
-use App\Http\Requests\TenderRequest;
+use App\Http\Requests\Tenders\TenderRequest;
 use App\Mcp\Support\Present;
 use App\Mcp\Support\ToolError;
 use App\Mcp\Tools\Concerns\DescribesTenderFields;
 use App\Models\Tender;
 use App\Models\User;
-use App\Services\AuditLogger;
+use App\Services\System\AuditLogger;
 use App\Services\Tenders\TenderAttributes;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Arr;

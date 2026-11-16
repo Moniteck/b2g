@@ -2,7 +2,6 @@
 
 namespace App\Services\Ai;
 
-use App\Services\OpenAIService;
 use RuntimeException;
 
 /**

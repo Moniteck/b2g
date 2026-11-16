@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\ClientController;
+use App\Http\Controllers\Clients\ClientController;
 use Illuminate\Support\Facades\Route;
 
 /* Base de clientes: los clientes nacen de una adjudicación, no hay alta manual */

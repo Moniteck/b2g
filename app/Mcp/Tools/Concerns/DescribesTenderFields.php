@@ -2,7 +2,7 @@
 
 namespace App\Mcp\Tools\Concerns;
 
-use App\Http\Requests\TenderRequest;
+use App\Http\Requests\Tenders\TenderRequest;
 use App\Models\Institution;
 use App\Models\Tender;
 use App\Rules\BelongsToActiveCompany;

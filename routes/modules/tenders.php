@@ -1,9 +1,10 @@
 <?php
 
-use App\Http\Controllers\TenderAiController;
-use App\Http\Controllers\TenderBidDocumentController;
-use App\Http\Controllers\TenderCaptureImportController;
-use App\Http\Controllers\TenderController;
+use App\Http\Controllers\Tenders\ProcessHistoryController;
+use App\Http\Controllers\Tenders\TenderAiController;
+use App\Http\Controllers\Tenders\TenderBidDocumentController;
+use App\Http\Controllers\Tenders\TenderCaptureImportController;
+use App\Http\Controllers\Tenders\TenderController;
 use Illuminate\Support\Facades\Route;
 
 /* Licitaciones */
@@ -45,3 +46,10 @@ Route::post('/licitaciones/{tender}/pliego/{extraction}/cotizacion', [TenderBidD
 
 Route::post('/licitaciones/{tender}/recomendacion', [TenderAiController::class, 'recommend'])->whereNumber('tender')->middleware('throttle:ai')->name('tenders.ai.recommend');
 Route::get('/ia-licitaciones', [TenderAiController::class, 'index'])->name('tender-ai.index');
+
+/* Historial HonduCompras */
+
+Route::get('/historial', [ProcessHistoryController::class, 'index'])->name('process-history.index');
+Route::post('/historial', [ProcessHistoryController::class, 'store'])->name('process-history.store');
+Route::put('/historial/{processHistory}', [ProcessHistoryController::class, 'update'])->name('process-history.update');
+Route::delete('/historial/{processHistory}', [ProcessHistoryController::class, 'destroy'])->name('process-history.destroy');

@@ -20,7 +20,7 @@ use Laravel\Mcp\Server\Http\Controllers\OAuthRegisterController;
 | Autenticación: OAuth 2.1 con Authorization Code + PKCE (Passport) y registro
 | dinámico de clientes (DCR). Al aprobar el acceso el usuario elige empresas y
 | nivel (solo lectura o lectura y escritura) y nace la `McpConnection`
-| (`McpConsentController`, en routes/modules/mcp-admin.php). El permiso efectivo
+| (`McpConsentController`, en routes/modules/mcp.php). El permiso efectivo
 | lo aplica el CRM: conexión + rol por empresa + policy de cada recurso.
 |
 */

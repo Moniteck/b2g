@@ -10,10 +10,10 @@ use App\Models\QuoteItem;
 use App\Models\Scopes\CompanyScope;
 use App\Models\Tender;
 use App\Models\User;
-use App\Services\AuditLogger;
 use App\Services\Pricing\PriceCalculator;
 use App\Services\Pricing\PriceDocument;
 use App\Services\Pricing\TaxRules;
+use App\Services\System\AuditLogger;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 

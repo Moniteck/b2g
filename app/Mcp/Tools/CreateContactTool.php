@@ -2,10 +2,10 @@
 
 namespace App\Mcp\Tools;
 
-use App\Http\Requests\ContactRequest;
+use App\Http\Requests\Directory\ContactRequest;
 use App\Models\Contact;
 use App\Models\User;
-use App\Services\AuditLogger;
+use App\Services\System\AuditLogger;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;

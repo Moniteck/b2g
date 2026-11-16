@@ -2,15 +2,15 @@
 
 namespace Tests\Feature\Security;
 
-use App\Http\Controllers\McpConsentController;
+use App\Http\Controllers\Mcp\McpConsentController;
 use App\Jobs\ReadTenderCapture;
 use App\Models\AuditLog;
 use App\Models\Company;
 use App\Rules\SafeExternalUrl;
 use App\Services\Ai\AiTokenBudget;
 use App\Services\Ai\BidDocumentAnalyzer;
-use App\Services\AuditLogger;
-use App\Services\OpenAIService;
+use App\Services\Ai\OpenAIService;
+use App\Services\System\AuditLogger;
 use App\Services\Tenders\CaptureImportService;
 use App\Services\Tenders\OcrReader;
 use Illuminate\Foundation\Testing\RefreshDatabase;

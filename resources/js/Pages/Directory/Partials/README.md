@@ -1,7 +1,7 @@
 # Módulo de documentos: piezas reutilizables
 
 Adjuntos de cualquier registro y visor de documentos. El backend está en
-`app/Http/Controllers/AttachmentController.php`, `app/Services/Documents/` y
+`app/Http/Controllers/Documents/AttachmentController.php`, `app/Services/Documents/` y
 `routes/modules/documents.php`.
 
 ## `AttachmentPanel.vue`

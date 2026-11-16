@@ -2,7 +2,7 @@
 
 namespace App\Mcp\Tools;
 
-use App\Http\Controllers\SignatureController;
+use App\Http\Controllers\Signatures\SignatureController;
 use App\Mcp\Support\Present;
 use App\Mcp\Support\ToolError;
 use App\Mcp\Support\Untrusted;

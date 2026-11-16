@@ -9,7 +9,7 @@ use App\Models\Institution;
 use App\Models\Opportunity;
 use App\Models\Quote;
 use App\Models\User;
-use App\Services\AuditLogger;
+use App\Services\System\AuditLogger;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;

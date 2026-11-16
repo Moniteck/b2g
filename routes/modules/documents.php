@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\AttachmentController;
-use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\Documents\AttachmentController;
+use App\Http\Controllers\Documents\DocumentController;
 use App\Services\Documents\Attachables;
 use Illuminate\Support\Facades\Route;
 

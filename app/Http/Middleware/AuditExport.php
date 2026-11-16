@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Services\AuditLogger;
+use App\Services\System\AuditLogger;
 use App\Services\Tenancy\CompanyContext;
 use Closure;
 use Illuminate\Http\Request;

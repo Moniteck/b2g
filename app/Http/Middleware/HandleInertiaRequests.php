@@ -4,7 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\Company;
 use App\Models\User;
-use App\Services\AlertService;
+use App\Services\Notifications\AlertService;
 use App\Services\Notifications\NotificationFeed;
 use App\Services\Tenancy\CompanyContext;
 use App\Support\Permissions;

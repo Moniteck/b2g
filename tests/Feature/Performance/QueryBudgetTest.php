@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Performance;
 
-use App\Http\Controllers\DiagnosticsController;
+use App\Http\Controllers\Admin\DiagnosticsController;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Mail\DailyDigestMail;
 use App\Mail\QuoteMail;

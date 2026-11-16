@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\SignatureController;
-use App\Http\Controllers\SigningAssetController;
+use App\Http\Controllers\Signatures\SignatureController;
+use App\Http\Controllers\Signatures\SigningAssetController;
 use Illuminate\Support\Facades\Route;
 
 /* Mi firma y sello (personales del usuario autenticado) */

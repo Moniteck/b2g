@@ -40,7 +40,7 @@ código, tablas y columnas en inglés, como el resto del proyecto. Sin emojis en
 - Transacciones y bloqueo (`lockForUpdate`) en toda operación que no deba duplicarse; botones idempotentes.
 - Fechas en hora de Honduras (`America/Tegucigalpa`), sin convertir a UTC.
 - Binarios y límites: `App\Support\Binaries` (`tesseract()`, `poppler('pdftotext')`, `maxPdfKilobytes()`, `maxImageKilobytes()`).
-- Auditoría: registra las acciones relevantes con `App\Services\AuditLogger`.
+- Auditoría: registra las acciones relevantes con `App\Services\System\AuditLogger`.
 - Rendimiento: sin N+1 (`with`, `withCount`), paginación en listas, columnas seleccionadas, índices para los filtros,
   props pesadas con `Inertia::defer`/perezosas, respuestas de lista por debajo de ~300 ms en local.
 - Sin secretos en el código y sin variables nuevas en `.env` salvo que sean imprescindibles (anótalas en el informe; no edites `.env`).

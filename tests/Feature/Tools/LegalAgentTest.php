@@ -4,7 +4,7 @@ namespace Tests\Feature\Tools;
 
 use App\Models\LegalConversation;
 use App\Models\LegalMessage;
-use App\Services\OpenAIService;
+use App\Services\Ai\OpenAIService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Inertia\Testing\AssertableInertia as Assert;

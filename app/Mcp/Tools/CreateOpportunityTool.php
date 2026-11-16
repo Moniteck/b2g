@@ -2,11 +2,11 @@
 
 namespace App\Mcp\Tools;
 
-use App\Http\Requests\OpportunityRequest;
+use App\Http\Requests\Pipeline\OpportunityRequest;
 use App\Models\Opportunity;
 use App\Models\User;
-use App\Services\AuditLogger;
 use App\Services\Notifications\CalendarSyncService;
+use App\Services\System\AuditLogger;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Arr;
 use Laravel\Mcp\Request;

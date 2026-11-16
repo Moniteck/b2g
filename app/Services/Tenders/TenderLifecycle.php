@@ -3,7 +3,7 @@
 namespace App\Services\Tenders;
 
 use App\Models\Tender;
-use App\Services\AuditLogger;
+use App\Services\System\AuditLogger;
 use Illuminate\Support\Facades\DB;
 
 /**

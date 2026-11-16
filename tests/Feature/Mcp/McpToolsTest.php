@@ -29,7 +29,7 @@ use App\Models\McpConnection;
 use App\Models\Opportunity;
 use App\Models\Tender;
 use App\Models\User;
-use App\Services\AuditLogger;
+use App\Services\System\AuditLogger;
 use App\Services\Tenders\TenderAttributes;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Mcp\Request;

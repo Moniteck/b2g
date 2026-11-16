@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\OpportunityController;
+use App\Http\Controllers\Pipeline\OpportunityController;
 use Illuminate\Support\Facades\Route;
 
 /* Pipeline de oportunidades (kanban). Resultado y participantes: routes/modules/quotes.php (/oportunidades/{id}/…). */

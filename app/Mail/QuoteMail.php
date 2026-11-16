@@ -3,7 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Quote;
-use App\Services\QuoteDocumentService;
+use App\Services\Business\QuoteDocumentService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;

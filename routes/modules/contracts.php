@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\ContractController;
+use App\Http\Controllers\Contracts\ContractController;
 use App\Http\Middleware\RedirectBrowserToScreen;
 use Illuminate\Support\Facades\Route;
 

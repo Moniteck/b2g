@@ -3,7 +3,7 @@
 namespace App\Http\Requests\Finance;
 
 use App\Models\KpiGoal;
-use App\Services\KpiService;
+use App\Services\Finance\KpiService;
 use App\Services\Tenancy\CompanyContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Http\FormRequest;

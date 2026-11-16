@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Tenders;
 
-use App\Http\Requests\TenderRequest;
 use App\Models\Institution;
 use App\Models\Tender;
 use App\Rules\BelongsToActiveCompany;

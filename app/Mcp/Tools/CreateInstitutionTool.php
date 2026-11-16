@@ -2,10 +2,10 @@
 
 namespace App\Mcp\Tools;
 
-use App\Http\Requests\InstitutionRequest;
+use App\Http\Requests\Directory\InstitutionRequest;
 use App\Models\Institution;
 use App\Models\User;
-use App\Services\AuditLogger;
+use App\Services\System\AuditLogger;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Validation\Rule;
 use Laravel\Mcp\Request;

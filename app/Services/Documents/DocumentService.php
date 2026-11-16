@@ -6,7 +6,7 @@ use App\Models\Document;
 use App\Models\DocumentLink;
 use App\Models\DocumentVersion;
 use App\Models\User;
-use App\Services\AuditLogger;
+use App\Services\System\AuditLogger;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Arr;

@@ -7,7 +7,7 @@ use App\Models\DocumentVersion;
 use App\Models\SignatureApplication;
 use App\Models\SigningAsset;
 use App\Models\User;
-use App\Services\AuditLogger;
+use App\Services\System\AuditLogger;
 use App\Services\Tenancy\CompanyContext;
 use App\Support\Binaries;
 use Illuminate\Http\UploadedFile;

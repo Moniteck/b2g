@@ -1,11 +1,11 @@
 <?php
 
-use App\Http\Controllers\BudgetController;
-use App\Http\Controllers\CashFlowController;
-use App\Http\Controllers\CollectionController;
-use App\Http\Controllers\KpiGoalController;
-use App\Http\Controllers\PoaController;
-use App\Http\Controllers\ReportController;
+use App\Http\Controllers\Finance\BudgetController;
+use App\Http\Controllers\Finance\CashFlowController;
+use App\Http\Controllers\Finance\CollectionController;
+use App\Http\Controllers\Finance\KpiGoalController;
+use App\Http\Controllers\Finance\PoaController;
+use App\Http\Controllers\Finance\ReportController;
 use Illuminate\Support\Facades\Route;
 
 /* Reportes e indicadores */

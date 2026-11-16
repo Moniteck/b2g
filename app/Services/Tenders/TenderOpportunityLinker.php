@@ -5,7 +5,7 @@ namespace App\Services\Tenders;
 use App\Models\Opportunity;
 use App\Models\Tender;
 use App\Models\User;
-use App\Services\AuditLogger;
+use App\Services\System\AuditLogger;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 

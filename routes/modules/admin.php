@@ -1,23 +1,12 @@
 <?php
 
-use App\Http\Controllers\AccountController;
-use App\Http\Controllers\ActiveCompanyController;
-use App\Http\Controllers\AdminUserController;
-use App\Http\Controllers\AuditLogController;
-use App\Http\Controllers\CompanyController;
-use App\Http\Controllers\DiagnosticsController;
-use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\AuditLogController;
+use App\Http\Controllers\Admin\CompanyController;
+use App\Http\Controllers\Admin\DiagnosticsController;
+use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Auth\AccessRequestController;
 use Illuminate\Support\Facades\Route;
-
-/* Empresa activa (selector de la cabecera) */
-
-Route::post('/empresa-activa', ActiveCompanyController::class)->name('companies.switch');
-
-/* Mi cuenta */
-
-Route::get('/mi-cuenta', [AccountController::class, 'show'])->name('account.show');
-Route::put('/mi-cuenta', [AccountController::class, 'update'])->name('account.update');
-Route::put('/mi-cuenta/contrasena', [AccountController::class, 'password'])->middleware('throttle:10,1')->name('account.password');
 
 /* Empresas del grupo y membresías (administración completa: solo raíz) */
 
@@ -50,3 +39,11 @@ Route::delete('/configuracion/usuarios/{user}', [AdminUserController::class, 'de
 
 Route::get('/configuracion/diagnostico', DiagnosticsController::class)->name('settings.diagnostics');
 Route::get('/configuracion/auditoria', [AuditLogController::class, 'index'])->name('admin.audit');
+
+/* Página índice de Administración (las tarjetas se filtran por permiso; cada destino autoriza su ruta). */
+
+Route::inertia('/administracion', 'Admin/Index')->name('admin.index');
+
+// Revisión de solicitudes de acceso desde Usuarios (el envío público vive en routes/web.php, grupo `guest`).
+Route::post('/configuracion/usuarios/solicitudes/{accessRequest}/aprobar', [AccessRequestController::class, 'approve'])->whereNumber('accessRequest')->name('access-requests.approve');
+Route::post('/configuracion/usuarios/solicitudes/{accessRequest}/rechazar', [AccessRequestController::class, 'reject'])->whereNumber('accessRequest')->name('access-requests.reject');

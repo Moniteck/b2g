@@ -2,8 +2,8 @@
 
 namespace App\Mcp\Tools;
 
-use App\Http\Requests\TenderRequest;
 use App\Http\Requests\Tenders\CaptureConfirmRequest;
+use App\Http\Requests\Tenders\TenderRequest;
 use App\Mcp\Support\Present;
 use App\Mcp\Support\ToolError;
 use App\Mcp\Tools\Concerns\DescribesTenderFields;

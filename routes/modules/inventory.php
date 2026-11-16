@@ -1,7 +1,6 @@
 <?php
 
-use App\Http\Controllers\InventoryController;
-use App\Http\Controllers\OfferCalculatorController;
+use App\Http\Controllers\Inventory\InventoryController;
 use App\Http\Middleware\RedirectBrowserToScreen;
 use Illuminate\Support\Facades\Route;
 
@@ -14,7 +13,3 @@ Route::post('/inventario/sincronizar', [InventoryController::class, 'sync'])->mi
 Route::get('/inventario/{inventoryItem}', [InventoryController::class, 'show'])->whereNumber('inventoryItem')->middleware(RedirectBrowserToScreen::class.':/inventario?ver={inventoryItem}')->name('inventory.show');
 
 /* Calculadora de oferta */
-
-Route::get('/calculadora-oferta', [OfferCalculatorController::class, 'index'])->name('offer-calculator.index');
-Route::post('/calculadora-oferta/calcular', [OfferCalculatorController::class, 'calculate'])->name('offer-calculator.calculate');
-Route::post('/calculadora-oferta/pdf', [OfferCalculatorController::class, 'pdf'])->middleware(['throttle:exports', 'audit.export'])->name('offer-calculator.pdf');
