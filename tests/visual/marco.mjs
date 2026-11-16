@@ -10,6 +10,9 @@ import { chromium } from 'playwright';
 import { BASE_URL, USERS, VIEWPORTS, login, openContext } from './auditoria/comun.mjs';
 
 const OUT = 'storage/app/qa/capturas/marco';
+// Vistas que la auditoría no tenía: 1920 y 1024 con ratón.
+VIEWPORTS.d1920 = { width: 1920, height: 1080 };
+VIEWPORTS.r1024 = { width: 1024, height: 768 };
 mkdirSync(OUT, { recursive: true });
 
 const args = Object.fromEntries(process.argv.slice(2).filter((arg) => arg.startsWith('--')).map((arg) => arg.slice(2).split('=')));
@@ -125,7 +128,8 @@ const runners = {
             if (VIEWPORTS[view].touch) {
                 await page.locator('.cap-shell-sidebar summary').first().tap().catch(() => {});
             } else {
-                await sidebar.hover();
+                await page.mouse.move(700, 400);
+                await page.mouse.move(30, 300, { steps: 6 });
             }
             await page.waitForTimeout(500);
             await shot(page, `barra-${view}-${theme}-asomada`);
