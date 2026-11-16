@@ -136,7 +136,7 @@ class AttachmentController extends Controller
             ->with([
                 'creator:id,name',
                 'document' => fn ($query) => $query->select(['id', 'company_id', 'name', 'description', 'category', 'version', 'original_filename', 'mime_type', 'size', 'uploaded_by', 'created_at']),
-                'document.uploader:id,name',
+                'document.currentVersion.uploader:id,name',
                 'document.currentVersion.signer:id,name',
             ])
             ->latest('id')

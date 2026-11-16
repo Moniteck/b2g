@@ -276,7 +276,6 @@ class QaSeeder extends Seeder
                 'opportunity_id' => $opportunity->id,
                 'tender_id' => $tender?->id,
                 'created_by' => $author->id,
-                'prepared_by' => $author->name,
                 'quoted_at' => now()->subDays(2)->toDateString(),
                 'purchase_type' => $tender?->purchase_type ?? 'Licitación Privada',
                 'validity_days' => 30,

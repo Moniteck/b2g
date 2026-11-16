@@ -80,7 +80,7 @@ class DatabaseSeeder extends Seeder
 
         $quote = Quote::updateOrCreate(
             ['company_id' => $company->id, 'number' => 'COT-2026-0001'],
-            ['institution_id' => $institutions[1]->id, 'opportunity_id' => $opportunity->id, 'created_by' => $admin->id, 'prepared_by' => $admin->name, 'quoted_at' => now()->toDateString(), 'purchase_type' => 'Compra Menor', 'validity_days' => 30, 'status' => 'Emitida', 'outcome' => 'Pendiente', 'subtotal' => $subtotal, 'tax' => $tax, 'discount' => 0, 'tax_included' => false, 'total' => round($subtotal + $tax, 2), 'notes' => 'Entrega en cinco días hábiles.'],
+            ['institution_id' => $institutions[1]->id, 'opportunity_id' => $opportunity->id, 'created_by' => $admin->id, 'quoted_at' => now()->toDateString(), 'purchase_type' => 'Compra Menor', 'validity_days' => 30, 'status' => 'Emitida', 'outcome' => 'Pendiente', 'subtotal' => $subtotal, 'tax' => $tax, 'discount' => 0, 'tax_included' => false, 'total' => round($subtotal + $tax, 2), 'notes' => 'Entrega en cinco días hábiles.'],
         );
 
         foreach ($lines as $index => $line) {
@@ -93,7 +93,7 @@ class DatabaseSeeder extends Seeder
 
         Document::updateOrCreate(
             ['company_id' => $company->id, 'name' => 'Constancia SAR'],
-            ['kind' => 'empresa', 'category' => 'solvencia_sar', 'issued_at' => now()->subMonths(11)->toDateString(), 'expires_at' => now()->addDays(12)->toDateString(), 'status' => Document::STATUS_EXPIRING, 'uploaded_by' => $admin->id],
+            ['kind' => 'empresa', 'category' => 'solvencia_sar', 'issued_at' => now()->subMonths(11)->toDateString(), 'expires_at' => now()->addDays(12)->toDateString(), 'status' => Document::STATUS_EXPIRING],
         );
     }
 }

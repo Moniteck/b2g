@@ -99,7 +99,7 @@ class RolePermissionsTest extends TestCase
         $this->assertDatabaseHas('tenders', ['id' => $tender->id, 'title' => 'Editada']);
 
         $this->actingAs($this->operator)->post('/calendario', ['title' => 'Reunión', 'starts_at' => now()->addDay()->toDateTimeString()])->assertRedirect();
-        $this->assertDatabaseHas('events', ['title' => 'Reunión', 'company_id' => $this->company->id, 'user_id' => $this->operator->id]);
+        $this->assertDatabaseHas('events', ['title' => 'Reunión', 'company_id' => $this->company->id, 'created_by' => $this->operator->id]);
 
         $this->actingAs($this->operator)->delete("/licitaciones/{$tender->id}")->assertForbidden();
         $this->actingAs($this->operator)->get('/configuracion')->assertForbidden();

@@ -47,7 +47,7 @@ class ListDocumentsTool extends BaseTool
             ->when(filled($data['search'] ?? null), function ($query) use ($data) {
                 $term = '%'.str_replace(['%', '_'], ['\%', '\_'], trim($data['search'])).'%';
                 $query->where(fn ($inner) => $inner->where('name', 'like', $term)->orWhere('reference_number', 'like', $term)
-                    ->orWhere('owner_name', 'like', $term)->orWhere('original_filename', 'like', $term));
+                    ->orWhere('owner_name', 'like', $term)->orWhereHas('versions', fn ($version) => $version->where('original_filename', 'like', $term)));
             })
             ->when(! empty($data['category']), fn ($query) => $query->where('category', $data['category']))
             ->when(! empty($data['status']), fn ($query) => $query->withStatus($data['status']))

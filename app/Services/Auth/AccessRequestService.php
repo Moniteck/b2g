@@ -274,7 +274,7 @@ class AccessRequestService
             }
 
             // La contraseña ya está cifrada: el cast `hashed` de User no la vuelve a cifrar.
-            $user = User::create(['name' => $locked->name, 'email' => $locked->email, 'password' => $locked->password, 'role' => $role, 'phone' => $locked->phone]);
+            $user = User::create(['name' => $locked->name, 'email' => $locked->email, 'password' => $locked->password, 'phone' => $locked->phone]);
             $this->memberships->invite($company, $locked->name, $locked->email, $role);
 
             $locked->forceFill([

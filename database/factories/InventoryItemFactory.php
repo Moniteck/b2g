@@ -32,7 +32,6 @@ class InventoryItemFactory extends Factory
             'stock' => $stock,
             'stock_available' => $stock,
             'cost' => $cost,
-            'price' => round($cost * 1.45, 2),
             'suggested_price' => round($cost * 1.45, 2),
             'tax_rate' => 15,
             'tax_included' => false,

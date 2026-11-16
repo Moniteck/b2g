@@ -130,7 +130,7 @@ class ReminderEngineTest extends TestCase
         $followUpEvent = $this->eventFor("contract_follow_up:{$followUp->id}:Seguimiento");
         $this->assertSame(['d0' => '2026-11-18 07:00'], $this->plan($followUpEvent));
 
-        $document = Document::factory()->for($company)->create(['uploaded_by' => $manager->id, 'expires_at' => '2027-02-15']);
+        $document = Document::factory()->for($company)->create(['renewal_owner_id' => $manager->id, 'expires_at' => '2027-02-15']);
         $documentEvent = $this->eventFor("document:{$document->id}:Documento");
         $this->assertSame(['d30', 'd7', 'd1'], array_keys($this->plan($documentEvent)));
 

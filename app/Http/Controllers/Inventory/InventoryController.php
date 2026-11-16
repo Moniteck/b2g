@@ -53,7 +53,7 @@ class InventoryController extends Controller
         ];
 
         $columns = ['id', 'company_id', 'blessing_id', 'sku', 'description', 'category', 'brand', 'unit', 'stock',
-            'stock_available', 'cost', 'price', 'suggested_price', 'tax_rate', 'tax_included', 'currency',
+            'stock_available', 'cost', 'suggested_price', 'tax_rate', 'tax_included', 'currency',
             'is_active', 'is_demo', 'synced_at'];
 
         $items = InventoryItem::query()
@@ -140,7 +140,7 @@ class InventoryController extends Controller
         $term = trim((string) $request->query('q', ''));
 
         $items = InventoryItem::query()
-            ->select(['id', 'company_id', 'sku', 'description', 'brand', 'unit', 'stock', 'stock_available', 'cost', 'price', 'suggested_price', 'tax_rate', 'tax_included', 'currency'])
+            ->select(['id', 'company_id', 'sku', 'description', 'brand', 'unit', 'stock', 'stock_available', 'cost', 'suggested_price', 'tax_rate', 'tax_included', 'currency'])
             ->where('is_active', true)
             ->search($term)
             ->orderByRaw('CASE WHEN sku = ? THEN 0 ELSE 1 END', [$term])

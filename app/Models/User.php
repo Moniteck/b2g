@@ -16,7 +16,7 @@ use Illuminate\Support\Str;
 use Laravel\Passport\Contracts\OAuthenticatable;
 use Laravel\Passport\HasApiTokens;
 
-#[Fillable(['name', 'email', 'password', 'role', 'phone', 'is_root'])]
+#[Fillable(['name', 'email', 'password', 'phone', 'is_root'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable implements OAuthenticatable
 {
@@ -55,7 +55,7 @@ class User extends Authenticatable implements OAuthenticatable
 
     /**
      * Raíz del grupo: opera sobre todas las empresas. No es un rol de empresa;
-     * la columna `users.role` es un resto del esquema anterior y ya no concede nada.
+     * el rol de empresa vive en `company_user.role`.
      */
     public function isRoot(): bool
     {

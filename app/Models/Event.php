@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\BelongsToCompany;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
@@ -60,9 +61,9 @@ class Event extends Model
     ];
 
     protected $fillable = [
-        'company_id', 'user_id', 'owner_id', 'created_by', 'institution_id', 'opportunity_id', 'tender_id',
+        'company_id', 'owner_id', 'created_by', 'institution_id', 'opportunity_id', 'tender_id',
         'contract_id', 'title', 'label', 'description', 'type', 'starts_at', 'ends_at', 'all_day', 'priority',
-        'reference_type', 'reference_id', 'completed', 'completed_at', 'remindable', 'reminder_offsets',
+        'reference_type', 'reference_id', 'completed_at', 'remindable', 'reminder_offsets',
         'recipients', 'origin', 'source_key', 'attended_at', 'attended_by', 'cancelled_at', 'cancel_reason',
     ];
 
@@ -74,7 +75,6 @@ class Event extends Model
             'completed_at' => 'datetime',
             'attended_at' => 'datetime',
             'cancelled_at' => 'datetime',
-            'completed' => 'boolean',
             'remindable' => 'boolean',
             'all_day' => 'boolean',
             'reminder_offsets' => 'array',
@@ -139,6 +139,12 @@ class Event extends Model
         return $this->all_day ? $this->starts_at->copy()->endOfDay() : $this->starts_at->copy();
     }
 
+    /** Completado en su registro de origen. */
+    protected function completed(): Attribute
+    {
+        return Attribute::get(fn (): bool => $this->completed_at !== null);
+    }
+
     /** Sigue generando avisos: no cancelado, no atendido, no completado y con fecha por delante. */
     public function isActive(?Carbon $now = null): bool
     {
@@ -162,7 +168,7 @@ class Event extends Model
     {
         return $query->whereNull($query->qualifyColumn('cancelled_at'))
             ->whereNull($query->qualifyColumn('attended_at'))
-            ->where($query->qualifyColumn('completed'), false);
+            ->whereNull($query->qualifyColumn('completed_at'));
     }
 
     /** Enlace al registro de origen dentro de la aplicación. */

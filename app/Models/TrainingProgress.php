@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class TrainingProgress extends Model
 {
-    protected $fillable = ['user_id', 'tutorial_key', 'progress', 'score'];
+    protected $fillable = ['user_id', 'tutorial_key', 'progress'];
 }

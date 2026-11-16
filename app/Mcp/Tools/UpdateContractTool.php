@@ -32,7 +32,7 @@ class UpdateContractTool extends BaseTool
     private const FIELDS = [
         'client_id', 'institution_id', 'contact_id', 'manager_id', 'number', 'name', 'awarded_amount', 'amount',
         'signed_at', 'duration_days', 'duration_business_days', 'start_trigger', 'start_date', 'is_end_date_manual',
-        'end_date', 'product_delivered', 'official_in_charge', 'notes',
+        'end_date', 'product_delivered', 'notes',
     ];
 
     protected ?array $record = ['contract_id', Contract::class];
@@ -56,7 +56,6 @@ class UpdateContractTool extends BaseTool
             'institution_id' => $schema->integer()->description('Institución.'),
             'contact_id' => $schema->integer()->description('Persona responsable del contacto (de la institución).'),
             'manager_id' => $schema->integer()->description('Oficial que da seguimiento (usuario de la empresa).'),
-            'official_in_charge' => $schema->string()->description('Oficial de la institución a cargo.'),
             'notes' => $schema->string()->description('Notas.'),
         ];
     }

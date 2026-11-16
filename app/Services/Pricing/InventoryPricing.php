@@ -19,7 +19,7 @@ class InventoryPricing
     /** Precio sugerido del producto, en la base de su `tax_included`. */
     public function sourcePrice(InventoryItem $item): float
     {
-        return (float) ($item->suggested_price ?? $item->price ?? 0);
+        return (float) ($item->suggested_price ?? 0);
     }
 
     public function taxRate(InventoryItem $item): float

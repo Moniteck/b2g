@@ -69,8 +69,7 @@ class Document extends Model
 
     protected $fillable = [
         'company_id', 'institution_id', 'name', 'reference_number', 'description', 'kind', 'owner_name',
-        'required_for', 'category', 'version', 'hash', 'path', 'issued_at',
-        'expires_at', 'status', 'original_filename', 'disk', 'mime_type', 'size', 'uploaded_by',
+        'category', 'version', 'issued_at', 'expires_at', 'status',
         'signed_at', 'signed_by', 'sealed_at', 'renewal_owner_id',
     ];
 
@@ -90,8 +89,47 @@ class Document extends Model
             'signed_at' => 'datetime',
             'sealed_at' => 'datetime',
             'version' => 'integer',
-            'size' => 'integer',
+            'renewal_owner_id' => 'integer',
         ];
+    }
+
+    /*
+     * El archivo vive en `document_versions`: estos atributos leen la versión vigente
+     * (cárgala con `with('currentVersion')` en los listados para evitar N+1).
+     */
+    protected function path(): Attribute
+    {
+        return Attribute::get(fn () => $this->currentVersion?->path);
+    }
+
+    protected function disk(): Attribute
+    {
+        return Attribute::get(fn () => $this->currentVersion?->disk);
+    }
+
+    protected function originalFilename(): Attribute
+    {
+        return Attribute::get(fn () => $this->currentVersion?->original_filename);
+    }
+
+    protected function mimeType(): Attribute
+    {
+        return Attribute::get(fn () => $this->currentVersion?->mime_type);
+    }
+
+    protected function size(): Attribute
+    {
+        return Attribute::get(fn () => $this->currentVersion?->size);
+    }
+
+    protected function hash(): Attribute
+    {
+        return Attribute::get(fn () => $this->currentVersion?->hash);
+    }
+
+    protected function uploadedBy(): Attribute
+    {
+        return Attribute::get(fn () => $this->currentVersion?->uploaded_by);
     }
 
     /** Las fechas se guardan como «AAAA-MM-DD» en cualquier motor (comparables como texto). */
@@ -129,11 +167,6 @@ class Document extends Model
     public function links()
     {
         return $this->hasMany(DocumentLink::class);
-    }
-
-    public function uploader()
-    {
-        return $this->belongsTo(User::class, 'uploaded_by');
     }
 
     public function signer()

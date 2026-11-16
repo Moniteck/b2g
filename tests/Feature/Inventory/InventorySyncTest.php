@@ -239,7 +239,7 @@ class InventorySyncTest extends TestCase
 
     public function test_inverting_the_tax_rule_only_needs_the_company_setting(): void
     {
-        $this->company->forceFill(['settings' => ['pricing' => ['prices_include_tax' => true]]])->save();
+        $this->company->forceFill(['prices_include_tax' => true])->save();
 
         $this->sync();
 

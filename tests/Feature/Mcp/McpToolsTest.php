@@ -208,7 +208,7 @@ class McpToolsTest extends McpTestCase
 
     public function test_search_inventory_returns_unified_pricing(): void
     {
-        $item = InventoryItem::factory()->create(['company_id' => $this->company->id, 'suggested_price' => 100, 'price' => 100, 'tax_rate' => 15, 'tax_included' => false]);
+        $item = InventoryItem::factory()->create(['company_id' => $this->company->id, 'suggested_price' => 100, 'tax_rate' => 15, 'tax_included' => false]);
         InventoryItem::factory()->create(['company_id' => $this->other->id, 'sku' => $item->sku.'X']);
         [$viewer] = $this->memberOf($this->company, 'viewer');
         $this->inSession($viewer, $this->connect($viewer, [$this->company], McpConnection::LEVEL_READ));

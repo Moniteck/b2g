@@ -27,7 +27,7 @@ class PoaEntryRequest extends FormRequest
             'institution_id' => ['nullable', 'integer', new BelongsToActiveCompany(Institution::class)],
             'project' => ['required', 'string', 'max:255'],
             'year' => ['required', 'integer', 'min:2020', 'max:2100'],
-            'partida' => ['nullable', 'string', 'max:100'],
+            'budget_line' => ['nullable', 'string', 'max:100'],
             'quarter' => ['nullable', 'integer', 'between:1,4'],
             'probability' => ['required', 'integer', 'between:0,100'],
             'budgeted_amount' => ['required', 'numeric', 'min:0', 'max:999999999999'],
@@ -42,7 +42,7 @@ class PoaEntryRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'institution_id' => 'institución', 'project' => 'proyecto', 'year' => 'año', 'partida' => 'partida',
+            'institution_id' => 'institución', 'project' => 'proyecto', 'year' => 'año', 'budget_line' => 'partida',
             'quarter' => 'trimestre', 'probability' => 'probabilidad', 'budgeted_amount' => 'monto presupuestado',
             'executed_amount' => 'monto ejecutado', 'estimated_date' => 'fecha estimada',
             'annual_close_alert' => 'alerta de cierre anual', 'status' => 'estado', 'notes' => 'notas',

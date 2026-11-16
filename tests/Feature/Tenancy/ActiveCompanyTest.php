@@ -75,7 +75,7 @@ class ActiveCompanyTest extends TestCase
                 ->has('companies', 2));
 
         // Un administrador de empresa NO es raíz: no ve otras empresas ni las administra.
-        [$admin] = $this->memberOf($companyA, 'admin', ['role' => 'admin']);
+        [$admin] = $this->memberOf($companyA, 'admin');
 
         $this->assertFalse($admin->isRoot());
         $this->actingAs($admin)->post('/empresa-activa', ['company_id' => $companyB->id])->assertSessionHasErrors('company_id');

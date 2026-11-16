@@ -73,7 +73,7 @@ const formOpen = ref(false);
 const editing = ref(null);
 const formRoot = ref(null);
 const blank = () => ({
-    institution_id: null, project: '', year: new Date().getFullYear(), partida: '', quarter: null, probability: 50,
+    institution_id: null, project: '', year: new Date().getFullYear(), budget_line: '', quarter: null, probability: 50,
     budgeted_amount: null, executed_amount: null, estimated_date: '', annual_close_alert: false, status: 'Identificada', notes: '',
 });
 const form = useForm(blank());
@@ -82,7 +82,7 @@ const statusOptions = computed(() => props.statuses.map((status) => ({ value: st
 function openForm(row = null) {
     editing.value = row;
     form.defaults(row ? {
-        institution_id: row.institution_id, project: row.project, year: row.year, partida: row.partida ?? '', quarter: row.quarter,
+        institution_id: row.institution_id, project: row.project, year: row.year, budget_line: row.budget_line ?? '', quarter: row.quarter,
         probability: row.probability, budgeted_amount: row.budgeted_amount, executed_amount: row.executed_amount,
         estimated_date: row.estimated_date ?? '', annual_close_alert: row.annual_close_alert, status: row.status, notes: row.notes ?? '',
     } : blank());
@@ -112,7 +112,7 @@ const detailItems = computed(() => {
         { key: 'status', label: 'Estado', value: row.status },
         { label: 'Institución', value: row.institution },
         { label: 'Año y trimestre', value: row.quarter ? `${row.year} · trimestre ${row.quarter}` : String(row.year) },
-        { label: 'Partida', value: row.partida },
+        { label: 'Partida', value: row.budget_line },
         { label: 'Fecha estimada', value: row.estimated_date ? `${date(row.estimated_date)} (${relativeDays(row.estimated_date)})` : null },
         { label: 'Probabilidad', value: `${number(row.probability)} %` },
         { label: 'Presupuestado', value: money(row.budgeted_amount) },
@@ -230,8 +230,8 @@ function actionsOf(row) {
                 <FormField label="Trimestre" optional :error="form.errors.quarter">
                     <SelectInput v-model="form.quarter" :options="quarterOptions" placeholder="Sin trimestre" />
                 </FormField>
-                <FormField label="Partida presupuestaria" optional :error="form.errors.partida">
-                    <TextInput v-model="form.partida" maxlength="100" placeholder="42210" />
+                <FormField label="Partida presupuestaria" optional :error="form.errors.budget_line">
+                    <TextInput v-model="form.budget_line" maxlength="100" placeholder="42210" />
                 </FormField>
                 <FormField label="Fecha estimada de compra" optional :error="form.errors.estimated_date">
                     <DateInput v-model="form.estimated_date" />

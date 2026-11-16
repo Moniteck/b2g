@@ -34,7 +34,7 @@ class Contract extends Model
         'collected_amount', 'physical_progress', 'financial_progress', 'retention_amount',
         'status', 'signed_at', 'duration_days', 'duration_business_days', 'start_trigger',
         'start_date', 'end_date', 'is_end_date_manual', 'product_delivered',
-        'official_in_charge', 'completed_at', 'closed_at', 'notes', 'created_by', 'updated_by',
+        'closed_at', 'notes', 'created_by', 'updated_by',
     ];
 
     protected $attributes = [
@@ -54,7 +54,6 @@ class Contract extends Model
             'signed_at' => 'date',
             'start_date' => 'date',
             'end_date' => 'date',
-            'completed_at' => 'date',
             'closed_at' => 'datetime',
             'product_delivered' => 'boolean',
             'duration_business_days' => 'boolean',

@@ -56,7 +56,6 @@ class QuoteService
                 'opportunity_id' => $data['opportunity_id'] ?? null,
                 'tender_id' => $data['tender_id'] ?? null,
                 'created_by' => $actorId,
-                'prepared_by' => $actorId,
                 'number' => $this->nextNumber($companyId),
                 'quoted_at' => filled($data['quoted_at'] ?? null) ? $data['quoted_at'] : now()->toDateString(),
                 'purchase_type' => filled($data['purchase_type'] ?? null) ? $data['purchase_type'] : 'Cotización',

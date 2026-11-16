@@ -36,7 +36,6 @@ class StoreDocumentRequest extends DocumentRequest
             'reference_number' => ['nullable', 'string', 'max:100'],
             'description' => ['nullable', 'string', 'max:500'],
             'owner_name' => ['nullable', 'string', 'max:255'],
-            'required_for' => ['nullable', 'string', 'max:255'],
             'issued_at' => ['nullable', 'date'],
             'expires_at' => ['nullable', 'date', 'after_or_equal:issued_at'],
             'cotizacion_id' => ['nullable', 'integer', new BelongsToActiveCompany(Quote::class)],

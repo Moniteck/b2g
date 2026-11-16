@@ -255,7 +255,6 @@ class InventorySyncService
                 'stock' => $product->stock ?? 0,
                 'stock_available' => $product->stockAvailable ?? $product->stock,
                 'cost' => $product->cost ?? 0,
-                'price' => $product->suggestedPrice ?? 0,
                 'suggested_price' => $product->suggestedPrice,
                 'tax_rate' => $rules->rateFor($product->taxRate),
                 'tax_included' => $rules->includesTax($product->taxIncluded),

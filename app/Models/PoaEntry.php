@@ -25,7 +25,7 @@ class PoaEntry extends Model
     /** Días de anticipación de la alerta por fecha estimada. */
     public const ALERT_DAYS = 30;
 
-    protected $fillable = ['company_id', 'institution_id', 'project', 'year', 'partida', 'quarter', 'probability', 'budgeted_amount', 'executed_amount', 'estimated_date', 'annual_close_alert', 'status', 'notes'];
+    protected $fillable = ['company_id', 'institution_id', 'project', 'year', 'budget_line', 'quarter', 'probability', 'budgeted_amount', 'executed_amount', 'estimated_date', 'annual_close_alert', 'status', 'notes'];
 
     protected function casts(): array
     {

@@ -9,7 +9,7 @@ class Institution extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'acronym', 'type', 'fleet_type', 'modality', 'contact_name', 'phone', 'email', 'potential', 'location', 'status', 'notes', 'management_notes', 'source'];
+    protected $fillable = ['name', 'acronym', 'type', 'contact_name', 'phone', 'email', 'potential', 'location', 'status', 'notes', 'source'];
 
     public function contacts()
     {

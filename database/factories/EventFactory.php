@@ -20,7 +20,6 @@ class EventFactory extends Factory
 
         return [
             'company_id' => Company::factory(),
-            'user_id' => null,
             'institution_id' => null,
             'opportunity_id' => null,
             'tender_id' => null,
@@ -31,7 +30,6 @@ class EventFactory extends Factory
             'ends_at' => $startsAt->copy()->addHour(),
             'priority' => 'Normal',
             'remindable' => true,
-            'completed' => false,
         ];
     }
 
@@ -51,7 +49,6 @@ class EventFactory extends Factory
     public function completed(): static
     {
         return $this->state(fn (array $attributes) => [
-            'completed' => true,
             'completed_at' => now(),
         ]);
     }

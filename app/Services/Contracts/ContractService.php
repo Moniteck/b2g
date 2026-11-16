@@ -125,14 +125,13 @@ class ContractService
                 ContractStatus::CLOSED => $locked->forceFill([
                     'product_delivered' => true,
                     'physical_progress' => 100,
-                    'completed_at' => now()->toDateString(),
                     'closed_at' => now(),
                 ]),
                 default => null,
             };
 
             if ($from === ContractStatus::CLOSED) {
-                $locked->forceFill(['closed_at' => null, 'completed_at' => null]);
+                $locked->forceFill(['closed_at' => null]);
             }
 
             $locked->save();

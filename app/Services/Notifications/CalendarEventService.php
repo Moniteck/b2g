@@ -62,7 +62,6 @@ class CalendarEventService
             $event = new Event;
             $event->forceFill($attributes + [
                 'company_id' => $companyId,
-                'user_id' => $actor->id,
                 'owner_id' => $actor->id,
                 'created_by' => $actor->id,
                 'origin' => 'manual',

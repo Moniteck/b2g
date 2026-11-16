@@ -52,7 +52,7 @@ class DocumentService
      * Crea un documento con su versión 1 y, si se indica, lo enlaza a una entidad.
      *
      * @param  array<string, mixed>  $data  name, kind, category, reference_number, description, owner_name,
-     *                                      issued_at, expires_at, company_id, institution_id, required_for
+     *                                      issued_at, expires_at, company_id, institution_id
      * @param  array{category?: ?string, description?: ?string, context?: ?string, field?: string, allowed?: array<int, string>}  $link
      *
      * @throws ValidationException
@@ -67,7 +67,7 @@ class DocumentService
                 DB::afterRollBack(fn () => $this->deleteFiles([[self::DISK, $path]]));
 
                 $document = new Document(Arr::only($data, [
-                    'company_id', 'institution_id', 'owner_name', 'required_for', 'reference_number', 'description',
+                    'company_id', 'institution_id', 'owner_name', 'reference_number', 'description',
                 ]));
                 $document->forceFill([
                     'company_id' => $data['company_id'] ?? $attachTo?->getAttribute('company_id'),
@@ -77,14 +77,7 @@ class DocumentService
                     'issued_at' => $data['issued_at'] ?? null,
                     'expires_at' => $data['expires_at'] ?? null,
                     'version' => 1,
-                    'uploaded_by' => $actor->id,
                     'renewal_owner_id' => $data['renewal_owner_id'] ?? $actor->id,
-                    'path' => $path,
-                    'disk' => self::DISK,
-                    'original_filename' => $info['name'],
-                    'mime_type' => $info['mime'],
-                    'size' => $info['size'],
-                    'hash' => $info['hash'],
                 ])->save();
 
                 $version = DocumentVersion::create([
@@ -168,18 +161,12 @@ class DocumentService
 
                 $locked->forceFill(array_merge($dates, [
                     'version' => $next,
-                    'path' => $path,
-                    'disk' => self::DISK,
-                    'original_filename' => $info['name'],
-                    'mime_type' => $info['mime'],
-                    'size' => $info['size'],
-                    'hash' => $info['hash'],
-                    'uploaded_by' => $actor->id,
                     'signed_at' => null,
                     'signed_by' => null,
                 ]))->save();
 
                 $document->setRawAttributes($locked->getAttributes(), true);
+                $document->setRelation('currentVersion', $version);
 
                 return $version;
             });
@@ -289,7 +276,6 @@ class DocumentService
 
             $files = $document->versions()->get(['disk', 'path'])
                 ->map(fn (DocumentVersion $version) => [$version->disk, $version->path])
-                ->push([$document->disk, $document->path])
                 ->all();
 
             $document->delete();
@@ -349,17 +335,12 @@ class DocumentService
 
                 $locked->forceFill([
                     'version' => $next,
-                    'path' => $path,
-                    'disk' => self::DISK,
-                    'original_filename' => $name,
-                    'mime_type' => $mime,
-                    'size' => $size,
-                    'hash' => $hash,
                     'signed_at' => $signedAt,
                     'signed_by' => $signed ? $actor?->id : null,
                 ])->save();
 
                 $document->setRawAttributes($locked->getAttributes(), true);
+                $document->setRelation('currentVersion', $version);
 
                 return $version;
             });

@@ -46,7 +46,6 @@ class QuoteItem extends Model
         return $this->belongsTo(Quote::class);
     }
 
-    /** `inventory_item_id` es varchar en la tabla: se compara como entero. */
     public function inventoryItem()
     {
         return $this->belongsTo(InventoryItem::class, 'inventory_item_id');

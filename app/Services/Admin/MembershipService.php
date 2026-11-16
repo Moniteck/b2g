@@ -42,7 +42,7 @@ class MembershipService
 
             if ($user === null) {
                 $password = self::temporaryPassword();
-                $user = User::create(['name' => trim($name), 'email' => $email, 'password' => $password, 'role' => $role]);
+                $user = User::create(['name' => trim($name), 'email' => $email, 'password' => $password]);
                 $created = true;
             }
 

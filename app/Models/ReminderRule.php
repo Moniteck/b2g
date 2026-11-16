@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\BelongsToCompany;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -25,6 +26,12 @@ class ReminderRule extends Model
             'recipients' => 'array',
             'is_active' => 'boolean',
         ];
+    }
+
+    /** La columna es `time` (HH:MM:SS); la aplicación trabaja con HH:MM. */
+    protected function sendTime(): Attribute
+    {
+        return Attribute::get(fn (?string $value): ?string => $value === null ? null : substr($value, 0, 5));
     }
 
     /**

@@ -40,7 +40,7 @@ trait PresentsContracts
             'is_end_date_manual' => (bool) $contract->is_end_date_manual,
             'product_delivered' => (bool) $contract->product_delivered,
             'manager' => $contract->manager?->name,
-            ...Untrusted::of(['name' => $contract->name, 'official_in_charge' => $contract->official_in_charge], 300),
+            ...Untrusted::of(['name' => $contract->name], 300),
         ];
     }
 

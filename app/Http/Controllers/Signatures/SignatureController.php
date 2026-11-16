@@ -72,13 +72,14 @@ class SignatureController extends Controller
         $term = trim((string) $request->query('q', ''));
 
         $documents = Document::query()
-            ->where(fn ($query) => $query->where('mime_type', 'application/pdf')->orWhere('original_filename', 'like', '%.pdf'))
+            ->whereHas('currentVersion', fn ($version) => $version->where('mime_type', 'application/pdf')->orWhere('original_filename', 'like', '%.pdf'))
             ->when($term !== '', fn ($query) => $query->where(fn ($inner) => $inner
                 ->where('name', 'like', "%{$term}%")
-                ->orWhere('original_filename', 'like', "%{$term}%")))
+                ->orWhereHas('versions', fn ($version) => $version->where('original_filename', 'like', "%{$term}%"))))
             ->latest('updated_at')
             ->limit(20)
-            ->get(['id', 'name', 'original_filename', 'version', 'signed_at', 'category', 'updated_at']);
+            ->with('currentVersion')
+            ->get(['id', 'name', 'version', 'signed_at', 'category', 'updated_at']);
 
         return response()->json(['data' => $documents->map(fn (Document $document) => [
             'id' => $document->id,

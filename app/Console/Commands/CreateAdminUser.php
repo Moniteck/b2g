@@ -52,7 +52,6 @@ class CreateAdminUser extends Command
         if ($existing && ! $this->option('force')) {
             $this->components->error("El correo {$email} ya existe. Use --force para actualizarlo.");
             $this->components->twoColumnDetail('Usuario', $existing->name);
-            $this->components->twoColumnDetail('Rol', $existing->role);
 
             return self::FAILURE;
         }
@@ -80,14 +79,13 @@ class CreateAdminUser extends Command
         $user->forceFill([
             'name' => $name,
             'password' => Hash::make($password),
-            'role' => $role === 'viewer' ? 'operator' : $role,
             'email_verified_at' => $existing?->email_verified_at ?? now(),
         ])->save();
 
         $this->components->info($existing ? 'Administrador actualizado.' : 'Administrador creado.');
         $this->components->twoColumnDetail('Correo', $user->email);
         $this->components->twoColumnDetail('Nombre', $user->name);
-        $this->components->twoColumnDetail('Rol', $user->role);
+        $this->components->twoColumnDetail('Rol', $role);
         $this->components->twoColumnDetail('ID', (string) $user->id);
 
         if ($company = $this->option('company')) {

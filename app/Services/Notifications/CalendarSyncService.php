@@ -211,7 +211,7 @@ class CalendarSyncService
             'description' => $contract->name,
             'starts_at' => $end?->copy()->startOfDay(),
             'priority' => 'Alta',
-            'completed' => (bool) $contract->product_delivered && $contract->completed_at !== null,
+            'completed' => (bool) $contract->product_delivered && $contract->closed_at !== null,
         ], $reason);
 
         // Las entregas y seguimientos heredan del contrato el responsable y el cierre.
@@ -290,8 +290,8 @@ class CalendarSyncService
         $this->upsert('document', $document->id, 'Documento', [
             'company_id' => $document->company_id,
             'institution_id' => $document->institution_id,
-            'owner_id' => $document->renewal_owner_id ?? $document->uploaded_by,
-            'created_by' => $document->uploaded_by,
+            'owner_id' => $document->renewal_owner_id,
+            'created_by' => $document->renewal_owner_id,
             'label' => $document->name,
             'title' => "Vence: {$document->name}",
             'description' => $document->category ?: $document->kindLabel(),
@@ -375,7 +375,6 @@ class CalendarSyncService
             'reference_id' => $referenceId,
             'origin' => $referenceType,
             'remindable' => true,
-            'completed' => $completed,
             'cancelled_at' => null,
             'cancel_reason' => null,
         ];

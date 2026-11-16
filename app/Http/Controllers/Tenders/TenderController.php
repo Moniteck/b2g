@@ -419,7 +419,7 @@ class TenderController extends Controller
         return DocumentLink::query()
             ->where('linkable_type', Tender::class)->where('linkable_id', $tender->id)
             ->whereHas('document')
-            ->with(['document:id,name,original_filename,mime_type,size,version,category,created_at,uploaded_by', 'document.uploader:id,name'])
+            ->with(['document:id,name,version,category,created_at', 'document.currentVersion.uploader:id,name'])
             ->latest('id')
             ->get()
             ->map(fn (DocumentLink $link) => [
@@ -431,7 +431,7 @@ class TenderController extends Controller
                 'context' => $link->context,
                 'category' => $link->document->category,
                 'version' => $link->document->version,
-                'uploadedBy' => $link->document->uploader?->name,
+                'uploadedBy' => $link->document->currentVersion?->uploader?->name,
                 'uploadedAt' => $link->document->created_at?->toDateTimeString(),
                 'previewUrl' => "/documentos/{$link->document->id}/vista",
                 'downloadUrl' => "/documentos/{$link->document->id}/download",

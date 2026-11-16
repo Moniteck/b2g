@@ -49,15 +49,15 @@ class DocumentController extends Controller
         $perPage = in_array((int) $request->query('per_page'), self::PER_PAGE, true) ? (int) $request->query('per_page') : self::PER_PAGE[0];
 
         $query = Document::query()->directory()
-            ->select(['id', 'company_id', 'name', 'reference_number', 'description', 'kind', 'owner_name', 'category', 'version', 'issued_at', 'expires_at', 'status', 'original_filename', 'mime_type', 'size', 'signed_at', 'uploaded_by', 'updated_at'])
-            ->with('uploader:id,name');
+            ->select(['id', 'company_id', 'name', 'reference_number', 'description', 'kind', 'owner_name', 'category', 'version', 'issued_at', 'expires_at', 'status', 'signed_at', 'updated_at'])
+            ->with('currentVersion.uploader:id,name');
 
         if ($filters['search'] !== '') {
             $term = '%'.str_replace(['%', '_'], ['\%', '\_'], $filters['search']).'%';
             $query->where(fn ($inner) => $inner->where('name', 'like', $term)
                 ->orWhere('reference_number', 'like', $term)
                 ->orWhere('owner_name', 'like', $term)
-                ->orWhere('original_filename', 'like', $term));
+                ->orWhereHas('versions', fn ($version) => $version->where('original_filename', 'like', $term)));
         }
 
         if (array_key_exists($filters['category'], Document::CATEGORIES)) {

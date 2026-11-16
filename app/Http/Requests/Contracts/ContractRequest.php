@@ -78,7 +78,6 @@ class ContractRequest extends FormRequest
             'is_end_date_manual' => ['nullable', 'boolean'],
             'end_date' => ['nullable', 'date', 'after_or_equal:start_date', Rule::requiredIf(fn () => (bool) $this->input('is_end_date_manual'))],
             'product_delivered' => ['nullable', 'boolean'],
-            'official_in_charge' => ['nullable', 'string', 'max:255'],
             'notes' => ['nullable', 'string', 'max:5000'],
         ];
     }

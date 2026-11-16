@@ -43,7 +43,7 @@ class PoaController extends Controller
                     'institution' => $entry->institution?->name,
                     'project' => $entry->project,
                     'year' => $entry->year,
-                    'partida' => $entry->partida,
+                    'budget_line' => $entry->budget_line,
                     'quarter' => $entry->quarter,
                     'probability' => $entry->probability,
                     'budgeted_amount' => (float) $entry->budgeted_amount,
@@ -163,7 +163,7 @@ class PoaController extends Controller
             $term = '%'.addcslashes($filters['search'], '%_\\').'%';
             $query->where(fn (Builder $inner) => $inner
                 ->where('project', 'like', $term)
-                ->orWhere('partida', 'like', $term)
+                ->orWhere('budget_line', 'like', $term)
                 ->orWhereHas('institution', fn (Builder $institution) => $institution->where('name', 'like', $term)));
         }
 

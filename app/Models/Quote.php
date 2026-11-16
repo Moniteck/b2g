@@ -42,7 +42,7 @@ class Quote extends Model
     ];
 
     protected $fillable = [
-        'company_id', 'institution_id', 'contact_id', 'created_by', 'prepared_by', 'number',
+        'company_id', 'institution_id', 'contact_id', 'created_by', 'number',
         'quoted_at', 'purchase_type', 'validity_days', 'status', 'outcome', 'awarded_amount',
         'awarded_at', 'winner_name', 'lost_reason', 'revision', 'subtotal', 'tax', 'discount',
         'total', 'notes', 'conditions', 'opportunity_id', 'tender_id', 'client_id', 'tax_included',

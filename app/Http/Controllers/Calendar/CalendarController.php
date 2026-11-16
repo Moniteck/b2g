@@ -97,7 +97,7 @@ class CalendarController extends Controller
             ->limit(1000)
             ->get([
                 'id', 'title', 'label', 'type', 'starts_at', 'ends_at', 'all_day', 'origin', 'priority', 'reference_type',
-                'reference_id', 'tender_id', 'contract_id', 'completed', 'attended_at',
+                'reference_id', 'tender_id', 'contract_id', 'completed_at', 'attended_at',
             ]);
 
         return response()->json([
@@ -255,7 +255,7 @@ class CalendarController extends Controller
             'contract_id' => $event->contract_id,
             'href' => $event->isManual() ? null : $event->sourceHref(),
             'attended' => $event->attended_at !== null,
-            'completed' => (bool) $event->completed,
+            'completed' => $event->completed_at !== null,
         ];
     }
 

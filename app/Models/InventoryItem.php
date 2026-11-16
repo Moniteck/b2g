@@ -23,7 +23,7 @@ class InventoryItem extends Model
 
     protected $fillable = [
         'company_id', 'blessing_id', 'sku', 'description', 'category', 'brand', 'unit',
-        'stock', 'stock_available', 'cost', 'price', 'suggested_price', 'tax_rate',
+        'stock', 'stock_available', 'cost', 'suggested_price', 'tax_rate',
         'tax_included', 'currency', 'synced_at', 'raw', 'is_active', 'is_demo', 'deactivated_at',
     ];
 
@@ -35,7 +35,6 @@ class InventoryItem extends Model
             'stock' => 'decimal:2',
             'stock_available' => 'decimal:2',
             'cost' => 'decimal:2',
-            'price' => 'decimal:2',
             'suggested_price' => 'decimal:2',
             'tax_rate' => 'decimal:2',
             'tax_included' => 'boolean',

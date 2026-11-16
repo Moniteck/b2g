@@ -130,9 +130,9 @@ class SystemFoundationTest extends TestCase
         $this->assertFalse($user->fresh()->isRoot());
     }
 
-    public function test_the_legacy_admin_role_column_grants_nothing(): void
+    public function test_a_user_without_membership_grants_nothing(): void
     {
-        $legacyAdmin = User::factory()->create(['role' => 'admin']);
+        $legacyAdmin = User::factory()->create();
 
         $this->assertFalse($legacyAdmin->isRoot());
         $this->actingAs($legacyAdmin)->get('/licitaciones')->assertForbidden();

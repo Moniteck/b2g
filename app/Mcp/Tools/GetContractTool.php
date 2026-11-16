@@ -47,7 +47,7 @@ class GetContractTool extends BaseTool
             'contract' => $this->contractRow($contract) + [
                 'client' => $contract->client?->name,
                 'contact' => $contract->contact ? $contract->contact->only(['id', 'name', 'position', 'email', 'phone']) : null,
-                ...$this->untrusted(['name' => $contract->name, 'official_in_charge' => $contract->official_in_charge, 'notes' => $contract->notes]),
+                ...$this->untrusted(['name' => $contract->name, 'notes' => $contract->notes]),
             ],
             'deliveries' => $contract->deliveries->map(fn ($delivery) => $this->deliveryRow($delivery))->all(),
             'follow_ups' => $contract->followUps->map(fn ($followUp) => $this->followUpRow($followUp))->all(),

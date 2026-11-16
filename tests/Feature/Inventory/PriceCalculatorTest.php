@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Inventory;
 
+use App\Models\Company;
 use App\Services\Pricing\OfferCalculator;
 use App\Services\Pricing\PriceCalculator;
 use App\Services\Pricing\PriceLine;
@@ -363,17 +364,16 @@ class PriceCalculatorTest extends TestCase
         $this->assertTrue($rules->includesTax(true), 'sin configuración de empresa decide el origen');
     }
 
-    public function test_company_settings_override_the_source(): void
+    public function test_company_columns_override_the_source(): void
     {
-        $included = TaxRules::fromSettings(['pricing' => ['prices_include_tax' => true, 'tax_rate' => 18]]);
-        $excluded = TaxRules::fromSettings(['pricing' => ['prices_include_tax' => false]]);
+        $included = TaxRules::forCompany(new Company(['tax_rate' => 18, 'prices_include_tax' => true]));
+        $excluded = TaxRules::forCompany(new Company(['tax_rate' => 15, 'prices_include_tax' => false]));
 
         $this->assertTrue($included->includesTax(false));
         $this->assertSame(18.0, $included->rateFor(null));
         $this->assertSame(15.0, $included->rateFor(15.0), 'la tasa del producto manda sobre la de la empresa');
         $this->assertFalse($excluded->includesTax(true));
-        $this->assertSame(15.0, TaxRules::fromSettings(['pricing' => ['tax_rate' => 'x']])->rate);
-        $this->assertSame(100.0, TaxRules::fromSettings(['pricing' => ['tax_rate' => 500]])->rate);
+        $this->assertSame(100.0, TaxRules::forCompany(new Company(['tax_rate' => 500]))->rate);
     }
 
     public function test_line_serializes_to_snake_case(): void

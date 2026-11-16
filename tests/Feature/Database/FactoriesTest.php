@@ -99,7 +99,6 @@ class FactoriesTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->assertSame('operator', $user->role);
         $this->assertFalse((bool) $user->is_root);
         $this->assertTrue((bool) User::factory()->root()->create()->refresh()->is_root);
     }
@@ -139,7 +138,8 @@ class FactoriesTest extends TestCase
         $document = Document::factory()->create();
         $this->assertSame('empresa', $document->kind);
         $this->assertSame('Vigente', $document->status);
-        $this->assertSame('local', $document->disk);
+        $this->assertNull($document->path);
+        $this->assertSame('local', Document::factory()->withFile()->create()->disk);
         $this->assertFalse($document->isExpired());
 
         $this->assertFalse(QuoteParticipant::factory()->create()->is_ours);
