@@ -11,7 +11,8 @@
     </script>
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family={{ config('design.fonts.webfont') }}&display=swap" rel="stylesheet">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    @include('partials.pwa-head')
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>CRM B2G Honduras</title>
     @vite('resources/js/app.js')

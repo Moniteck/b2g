@@ -9,6 +9,7 @@ import StatusBadge from '../../Components/StatusBadge.vue';
 import TextInput from '../../Components/TextInput.vue';
 import Toggle from '../../Components/Toggle.vue';
 import AppLayout from '../../Layouts/AppLayout.vue';
+import PwaAccountSection from '../../pwa/AccountSection.vue';
 import { focusFirstError } from '../../lib/errors.js';
 import { reducedMotion, setMotionPreference, systemReducedMotion } from '../../lib/motion/index.js';
 import { card, textLink } from '../../lib/ui.js';
@@ -78,6 +79,8 @@ function savePassword() {
             <p v-else-if="!account.is_root" class="text-sm text-cap-text-soft">No pertenece a ninguna empresa.</p>
             <p class="text-sm text-cap-text-soft">La firma y el sello se administran en <Link href="/firmas" :class="textLink">Mi firma y sello</Link>.</p>
         </section>
+
+        <PwaAccountSection />
 
         <section :class="[card, 'flex flex-col gap-2 p-4 sm:p-6']" aria-labelledby="account-preferences">
             <h2 id="account-preferences" class="font-display text-base font-semibold text-gray-900 dark:text-gray-100">Preferencias de este navegador</h2>
