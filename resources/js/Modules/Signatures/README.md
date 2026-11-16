@@ -56,11 +56,33 @@ firmante y `signed` recibe `null` y, como segundo argumento, la respuesta comple
 | Eventos | `signed(document \| null, response)`, `update:open` |
 | Colocación | Firma y sello arrastrables y redimensionables (ratón y táctil; teclado: flechas, Mayús + flechas, «+» y «−»). Página por defecto: la última; opción «Aplicar en todas las páginas». Parte de la última posición que usó el usuario. |
 
+## Crear la firma o el sello: `AssetCreatorModal`
+
+`AssetCard` ya la abre («Crear firma», «Crear sello», «Subir imagen», «Cambiar»), también dentro de
+`SignDocumentModal` cuando al usuario le falta la firma o el sello. Para abrirla desde otro sitio:
+
+```vue
+<AssetCreatorModal v-model:open="open" type="firma" tab="draw" :company="{ name, tax_id }" @saved="reload" />
+```
+
+| Pestaña | Qué hace |
+|---|---|
+| `draw` (firma) | `SignaturePad.vue`: pointer events (ratón, lápiz, dedo), curvas suavizadas y grosor según velocidad o presión; color azul tinta o negro, fino/medio/grueso, deshacer, limpiar, línea guía. En un teléfono en horizontal la modal ocupa la pantalla. |
+| `type` (firma) | Nombre con 6 fuentes manuscritas OFL de `./fonts` (cargadas al abrir la modal), tamaño e inclinación. |
+| `stamp` (sello) | Sello circular o rectangular con nombre de la empresa activa, RTN y leyenda, en 5 tintas. |
+| `upload` | PNG o JPG; «Quitar el fondo blanco» para fotos sobre papel. |
+
+Todas exportan un **PNG transparente recortado** (`ink.js › trimCanvas`, máx. 2400 px por lado) y lo
+suben por `POST /firmas/activos` con la misma validación (2 MB). `company` sale de la prop `company`
+de `/firmas` o de `company` en `GET /firmas/estado`. Utilidades reutilizables en `ink.js`
+(`trimCanvas`, `canvasToFile`, `removeLightBackground`, `loadHandwritingFonts`) y `renderers.js`
+(`renderTyped`, `renderStamp`).
+
 ## Endpoints JSON (`routes/modules/signatures.php`)
 
 | Método y ruta | Uso |
 |---|---|
-| `GET /firmas/estado?document_id=` | `{ assets: { firma, sello }, last_placements, can_sign, document: { already_signed, last_signed_at } }` |
+| `GET /firmas/estado?document_id=` | `{ assets: { firma, sello }, last_placements, can_sign, company: { name, tax_id }, document: { already_signed, last_signed_at } }` |
 | `POST /firmas/activos` | Subir o reemplazar (`type`: `firma` \| `sello`, `file`: PNG o JPG ≤ 2 MB) |
 | `DELETE /firmas/activos/{type}` | Quitar (el historial de firmas aplicadas se conserva) |
 | `GET /firmas/activos/{type}/imagen` | Imagen propia (nadie más la recibe) |

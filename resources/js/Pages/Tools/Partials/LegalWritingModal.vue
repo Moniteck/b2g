@@ -148,7 +148,7 @@ async function exportPdf() {
                             <i v-if="step > item.value" class="mdi mdi-check text-sm leading-none" aria-hidden="true" />
                             <template v-else>{{ item.value }}</template>
                         </span>
-                        <span class="truncate" :class="step === item.value ? 'font-semibold text-gray-900 dark:text-gray-100' : 'text-cap-text-soft'">{{ item.label }}</span>
+                        <span class="truncate" :class="step === item.value ? 'font-semibold text-gray-900 dark:text-gray-100' : 'text-cap-text-soft max-sm:sr-only'">{{ item.label }}</span>
                     </button>
                     <span v-if="index < STEPS.length - 1" class="h-px min-w-4 flex-1 bg-cap-divider" aria-hidden="true" />
                 </li>
