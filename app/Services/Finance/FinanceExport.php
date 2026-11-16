@@ -4,6 +4,7 @@ namespace App\Services\Finance;
 
 use App\Models\Company;
 use App\Services\Tenancy\CompanyContext;
+use App\Support\SafeCell;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Str;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -80,14 +81,14 @@ class FinanceExport
         $sheet->setTitle(Str::limit($title, 28, ''));
 
         $lastColumn = chr(ord('A') + count($headings) - 1);
-        $sheet->setCellValue('A1', $company['name']);
+        SafeCell::set($sheet, 'A1', $company['name']);
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14)->getColor()->setRGB($this->hex('brand.red'));
-        $sheet->setCellValue('A2', $title);
+        SafeCell::set($sheet, 'A2', $title);
         $sheet->getStyle('A2')->getFont()->setBold(true)->setSize(12);
 
         $line = 3;
         foreach ($subtitle as $text) {
-            $sheet->setCellValue("A{$line}", $text);
+            SafeCell::set($sheet, "A{$line}", $text);
             $sheet->getStyle("A{$line}")->getFont()->getColor()->setRGB($this->hex('chrome.textSoft'));
             $line++;
         }
@@ -100,12 +101,12 @@ class FinanceExport
 
         $row = $headerRow + 1;
         foreach ($rows as $values) {
-            $sheet->fromArray(array_values($values), null, "A{$row}", true);
+            SafeCell::row($sheet, $values, "A{$row}");
             $row++;
         }
 
         if ($totals !== null) {
-            $sheet->fromArray($totals, null, "A{$row}", true);
+            SafeCell::row($sheet, $totals, "A{$row}");
             $sheet->getStyle("A{$row}:{$lastColumn}{$row}")->getFont()->setBold(true);
             $row++;
         }
@@ -139,7 +140,7 @@ class FinanceExport
             fputcsv($out, $headings);
 
             foreach ($rows as $row) {
-                fputcsv($out, array_values($row));
+                fputcsv($out, SafeCell::csvRow($row));
             }
 
             fclose($out);

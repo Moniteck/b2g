@@ -8,6 +8,7 @@ use App\Models\Quote;
 use App\Models\User;
 use App\Services\Business\QuoteService;
 use App\Services\Documents\DocumentService;
+use App\Support\SafeCell;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -91,7 +92,7 @@ class QuoteDocumentService
         $row = 2;
 
         foreach ($quotes as $quote) {
-            $sheet->fromArray([
+            SafeCell::row($sheet, [
                 $quote->number,
                 $quote->company?->name,
                 $quote->institution?->name,
@@ -102,7 +103,7 @@ class QuoteDocumentService
                 (float) $quote->total,
                 $quote->status,
                 $quote->outcome,
-            ], null, "A{$row}");
+            ], "A{$row}");
             $row++;
         }
 
