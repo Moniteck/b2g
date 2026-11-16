@@ -1,8 +1,8 @@
-/* Material Design Icons 7.4.47: subconjunto con los 483 íconos que usa el sistema.
+/* Material Design Icons 7.4.47: subconjunto con los 487 íconos que usa el sistema.
    ARCHIVO GENERADO por scripts/mdi-subset.mjs: no se edita a mano; tras usar un ícono nuevo, vuelve a ejecutarlo. */
 @font-face {
   font-family: "Material Design Icons";
-  src: url("../fonts/mdi/mdi-subset.woff?v=7.4.47-483") format("woff");
+  src: url("../fonts/mdi/mdi-subset.woff?v=7.4.47-487") format("woff");
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -172,6 +172,7 @@
 .mdi-archive::before { content: "\F003C"; }
 .mdi-archive-outline::before { content: "\F120E"; }
 .mdi-arrow-bottom-right::before { content: "\F0043"; }
+.mdi-arrow-down::before { content: "\F0045"; }
 .mdi-arrow-left::before { content: "\F004D"; }
 .mdi-arrow-right::before { content: "\F0054"; }
 .mdi-arrow-right-bold-box::before { content: "\F0735"; }
@@ -405,6 +406,8 @@
 .mdi-folder-zip-outline::before { content: "\F07B9"; }
 .mdi-format-list-bulleted::before { content: "\F0279"; }
 .mdi-format-text::before { content: "\F0284"; }
+.mdi-forum::before { content: "\F028C"; }
+.mdi-forum-outline::before { content: "\F0822"; }
 .mdi-function::before { content: "\F0295"; }
 .mdi-gavel::before { content: "\F029B"; }
 .mdi-gesture-swipe-horizontal::before { content: "\F0ABF"; }
@@ -490,6 +493,7 @@
 .mdi-open-in-app::before { content: "\F03CB"; }
 .mdi-open-in-new::before { content: "\F03CC"; }
 .mdi-origin::before { content: "\F0B43"; }
+.mdi-owl::before { content: "\F03D2"; }
 .mdi-package-variant-closed::before { content: "\F03D7"; }
 .mdi-palette::before { content: "\F03D8"; }
 .mdi-paperclip::before { content: "\F03E2"; }
