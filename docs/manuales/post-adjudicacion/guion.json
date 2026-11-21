@@ -1,0 +1,209 @@
+{
+  "baseUrl": "http://localhost:8000",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "login": {
+    "url": "/login",
+    "userSelector": "#login-email",
+    "passwordSelector": "#login-password",
+    "submitSelector": "form button[type=submit]"
+  },
+  "steps": [
+    {
+      "wait": 2500
+    },
+    {
+      "goto": "/post-adjudicacion"
+    },
+    {
+      "wait": 6000
+    },
+    {
+      "screenshot": "01-contratos",
+      "caption": "Lista de contratos con sus cifras, plazos y avance de entregas",
+      "fullPage": false
+    },
+    {
+      "click": "button:has-text(\"Nuevo contrato\") >> nth=0"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "fill": {
+        "selector": "internal:label=\"Número de contrato\"i",
+        "value": "CTR-DEMO-2026-010"
+      }
+    },
+    {
+      "fill": {
+        "selector": "internal:label=\"Nombre u objeto\"i",
+        "value": "Suministro de equipo de oficina"
+      }
+    },
+    {
+      "wait": 800
+    },
+    {
+      "screenshot": "02-nuevo-contrato",
+      "caption": "Formulario para registrar un contrato a mano",
+      "fullPage": false
+    },
+    {
+      "goto": "/post-adjudicacion?panel=feriados"
+    },
+    {
+      "wait": 3500
+    },
+    {
+      "screenshot": "03-feriados",
+      "caption": "Panel de feriados para el cálculo de plazos en días hábiles",
+      "fullPage": false
+    },
+    {
+      "goto": "/post-adjudicacion/1"
+    },
+    {
+      "wait": 3500
+    },
+    {
+      "screenshot": "04-ficha-contrato",
+      "caption": "Ficha del contrato con su resumen y avance de entregas"
+    },
+    {
+      "goto": "/post-adjudicacion/1?tab=entregas"
+    },
+    {
+      "wait": 3500
+    },
+    {
+      "screenshot": "05-entregas",
+      "caption": "Pestaña Entregas del contrato",
+      "fullPage": false
+    },
+    {
+      "click": "button:has-text(\"Nueva entrega\")"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "fill": {
+        "selector": "internal:label=\"Descripción\"i",
+        "value": "Segunda entrega de equipo de oficina"
+      }
+    },
+    {
+      "fill": {
+        "selector": "internal:label=\"Cantidad\"i",
+        "value": "10"
+      }
+    },
+    {
+      "wait": 800
+    },
+    {
+      "screenshot": "06-nueva-entrega",
+      "caption": "Formulario para registrar una entrega del contrato",
+      "fullPage": false
+    },
+    {
+      "goto": "/post-adjudicacion/1?tab=seguimientos&nuevo=1"
+    },
+    {
+      "wait": 3500
+    },
+    {
+      "fill": {
+        "selector": "[role=dialog] textarea >> nth=0",
+        "value": "Se confirmó con la institución la fecha de recepción."
+      }
+    },
+    {
+      "wait": 800
+    },
+    {
+      "screenshot": "07-seguimiento",
+      "caption": "Formulario para registrar un seguimiento del contrato",
+      "fullPage": false
+    },
+    {
+      "goto": "/cobros"
+    },
+    {
+      "wait": 3000
+    },
+    {
+      "screenshot": "08-cobros",
+      "caption": "Cobros y cartera con las facturas por cobrar"
+    },
+    {
+      "click": "button:has-text(\"Nueva factura\") >> nth=0"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "fill": {
+        "selector": "internal:label=\"Número de factura\"i",
+        "value": "001-001-01-00009999"
+      }
+    },
+    {
+      "fill": {
+        "selector": "internal:label=\"Concepto\"i",
+        "value": "Suministro de equipo según contrato"
+      }
+    },
+    {
+      "wait": 800
+    },
+    {
+      "screenshot": "09-nueva-factura",
+      "caption": "Formulario para registrar una factura por cobrar",
+      "fullPage": false
+    },
+    {
+      "goto": "/presupuesto-revolvente"
+    },
+    {
+      "wait": 3000
+    },
+    {
+      "screenshot": "10-presupuesto-revolvente",
+      "caption": "Presupuesto revolvente con el saldo y sus movimientos"
+    },
+    {
+      "click": "button:has-text(\"Registrar movimiento\") >> nth=0"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "fill": {
+        "selector": "internal:label=\"Concepto\"i",
+        "value": "Compra de materiales para entrega"
+      }
+    },
+    {
+      "wait": 800
+    },
+    {
+      "screenshot": "11-registrar-movimiento",
+      "caption": "Formulario para registrar un movimiento del presupuesto",
+      "fullPage": false
+    },
+    {
+      "goto": "/flujo-caja"
+    },
+    {
+      "wait": 3000
+    },
+    {
+      "screenshot": "12-flujo-caja",
+      "caption": "Flujo de caja por mes con los próximos cobros"
+    }
+  ]
+}

@@ -1,0 +1,164 @@
+{
+  "baseUrl": "http://localhost:8000",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "login": {
+    "url": "/login",
+    "userSelector": "#login-email",
+    "passwordSelector": "#login-password",
+    "submitSelector": "form button[type=submit]"
+  },
+  "steps": [
+    {
+      "wait": 2500
+    },
+    {
+      "goto": "/directorio"
+    },
+    {
+      "wait": 5000
+    },
+    {
+      "screenshot": "01-directorio",
+      "caption": "Directorio institucional con los documentos de la empresa y su vigencia",
+      "fullPage": false
+    },
+    {
+      "click": "button:has-text(\"Subir documentos\") >> nth=0"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "screenshot": "02-subir-documentos",
+      "caption": "Ventana para subir documentos al directorio",
+      "fullPage": false
+    },
+    {
+      "goto": "/instituciones"
+    },
+    {
+      "wait": 4000
+    },
+    {
+      "screenshot": "03-instituciones",
+      "caption": "Catálogo de instituciones compradoras",
+      "fullPage": false
+    },
+    {
+      "click": "button:has-text(\"Nueva institución\") >> nth=0"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "fill": {
+        "selector": "[role=dialog] input >> nth=0",
+        "value": "Secretaría de Educación"
+      }
+    },
+    {
+      "fill": {
+        "selector": "[role=dialog] input >> nth=1",
+        "value": "SEDUC"
+      }
+    },
+    {
+      "wait": 800
+    },
+    {
+      "screenshot": "04-nueva-institucion",
+      "caption": "Formulario para registrar una institución",
+      "fullPage": false
+    },
+    {
+      "goto": "/instituciones/5"
+    },
+    {
+      "wait": 4000
+    },
+    {
+      "screenshot": "05-ficha-institucion",
+      "caption": "Ficha de una institución con sus contactos y su relación con la empresa",
+      "fullPage": false
+    },
+    {
+      "goto": "/contactos"
+    },
+    {
+      "wait": 4000
+    },
+    {
+      "screenshot": "06-contactos",
+      "caption": "Contactos de las instituciones",
+      "fullPage": false
+    },
+    {
+      "click": "button:has-text(\"Nuevo contacto\") >> nth=0"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "fill": {
+        "selector": "internal:label=\"Cargo\"i",
+        "value": "Jefe de Compras"
+      }
+    },
+    {
+      "fill": {
+        "selector": "internal:label=\"Departamento\"i",
+        "value": "Adquisiciones"
+      }
+    },
+    {
+      "wait": 800
+    },
+    {
+      "screenshot": "07-nuevo-contacto",
+      "caption": "Formulario para registrar un contacto",
+      "fullPage": false
+    },
+    {
+      "goto": "/matriz-cumplimiento"
+    },
+    {
+      "wait": 4000
+    },
+    {
+      "screenshot": "08-matrices",
+      "caption": "Matrices documentales de las licitaciones con su progreso",
+      "fullPage": false
+    },
+    {
+      "click": "button:has-text(\"Nueva matriz\") >> nth=0"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "click": "button:has-text(\"Agregar los habituales\")"
+    },
+    {
+      "wait": 1000
+    },
+    {
+      "screenshot": "09-nueva-matriz",
+      "caption": "Formulario para crear una matriz documental con los requisitos habituales",
+      "fullPage": false
+    },
+    {
+      "goto": "/matriz-cumplimiento/3"
+    },
+    {
+      "wait": 4000
+    },
+    {
+      "screenshot": "10-ficha-matriz",
+      "caption": "Ficha de una matriz documental con el estado de cada requisito",
+      "fullPage": false
+    }
+  ]
+}
