@@ -1,0 +1,27 @@
+{
+  "baseUrl": "http://localhost:8000",
+  "viewport": { "width": 1440, "height": 900 },
+  "login": { "url": "/login", "userSelector": "#login-email", "passwordSelector": "#login-password", "submitSelector": "form button[type=submit]" },
+  "steps": [
+    { "wait": 2500 },
+    { "goto": "/agente-legal" },
+    { "wait": 3500 },
+    { "screenshot": "01-inicio", "caption": "Agente Legal con el historial de conversaciones y las preguntas sugeridas", "fullPage": false },
+    { "fill": { "selector": "#legal-message", "value": "Me descalificaron en la LPN-SESAL-007-2026 por no presentar la constancia de solvencia. ¿Qué plazo tengo para impugnar?" } },
+    { "wait": 800 },
+    { "screenshot": "02-escribir-consulta", "caption": "Consulta escrita en el campo, lista para enviar", "fullPage": false },
+    { "goto": "/agente-legal" },
+    { "wait": 3000 },
+    { "click": "button:has-text(\"Redactar escrito\") >> visible=true" },
+    { "wait": 1200 },
+    { "screenshot": "03-tipo-escrito", "caption": "Redactar escrito: elegir el tipo de escrito", "fullPage": false },
+    { "click": "[data-writing-step=\"1\"] button >> nth=0" },
+    { "wait": 400 },
+    { "wait": 800 },
+    { "fill": { "selector": "[data-writing-step=\"2\"] input >> nth=1", "value": "Secretaría de Salud" } },
+    { "fill": { "selector": "[data-writing-step=\"2\"] input >> nth=2", "value": "LPN-SESAL-007-2026" } },
+    { "fill": { "selector": "[data-writing-step=\"2\"] textarea", "value": "El 10 de noviembre de 2026 se nos notificó la descalificación por no presentar la constancia de solvencia, que sí fue incluida en el sobre 1, folio 23. Solicitamos revisar la evaluación." } },
+    { "wait": 400 },
+    { "screenshot": "04-datos-escrito", "caption": "Datos del escrito antes de generar el borrador", "fullPage": false }
+  ]
+}

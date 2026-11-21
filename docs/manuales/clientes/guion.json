@@ -1,0 +1,81 @@
+{
+  "baseUrl": "http://localhost:8000",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "login": {
+    "url": "/login",
+    "userSelector": "#login-email",
+    "passwordSelector": "#login-password",
+    "submitSelector": "form button[type=submit]"
+  },
+  "steps": [
+    {
+      "wait": 2500
+    },
+    {
+      "goto": "/clientes"
+    },
+    {
+      "wait": 3500
+    },
+    {
+      "screenshot": "01-listado",
+      "caption": "Listado de clientes con el monto adjudicado"
+    },
+    {
+      "click": "button[aria-label^=\"Acciones de\"] >> nth=0"
+    },
+    {
+      "wait": 1000
+    },
+    {
+      "screenshot": "02-acciones",
+      "caption": "Acciones de un cliente",
+      "fullPage": false
+    },
+    {
+      "click": "text=Ver ficha"
+    },
+    {
+      "wait": 3500
+    },
+    {
+      "screenshot": "03-ficha",
+      "caption": "Ficha del cliente con sus datos"
+    },
+    {
+      "click": "[role=tab]:has-text(\"Ofertas ganadas\")"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "screenshot": "04-ofertas-ganadas",
+      "caption": "Ofertas ganadas del cliente"
+    },
+    {
+      "click": "[role=tab]:has-text(\"Contratos\")"
+    },
+    {
+      "wait": 4000
+    },
+    {
+      "screenshot": "05-contratos",
+      "caption": "Contratos del cliente",
+      "fullPage": false
+    },
+    {
+      "click": "button:has-text(\"Editar datos\")"
+    },
+    {
+      "wait": 1500
+    },
+    {
+      "screenshot": "06-editar",
+      "caption": "Formulario para editar los datos del cliente",
+      "fullPage": false
+    }
+  ]
+}

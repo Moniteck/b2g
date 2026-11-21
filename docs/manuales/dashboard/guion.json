@@ -1,0 +1,18 @@
+{
+  "baseUrl": "http://localhost:8000",
+  "viewport": { "width": 1440, "height": 900 },
+  "login": { "url": "/login", "userSelector": "#login-email", "passwordSelector": "#login-password", "submitSelector": "form button[type=submit]" },
+  "steps": [
+    { "wait": 2500 },
+    { "goto": "/" },
+    { "wait": 3500 },
+    { "screenshot": "01-resumen", "caption": "Saludo, período y franja «Requiere atención hoy»", "fullPage": false },
+    { "screenshot": "02-tablero-completo", "caption": "Tablero completo con indicadores, plazos, tareas, pipeline y actividad" },
+    { "click": "text=Este trimestre" },
+    { "wait": 3000 },
+    { "screenshot": "03-periodo-trimestre", "caption": "Indicadores del trimestre al cambiar el período", "fullPage": false },
+    { "click": "button:has-text(\"Importar licitación\")" },
+    { "wait": 1200 },
+    { "screenshot": "04-importar-licitacion", "caption": "Ventana para importar la captura de una licitación de HonduCompras", "fullPage": false }
+  ]
+}
